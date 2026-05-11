@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lidyane — Seabra Bakery</title>
+  <link rel="stylesheet" href="lidyane.css" />
+</head>
+<body>
+
+<div class="lid-app">
+
+  <!-- Header -->
+  <header class="lid-header">
+    <div>
+      <div class="lid-header-title">🧁 Seabra Bakery</div>
+      <div class="lid-header-sub">Lidyane Ferian</div>
+    </div>
+    <a href="index.html" class="lid-back-btn">← Matheus</a>
+  </header>
+
+  <!-- Connection status -->
+  <div class="lid-status">
+    <div class="lid-status-dot" id="lid-status-dot"></div>
+    <span id="lid-status-text">connecting...</span>
+  </div>
+
+  <!-- Tab navigation -->
+  <nav class="lid-tabs">
+    <div class="lid-tab active" data-tab="dashboard">📊 Resumo</div>
+    <div class="lid-tab" data-tab="entry">⏱ Dia</div>
+    <div class="lid-tab" data-tab="tips">💵 Tips</div>
+    <div class="lid-tab" data-tab="history">📋 Histórico</div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════
+       TAB 1 — Dashboard
+  ══════════════════════════════════════════════ -->
+  <section class="lid-section active" id="tab-dashboard">
+
+    <!-- Period navigation bar -->
+    <div id="lid-period-bar" style="display:none">
+      <div class="lid-period-bar">
+        <button class="lid-period-btn" id="lid-prev-period">‹</button>
+        <div class="lid-period-label" id="lid-period-label">—</div>
+        <button class="lid-period-btn" id="lid-next-period">›</button>
+      </div>
+    </div>
+
+    <!-- No period state -->
+    <div class="lid-no-period" id="lid-no-period">
+      <p>Nenhuma quinzena encontrada.<br>Crie a primeira para começar.</p>
+      <button class="lid-btn lid-btn-primary" onclick="LID.openNewPeriodModal()">+ Nova Quinzena</button>
+    </div>
+
+    <!-- Dashboard content (shown when period exists) -->
+    <div id="lid-dashboard-content" style="display:none">
+
+      <div class="lid-card">
+        <div class="lid-card-header">Quinzena atual</div>
+        <div class="lid-stats-grid">
+          <div class="lid-stat">
+            <div class="lid-stat-label">Horas trabalhadas</div>
+            <div class="lid-stat-value accent3" id="lid-stat-hours">0<span>h</span></div>
+          </div>
+          <div class="lid-stat">
+            <div class="lid-stat-label">Dias trabalhados</div>
+            <div class="lid-stat-value" id="lid-stat-days">0<span>/14</span></div>
+          </div>
+          <div class="lid-stat">
+            <div class="lid-stat-label">Salário base</div>
+            <div class="lid-stat-value accent3" id="lid-stat-base">$0</div>
+          </div>
+          <div class="lid-stat">
+            <div class="lid-stat-label">Total tips</div>
+            <div class="lid-stat-value accent2" id="lid-stat-tips">$0</div>
+          </div>
+        </div>
+
+        <div class="lid-total-row">
+          <div class="lid-total-label">Total com tips</div>
+          <div class="lid-total-value" id="lid-stat-total">$0.00</div>
+        </div>
+      </div>
+
+      <!-- Weekly breakdown -->
+      <div class="lid-card">
+        <div class="lid-card-header">Semanas</div>
+        <div id="lid-weeks-breakdown"></div>
+      </div>
+
+      <!-- Paycheck info -->
+      <div class="lid-card" id="lid-paycheck-card">
+        <div class="lid-card-header">Paycheck</div>
+        <div id="lid-paycheck-info"></div>
+        <button class="lid-btn lid-btn-secondary" style="margin-top:10px"
+                onclick="LID.openPaycheckModal()">Registrar Paycheck</button>
+      </div>
+
+      <!-- Period actions -->
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="lid-btn lid-btn-secondary" style="flex:1"
+                onclick="LID.openNewPeriodModal()">+ Nova Quinzena</button>
+        <button class="lid-btn lid-btn-danger lid-btn-sm" style="flex:0;padding:12px 16px"
+                onclick="LID.confirmDeletePeriod()">🗑</button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       TAB 2 — Daily Entry
+  ══════════════════════════════════════════════ -->
+  <section class="lid-section" id="tab-entry">
+
+    <div class="lid-no-period" id="lid-entry-no-period" style="display:none">
+      <p>Crie uma quinzena primeiro.</p>
+      <button class="lid-btn lid-btn-primary" onclick="LID.switchTab('dashboard')">← Ir para Resumo</button>
+    </div>
+
+    <div id="lid-entry-form-wrap">
+      <div class="lid-card">
+        <div class="lid-card-header" id="lid-entry-form-title">Registrar dia de trabalho</div>
+
+        <div class="lid-form-group">
+          <label class="lid-label">Data</label>
+          <input type="date" class="lid-input" id="lid-entry-date" />
+        </div>
+
+        <div class="lid-checkbox-row">
+          <input type="checkbox" id="lid-day-off" />
+          <label for="lid-day-off">Dia de folga</label>
+        </div>
+
+        <div id="lid-clock-fields">
+          <div class="lid-input-row">
+            <div class="lid-form-group">
+              <label class="lid-label">Clock In</label>
+              <input type="time" class="lid-input" id="lid-clock-in" />
+            </div>
+            <div class="lid-form-group">
+              <label class="lid-label">Clock Out</label>
+              <input type="time" class="lid-input" id="lid-clock-out" />
+            </div>
+          </div>
+
+          <div class="lid-input-row">
+            <div class="lid-form-group">
+              <label class="lid-label">Break Out</label>
+              <input type="time" class="lid-input" id="lid-break-out" />
+            </div>
+            <div class="lid-form-group">
+              <label class="lid-label">Break In</label>
+              <input type="time" class="lid-input" id="lid-break-in" />
+            </div>
+          </div>
+        </div>
+
+        <div class="lid-form-group">
+          <label class="lid-label">Observação (opcional)</label>
+          <input type="text" class="lid-input" id="lid-entry-notes" placeholder="ex: saí mais cedo" />
+        </div>
+
+        <!-- Live calc preview -->
+        <div class="lid-calc-preview" id="lid-calc-preview">
+          <span id="lid-calc-text"></span>
+        </div>
+
+        <input type="hidden" id="lid-entry-editing-id" value="" />
+
+        <button class="lid-btn lid-btn-primary" id="lid-save-entry-btn"
+                onclick="LID.saveEntry()">💾 Salvar Registro</button>
+
+        <button class="lid-btn lid-btn-secondary" id="lid-cancel-edit-btn"
+                onclick="LID.cancelEditEntry()" style="margin-top:8px;display:none">
+          Cancelar edição
+        </button>
+      </div>
+
+      <!-- Today's entries for the current period -->
+      <div class="lid-section-title">Registros da quinzena</div>
+      <div class="lid-entry-list" id="lid-entry-mini-list"></div>
+    </div>
+
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       TAB 3 — Tips
+  ══════════════════════════════════════════════ -->
+  <section class="lid-section" id="tab-tips">
+
+    <div class="lid-no-period" id="lid-tips-no-period" style="display:none">
+      <p>Crie uma quinzena primeiro.</p>
+      <button class="lid-btn lid-btn-primary" onclick="LID.switchTab('dashboard')">← Ir para Resumo</button>
+    </div>
+
+    <div id="lid-tips-form-wrap">
+      <div class="lid-card">
+        <div class="lid-card-header">Registrar tips da semana</div>
+        <p style="font-size:11px;color:var(--lid-muted);font-family:var(--lid-mono);margin-bottom:14px">
+          Tips recebidos toda segunda-feira, referentes à semana anterior (Dom→Sáb).
+        </p>
+
+        <div class="lid-form-group">
+          <label class="lid-label">Semana (domingo de início)</label>
+          <select class="lid-select" id="lid-tip-week-select"></select>
+        </div>
+
+        <div class="lid-form-group">
+          <label class="lid-label">Data de recebimento (segunda-feira)</label>
+          <input type="date" class="lid-input" id="lid-tip-received-on" />
+        </div>
+
+        <div class="lid-form-group">
+          <label class="lid-label">Valor dos tips ($)</label>
+          <input type="number" class="lid-input" id="lid-tip-amount"
+                 placeholder="0.00" step="0.01" min="0" />
+        </div>
+
+        <div class="lid-form-group">
+          <label class="lid-label">Observação (opcional)</label>
+          <input type="text" class="lid-input" id="lid-tip-notes" placeholder="ex: semana do Thanksgiving" />
+        </div>
+
+        <input type="hidden" id="lid-tip-editing-id" value="" />
+
+        <button class="lid-btn lid-btn-primary" id="lid-save-tip-btn"
+                onclick="LID.saveTip()">💾 Salvar Tips</button>
+
+        <button class="lid-btn lid-btn-secondary" id="lid-cancel-tip-btn"
+                onclick="LID.cancelEditTip()" style="margin-top:8px;display:none">
+          Cancelar edição
+        </button>
+      </div>
+
+      <div class="lid-section-title">Tips desta quinzena</div>
+      <div id="lid-tips-list"></div>
+    </div>
+
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       TAB 4 — History
+  ══════════════════════════════════════════════ -->
+  <section class="lid-section" id="tab-history">
+    <div class="lid-section-title">Todas as quinzenas</div>
+    <div id="lid-history-list"></div>
+  </section>
+
+</div><!-- /.lid-app -->
+
+<!-- ══ Modal: New Period ══════════════════════════════════════ -->
+<div class="lid-modal-overlay" id="lid-modal-period">
+  <div class="lid-modal">
+    <div class="lid-modal-title">
+      Nova Quinzena
+      <button class="lid-modal-close" onclick="LID.closeModal('lid-modal-period')">✕</button>
+    </div>
+
+    <div class="lid-form-group">
+      <label class="lid-label">Data de início (domingo)</label>
+      <input type="date" class="lid-input" id="lid-new-period-start" />
+    </div>
+
+    <div class="lid-form-group">
+      <label class="lid-label">Taxa horária ($)</label>
+      <input type="number" class="lid-input" id="lid-new-period-rate"
+             value="15" step="0.50" min="1" />
+    </div>
+
+    <div class="lid-form-group">
+      <label class="lid-label">Observação (opcional)</label>
+      <input type="text" class="lid-input" id="lid-new-period-notes" placeholder="" />
+    </div>
+
+    <button class="lid-btn lid-btn-primary" onclick="LID.savePeriod()">Criar Quinzena</button>
+  </div>
+</div>
+
+<!-- ══ Modal: Paycheck ════════════════════════════════════════ -->
+<div class="lid-modal-overlay" id="lid-modal-paycheck">
+  <div class="lid-modal">
+    <div class="lid-modal-title">
+      Registrar Paycheck
+      <button class="lid-modal-close" onclick="LID.closeModal('lid-modal-paycheck')">✕</button>
+    </div>
+
+    <div class="lid-form-group">
+      <label class="lid-label">Data do pagamento</label>
+      <input type="date" class="lid-input" id="lid-paycheck-date" />
+    </div>
+
+    <div class="lid-form-group">
+      <label class="lid-label">Valor recebido ($)</label>
+      <input type="number" class="lid-input" id="lid-paycheck-amount"
+             placeholder="0.00" step="0.01" min="0" />
+    </div>
+
+    <button class="lid-btn lid-btn-primary" onclick="LID.savePaycheck()">Salvar</button>
+  </div>
+</div>
+
+<!-- ══ Toast ══════════════════════════════════════════════════ -->
+<div class="lid-toast" id="lid-toast"></div>
+
+<!-- Supabase CDN — same version used by app.js -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Lidyane logic — standalone, does NOT import app.js -->
+<script src="lidyane.js"></script>
+
+</body>
+</html>

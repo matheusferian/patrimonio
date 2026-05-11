@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work Tracker - Matheus Ferian</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f4f0;--bg2:#eeecea;--s:#fff;--b:#dddbd7;--t:#1a1916;--t2:#6b6860;--t3:#a09e9a;--ac:#2d6a4f;--al:#e8f4ef;--or:#c96a1a;--ol:#fef3e8;--re:#c0392b;--rl:#fdecea;--bl:#1a4a7a;--r:10px;--mo:"DM Mono",monospace;--sa:"Inter",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t);font-family:var(--sa);font-size:14px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 80px}
+header{padding:20px 0 16px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.lt{font-size:20px;font-weight:700}.lt span{color:var(--ac)}
+.ls{font-family:var(--mo);font-size:10px;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+.hr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bdg{font-family:var(--mo);font-size:11px;color:var(--t2);background:var(--s);padding:5px 12px;border-radius:99px;border:1px solid var(--b)}
+.bdg b{color:var(--ac)}
+.sy{font-family:var(--mo);font-size:11px;padding:5px 12px;border-radius:99px;border:1px solid var(--b);background:var(--s);display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--t3);flex-shrink:0}
+.dot.ok{background:#22c55e}.dot.err{background:var(--re)}.dot.ld{background:var(--or);animation:pu 1s infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.4}}
+.tabs{display:flex;gap:2px;padding:14px 0 0;border-bottom:2px solid var(--b)}
+.tab{font-size:13px;font-weight:600;padding:8px 18px;border-radius:10px 10px 0 0;background:transparent;border:none;color:var(--t3);cursor:pointer;transition:all .15s}
+.tab:hover{color:var(--t2);background:var(--bg2)}
+.tab.active{background:var(--s);color:var(--ac);border:2px solid var(--b);border-bottom:2px solid var(--s);position:relative;top:2px}
+.pn{display:none}.pn.active{display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;padding:16px 0 6px}
+.kpi{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:14px 16px;border-top:3px solid var(--kc,var(--ac))}
+.kl{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.kv{font-family:var(--mo);font-size:20px;font-weight:500;color:var(--kc,var(--ac));line-height:1}
+.ks{font-size:11px;color:var(--t3);margin-top:4px}
+.st{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--t3);padding:18px 0 9px}
+.tw{overflow-x:auto;border-radius:var(--r);border:1px solid var(--b)}
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--s)}
+thead th{text-align:left;padding:9px 12px;background:var(--bg2);color:var(--t2);font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--b);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--b);cursor:pointer;transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--bg2)}
+tbody td{padding:10px 12px;vertical-align:middle}
+.tg{background:var(--bg2);border:1px solid var(--b);border-radius:6px;padding:3px 9px;font-size:11px;font-family:var(--mo);color:var(--t2)}
+.g{color:var(--ac)}.o{color:var(--or)}.r{color:var(--re)}.b{color:var(--bl)}
+.mn{font-family:var(--mo);font-weight:500}
+.emp{text-align:center;padding:40px 20px;color:var(--t3);font-size:13px}
+.fh{display:flex;align-items:center;justify-content:space-between;padding:16px 0 12px;flex-wrap:wrap;gap:12px}
+.ftt{font-size:18px;font-weight:700}.ftt span{color:var(--ac)}
+input[type=text],input[type=number]{background:var(--s);border:1px solid var(--b);border-radius:8px;color:var(--t);font-family:var(--mo);font-size:13px;padding:7px 11px;outline:none;transition:border-color .15s;width:100%}
+input:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(45,106,79,.12)}
+input::placeholder{color:var(--t3)}
+.sl{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin:14px 0 8px}
+.sl::after{content:"";flex:1;height:1px;background:var(--b)}
+.cl{display:grid;grid-template-columns:85px 1fr 76px 1fr 1fr 1fr;gap:8px;padding:0 12px 4px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3)}
+.dg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.dr{display:grid;grid-template-columns:85px 1fr 76px 1fr 1fr 1fr;gap:8px;align-items:start;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:9px 12px;transition:border-color .15s}
+.dr:focus-within{border-color:var(--ac);box-shadow:0 0 0 3px rgba(45,106,79,.08)}
+.dn{font-weight:600;font-size:13px;color:var(--t2);padding-top:7px}
+.ft1 input{border-left:3px solid rgba(45,106,79,.4)}
+.ft2 input{border-left:3px solid rgba(45,106,79,.2)}
+.ft3 input,.ft4 input{border-left:3px solid rgba(201,106,26,.35)}
+.wt{display:flex;flex-direction:column;gap:3px}
+.wtb{display:flex;gap:3px}
+.wb{flex:1;padding:5px 3px;border-radius:6px;border:1px solid var(--b);background:var(--bg2);color:var(--t3);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;line-height:1}
+.wb.wm.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.wb.wl.on{background:var(--bl);color:#fff;border-color:var(--bl)}
+.wb.wh.on{background:var(--or);color:#fff;border-color:var(--or)}
+.caw{display:none;align-items:center}
+.caw input{font-size:11px;padding:4px 6px;border-left:3px solid rgba(45,106,79,.3)}
+.tb2{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:12px 14px;margin-bottom:12px}
+.ti{display:flex;flex-direction:column;gap:3px}
+.tl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3)}
+.tv{font-family:var(--mo);font-size:15px;font-weight:500}
+.ts{font-size:10px;color:var(--t3);font-family:var(--mo)}
+.vr{display:flex;align-items:center;gap:12px;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:11px 14px;margin-bottom:12px;flex-wrap:wrap}
+.vr label{font-size:12px;font-weight:500;color:var(--t2);white-space:nowrap}
+.vr input{max-width:120px}
+.pl{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+.pi{display:grid;grid-template-columns:1fr 110px 28px;gap:8px;align-items:center;background:var(--s);border:1px solid var(--b);border-radius:8px;padding:8px 10px}
+.pi input{border-left:3px solid rgba(192,57,43,.3)}
+.xb{background:var(--rl);border:1px solid rgba(192,57,43,.2);border-radius:6px;color:var(--re);cursor:pointer;font-size:13px;padding:3px 7px}
+.xb:hover{background:#f5c6c2}
+.ab{font-size:12px;font-weight:500;padding:8px 14px;border-radius:8px;border:1px dashed var(--b);background:transparent;color:var(--t3);cursor:pointer;width:100%;text-align:left}
+.ab:hover{border-color:var(--re);color:var(--re);background:var(--rl)}
+.pt{font-family:var(--mo);font-size:11px;color:var(--t2);text-align:right;padding:3px 0 0}
+.bg{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.btn{font-size:13px;font-weight:600;padding:10px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .15s}
+.bp{background:var(--ac);color:#fff}.bp:hover{background:#245c43;transform:translateY(-1px)}
+.bs{background:var(--s);color:var(--t2);border:1px solid var(--b)}.bs:hover{border-color:var(--t3);color:var(--t)}
+.bd{background:var(--rl);color:var(--re);border:1px solid rgba(192,57,43,.2)}.bd:hover{background:#f5c6c2}
+.ws{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--b);margin-top:6px}
+.wp{font-family:var(--mo);font-size:11px;padding:5px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--t2);cursor:pointer;transition:all .15s}
+.wp:hover{border-color:var(--ac);color:var(--ac);background:var(--al)}
+.wp.on{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:500}
+.ccl{display:grid;grid-template-columns:85px 1fr 1fr 1fr;gap:10px;padding:0 12px 5px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3)}
+.cg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.cr{display:grid;grid-template-columns:85px 1fr 1fr 1fr;gap:10px;align-items:center;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:9px 12px}
+.cd{font-weight:600;font-size:13px;color:var(--t2)}
+.set{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:16px;margin:8px 0 16px}
+.set-t{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
+.sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.sb{background:var(--bg2);border-radius:8px;padding:12px;text-align:center;border:1px solid var(--b)}
+.sn{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:5px}
+.sv{font-family:var(--mo);font-size:18px;font-weight:500}
+.ss{font-size:11px;color:var(--t3);margin-top:3px;font-family:var(--mo)}
+.vd{border-top:1px solid var(--b);padding-top:13px;text-align:center;font-size:14px}
+.vw{font-size:16px;font-weight:700}.va{font-family:var(--mo);font-size:21px;font-weight:700}
+.rsb{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 0 4px}
+.rsb label{font-size:12px;font-weight:600;color:var(--t2)}
+.rsb select{font-size:13px;padding:7px 12px;border-radius:8px;border:1px solid var(--b);background:var(--s);color:var(--t);outline:none;cursor:pointer}
+.rtbs{display:flex;gap:6px;margin:10px 0 0}
+.rt{font-size:12px;font-weight:600;padding:7px 16px;border-radius:8px;border:1px solid var(--b);background:var(--s);color:var(--t2);cursor:pointer;transition:all .15s}
+.rt.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.rp{display:none}.rp.active{display:block}
+.rc{background:#fff;border:1px solid var(--b);border-radius:14px;padding:24px 28px;margin:12px 0;max-width:820px}
+.wac{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:16px;margin:12px 0;max-width:620px}
+.wac h3{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t2);margin-bottom:9px}
+.wat{font-family:var(--mo);font-size:13px;line-height:1.8;background:var(--bg2);border-radius:8px;padding:12px 14px;white-space:pre-wrap;color:var(--t);border:1px solid var(--b)}
+.wcb{margin-top:8px;font-size:12px;font-weight:600;padding:8px 16px;border-radius:8px;border:none;background:var(--ac);color:#fff;cursor:pointer;display:inline-block}
+.wcb:hover{background:#245c43}.wcb.cp{background:#22c55e}
+#po{position:fixed;inset:0;background:#fff;z-index:9999;overflow:auto;padding:20px}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--t);border-radius:10px;padding:11px 17px;font-size:13px;color:#fff;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+@media print{@page{margin:1cm;} body>*:not(#po){display:none!important}#po{position:static!important;padding:0!important}}
+@media(max-width:640px){.dr,.cl{grid-template-columns:65px 1fr 60px 1fr}.cr,.ccl{grid-template-columns:65px 1fr 1fr}.sg{grid-template-columns:1fr 1fr}.kv{font-size:17px}.rc{padding:16px 14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <div class="lt">WORK<span>.</span>TRACK</div>
+    <div class="ls">Matheus Ferian &middot; Farber Parking / Makers Air</div>
+  </div>
+  <div class="hr">
+    <div class="sy"><div class="dot ld" id="dot"></div><span id="st" style="font-family:var(--mo);font-size:11px;color:var(--t2)">connecting...</span></div>
+    <div class="bdg">Year <b id="yr">2026</b> &middot; <b id="wc">0</b> weeks</div>
+  </div>
+</header>
+<div class="tabs">
+  <button class="tab active" onclick="goTab('dash',this)">&#128202; Dashboard</button>
+  <button class="tab" onclick="goTab('entry',this)">&#9999;&#65039; Weekly Entry</button>
+  <button class="tab" onclick="goTab('cash',this)">&#128181; Cash Split</button>
+  <button class="tab" onclick="goTab('report',this)">&#128203; Sunday Report</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="pn active" id="tab-dash">
+  <div class="kpis" id="kpi"></div>
+  <div class="st">weekly history</div>
+  <div class="tw"><table>
+    <thead><tr><th>Week</th><th>Payment MA</th><th>Tips (&frac12;)</th><th>FPK Events</th><th>Total Hrs</th><th>My Profit</th><th>Purchases</th><th>Farber Owes</th><th>vs avg</th></tr></thead>
+    <tbody id="wtb"></tbody>
+  </table></div>
+</div>
+
+<!-- ENTRY -->
+<div class="pn" id="tab-entry">
+  <div class="fh">
+    <div class="ftt">Week: <span id="wlb">&mdash;</span></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:11px;font-weight:600;color:var(--t3);letter-spacing:1px;text-transform:uppercase">Period</span>
+      <input type="text" id="wn" placeholder="e.g. May 11-17" style="width:150px" oninput="updL()">
+    </div>
+  </div>
+  <div class="sl">&#9992;&#65039; Makers Air + FPK Events</div>
+  <div class="cl">
+    <span></span>
+    <span style="color:var(--ac)">Tips (full&divide;2)</span>
+    <span style="color:var(--t3)">Cash with</span>
+    <span style="color:var(--ac)">MA Hours</span>
+    <span style="color:var(--or)">FPK Location</span>
+    <span style="color:var(--or)">FPK Hours</span>
+  </div>
+  <div class="dg" id="dg"></div>
+  <div class="sl">&#128179; Venmo / Company Card Tips</div>
+  <div class="vr">
+    <label>Tips via Venmo or card ($) &mdash; full amount, auto &divide;2</label>
+    <input type="number" id="ven" placeholder="0.00" step="0.01" oninput="recalc()">
+  </div>
+  <div class="sl">&#128717; Purchases this week</div>
+  <div class="pl" id="pl"></div>
+  <button class="ab" onclick="addP()">+ Add purchase</button>
+  <div class="pt" id="ptot"></div>
+  <div class="sl">&#128202; Week Totals</div>
+  <div class="tb2" id="tp"></div>
+  <div class="bg">
+    <button class="btn bp" onclick="saveW()">&#128190; Save Week</button>
+    <button class="btn bs" onclick="clearW()">&#8635; Clear</button>
+    <button class="btn bd" id="delbtn" onclick="delW()" style="display:none">&#128465; Delete</button>
+  </div>
+  <div class="sl">saved weeks &mdash; click to edit</div>
+  <div class="ws" id="wsel"></div>
+</div>
+
+<!-- CASH -->
+<div class="pn" id="tab-cash">
+  <div class="fh">
+    <div>
+      <div class="ftt">Cash Split <span id="clb" style="font-size:15px;color:var(--t2)">&mdash;</span></div>
+      <div style="font-size:12px;color:var(--t3);margin-top:2px">Enter exact amount each person holds each day</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:11px;font-weight:600;color:var(--t3);letter-spacing:1px;text-transform:uppercase">Week</span>
+      <input type="text" id="cwn" placeholder="e.g. May 11-17" style="width:150px" oninput="updCL()">
+    </div>
+  </div>
+  <div class="sl">&#128181; Daily Cash</div>
+  <div class="ccl"><span></span><span style="color:var(--ac)">Matheus ($)</span><span style="color:var(--bl)">Luiz ($)</span><span style="color:var(--t3)">Note</span></div>
+  <div class="cg" id="cg"></div>
+  <div class="sl">&#9878;&#65039; Settlement</div>
+  <div class="set" id="setbox"><div class="set-t">settlement summary</div><div class="emp" style="padding:12px">Enter amounts above</div></div>
+  <div class="bg">
+    <button class="btn bp" onclick="saveC()">&#128190; Save</button>
+    <button class="btn bs" onclick="clearC()">&#8635; Clear</button>
+    <button class="btn bd" id="cdelbtn" onclick="delC()" style="display:none">&#128465; Delete</button>
+  </div>
+  <div class="sl">saved cash weeks &mdash; click to edit</div>
+  <div class="ws" id="cwsel"></div>
+  <div class="st">cash split history</div>
+  <div class="tw"><table>
+    <thead><tr><th>Week</th><th>Matheus held</th><th>Luiz held</th><th>Total</th><th>Each gets</th><th>Transfer</th></tr></thead>
+    <tbody id="chtb"></tbody>
+  </table></div>
+</div>
+
+<!-- REPORT -->
+<div class="pn" id="tab-report">
+  <div class="rsb">
+    <label>Select week:</label>
+    <select id="rsel" onchange="renderR()"><option value="">-- choose a week --</option></select>
+    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn bp" onclick="printR('boss')">&#128196; Save PDF &mdash; Farber</button>
+      <button class="btn bs" onclick="printR('luiz')">&#128196; Save PDF &mdash; Luiz</button>
+    </div>
+  </div>
+  <div class="rtbs">
+    <button class="rt on" onclick="goRT('vis',this)">&#128196; Visual Report</button>
+    <button class="rt" onclick="goRT('wab',this)">&#128241; WhatsApp &mdash; Boss</button>
+    <button class="rt" onclick="goRT('wal',this)">&#128241; WhatsApp &mdash; Luiz</button>
+  </div>
+  <div class="rp active" id="rp-vis">
+    <div class="rc" id="rcB"><div class="emp" style="padding:40px">Select a week above</div></div>
+    <div style="text-align:center;padding:5px 0;font-size:10px;color:var(--t3);letter-spacing:2px;text-transform:uppercase">-- Luiz section below (separate PDF) --</div>
+    <div class="rc" id="rcL" style="display:none"></div>
+  </div>
+  <div class="rp" id="rp-wab">
+    <div class="wac"><h3>&#128241; WhatsApp &mdash; Boss</h3><div class="wat" id="waB">Select a week above</div><button class="wcb" onclick="cpWA('waB',this)">&#128203; Copy</button></div>
+  </div>
+  <div class="rp" id="rp-wal">
+    <div class="wac"><h3>&#128241; WhatsApp &mdash; Luiz</h3><div class="wat" id="waL">Select a week above</div><button class="wcb" onclick="cpWA('waL',this)">&#128203; Copy</button></div>
+  </div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SB="https://icatgbqspkbwzjqtaaoz.supabase.co";
+const SK="sb_publishable_xPJhpYqpIG9jsxLcoD7jJw_2LXUWbI4";
+let db={weeks:[],cashWeeks:[]},eId=null,ceId=null,whoS={};
+
+async function req(m,p,b){
+  const h={"Content-Type":"application/json","apikey":SK,"Authorization":"Bearer "+SK};
+  if(m==="POST")h["Prefer"]="resolution=merge-duplicates,return=minimal";
+  const r=await fetch(SB+"/rest/v1"+p,{method:m,headers:h,body:b?JSON.stringify(b):undefined});
+  if(!r.ok){const e=await r.text();throw new Error(e);}
+  const t=await r.text();return t?JSON.parse(t):null;
+}
+async function load(retry){
+  ss("ld","syncing...");
+  try{
+    const[w,c]=await Promise.all([req("GET","/weeks?select=*&order=saved_at.desc"),req("GET","/cash_weeks?select=*&order=saved_at.desc")]);
+    db.weeks=(w||[]).map(r=>({...r.data,id:r.id,name:r.name,savedAt:r.saved_at}));
+    db.cashWeeks=(c||[]).map(r=>({...r.data,id:r.id,name:r.name,savedAt:r.saved_at}));
+    ss("ok","synced");
+    rDash();rWSel();rCHist();rCWSel();fillR();
+    const ap=document.querySelector(".pn.active");
+    if(ap&&ap.id==="tab-entry"&&!eId&&db.weeks.length)lwk(latW().id);
+    if(ap&&ap.id==="tab-cash"&&!ceId&&db.cashWeeks.length)lcw(latCW().id);
+    if(ap&&ap.id==="tab-report")renderR();
+  }catch(e){
+    if(!retry||retry<2){ss("ld","retrying...");setTimeout(()=>load((retry||0)+1),1500);}
+    else ss("err","offline");
+  }
+}
+async function pw(w){ss("ld","saving...");try{await req("POST","/weeks",{id:w.id,name:w.name,data:w,saved_at:w.savedAt});ss("ok","saved");}catch(e){ss("err","save failed");throw e;}}
+async function pc(w){ss("ld","saving...");try{await req("POST","/cash_weeks",{id:w.id,name:w.name,data:w,saved_at:w.savedAt});ss("ok","saved");}catch(e){ss("err","save failed");throw e;}}
+function ss(c,t){document.getElementById("dot").className="dot "+c;document.getElementById("st").textContent=t;}
+
+const DAYS=[{id:"mon",l:"Monday"},{id:"tue",l:"Tuesday"},{id:"wed",l:"Wednesday"},{id:"thu",l:"Thursday"},{id:"fri",l:"Friday"},{id:"sat",l:"Saturday"},{id:"sun",l:"Sunday"}];
+function pH(s){if(!s||!s.trim())return 0;s=s.trim().replace(",",".");if(s.includes(":")){const[h,m]=s.split(":").map(Number);return(h||0)+(m||0)/60;}return parseFloat(s)||0;}
+function f$(n){if(n==null)return"$-";const a=Math.abs(n),sg=n<0?"-":"";return sg+"$"+a.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,",");}
+function fH(h){if(!h)return"0:00";const hh=Math.floor(h),mm=Math.round((h-hh)*60);return hh+":"+(mm<10?"0":"")+mm;}
+function latW(){return[...db.weeks].sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt))[0];}
+function latCW(){return[...db.cashWeeks].sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt))[0];}
+
+function cW(w){
+  let tr=0,mah=0,fpkh=0,comp=0;
+  Object.values(w.days).forEach(d=>{tr+=d.tips||0;mah+=pH(d.hours);fpkh+=pH(d.ev);});
+  comp=(w.purchases||[]).reduce((s,p)=>s+(p.amt||0),0);
+  const tips=(tr+(w.venmo||0))/2,payMA=mah*14,payFPK=fpkh*18;
+  return{tips,tr,payMA,payFPK,mah,fpkh,totalHrs:mah+fpkh,comp,myProfit:tips+payMA+payFPK,farberOwes:payMA+payFPK};
+}
+function cC(w){
+  let me=0,luiz=0;
+  Object.values(w.days).forEach(d=>{me+=d.me||0;luiz+=d.luiz||0;});
+  const total=me+luiz,each=total/2,diff=me-each;
+  return{me,luiz,total,each,diff};
+}
+
+function buildDG(){
+  document.getElementById("dg").innerHTML=DAYS.map(d=>`
+    <div class="dr">
+      <div class="dn">${d.l.slice(0,3)}</div>
+      <div class="ft1"><input type="number" id="${d.id}_t" placeholder="full amt" step="0.01" oninput="recalc();syncC()"></div>
+      <div class="wt">
+        <div class="wtb">
+          <button class="wb wm" id="${d.id}_wm" onclick="sWho('${d.id}','me')">M</button>
+          <button class="wb wl" id="${d.id}_wl" onclick="sWho('${d.id}','luiz')">L</button>
+          <button class="wb wh" id="${d.id}_wh" onclick="sWho('${d.id}','half')">1/2</button>
+        </div>
+        <div class="caw" id="${d.id}_caw"><input type="number" id="${d.id}_ca" placeholder="amt" step="0.01" oninput="syncC()"></div>
+      </div>
+      <div class="ft2"><input type="text" id="${d.id}_h" placeholder="8:00" oninput="recalc()"></div>
+      <div class="ft3"><input type="text" id="${d.id}_loc" placeholder="location"></div>
+      <div class="ft4"><input type="text" id="${d.id}_ev" placeholder="h:mm" oninput="recalc()"></div>
+    </div>`).join("");
+}
+function buildCG(){
+  document.getElementById("cg").innerHTML=DAYS.map(d=>`
+    <div class="cr">
+      <div class="cd">${d.l.slice(0,3)}</div>
+      <div><input type="number" id="c_${d.id}_m" placeholder="0.00" step="0.01" oninput="recalcC()" style="border-left:3px solid rgba(45,106,79,.4)"></div>
+      <div><input type="number" id="c_${d.id}_l" placeholder="0.00" step="0.01" oninput="recalcC()" style="border-left:3px solid rgba(26,74,122,.4)"></div>
+      <div><input type="text" id="c_${d.id}_n" placeholder="note..."></div>
+    </div>`).join("");
+}
+
+function sWho(id,w){
+  whoS[id]=w;
+  ["me","luiz","half"].forEach(x=>{const b=document.getElementById(id+"_w"+x[0]);if(b)b.classList.toggle("on",x===w);});
+  const caw=document.getElementById(id+"_caw");
+  if(caw){
+    caw.style.display=w?"flex":"none";
+    const ca=document.getElementById(id+"_ca");
+    if(ca&&!ca.value){const tv=parseFloat(document.getElementById(id+"_t")?.value||0)||0;if(tv)ca.value=tv;}
+  }
+  syncC();
+}
+function syncC(){
+  DAYS.forEach(d=>{
+    const w=whoS[d.id]||"";
+    const cv=parseFloat(document.getElementById(d.id+"_ca")?.value||0)||0;
+    const tv=parseFloat(document.getElementById(d.id+"_t")?.value||0)||0;
+    const amt=cv||tv||0;
+    const mel=document.getElementById("c_"+d.id+"_m");
+    const ll=document.getElementById("c_"+d.id+"_l");
+    if(!mel||!ll)return;
+    if(w==="me"){mel.value=amt||"";ll.value="";}
+    else if(w==="luiz"){mel.value="";ll.value=amt||"";}
+    else if(w==="half"){mel.value=amt?(amt/2).toFixed(2):"";ll.value=amt?(amt/2).toFixed(2):"";}
+    else{mel.value="";ll.value="";}
+  });
+  recalcC();
+}
+function getPT(){let t=0;document.querySelectorAll(".pamt").forEach(i=>t+=parseFloat(i.value||0)||0);return t;}
+function recalc(){
+  let tr=0,mah=0,fpkh=0;
+  DAYS.forEach(d=>{tr+=parseFloat(document.getElementById(d.id+"_t")?.value||0)||0;mah+=pH(document.getElementById(d.id+"_h")?.value);fpkh+=pH(document.getElementById(d.id+"_ev")?.value);});
+  const vr=parseFloat(document.getElementById("ven")?.value||0)||0;
+  const comp=getPT(),tips=(tr+vr)/2,payMA=mah*14,payFPK=fpkh*18,myP=tips+payMA+payFPK,fO=payMA+payFPK;
+  const pe=document.getElementById("ptot");if(pe)pe.textContent=comp>0?"Total purchases: "+f$(comp):"";
+  document.getElementById("tp").innerHTML=
+    "<div class=ti><div class=tl>Tips (your 1/2)</div><div class='tv g'>"+f$(tips)+"</div><div class=ts>full: "+f$(tr+vr)+"</div></div>"+
+    "<div class=ti><div class=tl>Payment MA</div><div class='tv g'>"+f$(payMA)+"</div><div class=ts>"+fH(mah)+" x $14</div></div>"+
+    "<div class=ti><div class=tl>FPK Events</div><div class='tv o'>"+f$(payFPK)+"</div><div class=ts>"+fH(fpkh)+" x $18</div></div>"+
+    "<div class=ti><div class=tl>Total Hours</div><div class='tv b'>"+fH(mah+fpkh)+"</div></div>"+
+    "<div class=ti><div class=tl>Purchases</div><div class='tv r'>"+f$(comp)+"</div><div class=ts>not in profit</div></div>"+
+    "<div class=ti style='border-left:3px solid var(--ac);padding-left:8px'><div class=tl>My Profit</div><div class='tv g'>"+f$(myP)+"</div><div class=ts>tips+MA+FPK</div></div>"+
+    "<div class=ti style='border-left:3px solid var(--or);padding-left:8px'><div class=tl>Farber Owes Me</div><div class='tv o'>"+f$(fO)+"</div><div class=ts>MA+FPK only</div></div>";
+}
+function recalcC(){
+  let me=0,luiz=0;
+  DAYS.forEach(d=>{me+=parseFloat(document.getElementById("c_"+d.id+"_m")?.value||0)||0;luiz+=parseFloat(document.getElementById("c_"+d.id+"_l")?.value||0)||0;});
+  const total=me+luiz,each=total/2,diff=me-each;
+  const box=document.getElementById("setbox");
+  if(total===0){box.innerHTML="<div class=set-t>settlement summary</div><div class=emp style=padding:12px>Enter amounts above</div>";return;}
+  let vd="";
+  if(Math.abs(diff)<0.01)vd="<div class=vd><span class='vw g'>All even! No transfer needed.</span></div>";
+  else if(diff>0)vd="<div class=vd><span class='vw g'>Matheus</span> pays <span class='va o'>"+f$(diff)+"</span> to <span class='vw b'>Luiz</span></div>";
+  else vd="<div class=vd><span class='vw b'>Luiz</span> pays <span class='va o'>"+f$(Math.abs(diff))+"</span> to <span class='vw g'>Matheus</span></div>";
+  box.innerHTML="<div class=set-t>settlement summary</div>"+
+    "<div class=sg><div class=sb><div class=sn>Matheus holds</div><div class='sv g'>"+f$(me)+"</div><div class=ss>should have "+f$(each)+"</div></div>"+
+    "<div class=sb><div class=sn>Luiz holds</div><div class='sv b'>"+f$(luiz)+"</div><div class=ss>should have "+f$(each)+"</div></div>"+
+    "<div class=sb><div class=sn>Total pool</div><div class='sv o'>"+f$(total)+"</div><div class=ss>each: "+f$(each)+"</div></div></div>"+vd;
+}
+
+let pId=0;
+function addP(desc,amt){
+  const list=document.getElementById("pl"),id="p"+(pId++),div=document.createElement("div");
+  div.className="pi";div.id=id;
+  div.innerHTML="<input type=text class=pdesc placeholder=Description value='"+(desc||"").replace(/'/g,"&#39;")+"'>"
+    +"<input type=number class=pamt placeholder=0.00 step=0.01 value='"+(amt||"")+"' oninput=recalc()>"
+    +"<button class=xb onclick='rP(this)' data-pid='"+id+"'>x</button>";
+  list.appendChild(div);recalc();
+}
+function rP(btn){var id=btn.getAttribute("data-pid");const e=document.getElementById(id);if(e)e.remove();recalc();}
+function gPI(){const i=[];document.querySelectorAll(".pi").forEach(r=>{const d=r.querySelector(".pdesc")?.value||"",a=parseFloat(r.querySelector(".pamt")?.value||0)||0;if(d||a)i.push({desc:d,amt:a});});return i;}
+
+function gF(){
+  const name=document.getElementById("wn").value.trim(),days={};
+  DAYS.forEach(d=>{days[d.id]={tips:parseFloat(document.getElementById(d.id+"_t").value)||0,hours:document.getElementById(d.id+"_h").value||"",loc:document.getElementById(d.id+"_loc").value||"",ev:document.getElementById(d.id+"_ev").value||"",cashWho:whoS[d.id]||"",cashAmt:parseFloat(document.getElementById(d.id+"_ca")?.value||0)||0};});
+  return{name,days,venmo:parseFloat(document.getElementById("ven").value)||0,purchases:gPI(),savedAt:new Date().toISOString()};
+}
+async function saveW(){
+  const data=gF();if(!data.name){toast("Enter the week period!");return;}
+  if(eId){const i=db.weeks.findIndex(w=>w.id===eId);if(i>=0){data.id=eId;db.weeks[i]=data;}else{data.id=Date.now()+"";eId=data.id;db.weeks.push(data);}}
+  else{data.id=Date.now()+"";eId=data.id;db.weeks.push(data);}
+  const cd={};DAYS.forEach(d=>{const w=data.days[d.id].cashWho||"",a=data.days[d.id].cashAmt||data.days[d.id].tips||0;let me=0,luiz=0;if(w==="me")me=a;else if(w==="luiz")luiz=a;else if(w==="half"){me=a/2;luiz=a/2;}cd[d.id]={me,luiz,note:""};});
+  const ex=db.cashWeeks.find(w=>w.name===data.name);let co;
+  if(ex){const ci=db.cashWeeks.findIndex(w=>w.name===data.name);co={...ex,days:cd,savedAt:data.savedAt};db.cashWeeks[ci]=co;}
+  else{co={id:"c"+Date.now(),name:data.name,days:cd,savedAt:data.savedAt};db.cashWeeks.push(co);}
+  try{await pw(data);await pc(co);toast("Week saved!");}catch(e){toast("Save error!");}
+  rDash();rWSel();rCHist();rCWSel();fillR();
+  document.getElementById("delbtn").style.display="block";
+}
+async function delW(){
+  if(!eId||!confirm("Delete this week?"))return;
+  const id=eId;db.weeks=db.weeks.filter(w=>w.id!==id);
+  try{await req("DELETE","/weeks?id=eq."+encodeURIComponent(id));}catch(e){}
+  toast("Deleted.");eId=null;rDash();rWSel();fillR();clearW();
+}
+function lwk(id){
+  const w=db.weeks.find(w=>w.id===id);if(!w)return;
+  eId=id;document.getElementById("wn").value=w.name;document.getElementById("wlb").textContent=w.name;
+  DAYS.forEach(d=>{const v=w.days[d.id]||{};
+    document.getElementById(d.id+"_t").value=v.tips||"";document.getElementById(d.id+"_h").value=v.hours||"";
+    document.getElementById(d.id+"_loc").value=v.loc||"";document.getElementById(d.id+"_ev").value=v.ev||"";
+    whoS[d.id]="";["me","luiz","half"].forEach(x=>{const b=document.getElementById(d.id+"_w"+x[0]);if(b)b.classList.remove("on");});
+    const caw=document.getElementById(d.id+"_caw");if(caw)caw.style.display="none";
+    const ca=document.getElementById(d.id+"_ca");if(ca)ca.value=v.cashAmt||"";
+    if(v.cashWho)sWho(d.id,v.cashWho);
+  });
+  document.getElementById("ven").value=w.venmo||"";document.getElementById("pl").innerHTML="";
+  (w.purchases||[]).forEach(p=>addP(p.desc,p.amt));
+  document.getElementById("delbtn").style.display="block";rWSel();recalc();
+}
+function clearW(){
+  eId=null;document.getElementById("wn").value="";document.getElementById("wlb").textContent="--";
+  document.getElementById("ven").value="";document.getElementById("delbtn").style.display="none";
+  DAYS.forEach(d=>{["_t","_h","_loc","_ev","_ca"].forEach(s=>{const e=document.getElementById(d.id+s);if(e)e.value="";});
+    whoS[d.id]="";["me","luiz","half"].forEach(x=>{const b=document.getElementById(d.id+"_w"+x[0]);if(b)b.classList.remove("on");});
+    const c=document.getElementById(d.id+"_caw");if(c)c.style.display="none";});
+  document.getElementById("pl").innerHTML="";rWSel();recalc();
+}
+function updL(){document.getElementById("wlb").textContent=document.getElementById("wn").value||"--";}
+
+function gCF(){
+  const name=document.getElementById("cwn").value.trim(),days={};
+  DAYS.forEach(d=>{days[d.id]={me:parseFloat(document.getElementById("c_"+d.id+"_m").value)||0,luiz:parseFloat(document.getElementById("c_"+d.id+"_l").value)||0,note:document.getElementById("c_"+d.id+"_n").value||""};});
+  return{name,days,savedAt:new Date().toISOString()};
+}
+async function saveC(){
+  const data=gCF();if(!data.name){toast("Enter the week period!");return;}
+  if(ceId){const i=db.cashWeeks.findIndex(w=>w.id===ceId);if(i>=0){data.id=ceId;db.cashWeeks[i]=data;}else{data.id="c"+Date.now();ceId=data.id;db.cashWeeks.push(data);}}
+  else{data.id="c"+Date.now();ceId=data.id;db.cashWeeks.push(data);}
+  try{await pc(data);toast("Cash saved!");}catch(e){toast("Save error!");}
+  rCHist();rCWSel();document.getElementById("cdelbtn").style.display="block";
+}
+async function delC(){
+  if(!ceId||!confirm("Delete?"))return;
+  const id=ceId;db.cashWeeks=db.cashWeeks.filter(w=>w.id!==id);
+  try{await req("DELETE","/cash_weeks?id=eq."+encodeURIComponent(id));}catch(e){}
+  toast("Deleted.");ceId=null;rCHist();rCWSel();clearC();
+}
+function lcw(id){
+  const w=db.cashWeeks.find(w=>w.id===id);if(!w)return;
+  ceId=id;document.getElementById("cwn").value=w.name;document.getElementById("clb").textContent=w.name;
+  DAYS.forEach(d=>{const v=w.days[d.id]||{};document.getElementById("c_"+d.id+"_m").value=v.me||"";document.getElementById("c_"+d.id+"_l").value=v.luiz||"";document.getElementById("c_"+d.id+"_n").value=v.note||"";});
+  document.getElementById("cdelbtn").style.display="block";rCWSel();recalcC();
+}
+function clearC(){
+  ceId=null;document.getElementById("cwn").value="";document.getElementById("clb").textContent="--";
+  document.getElementById("cdelbtn").style.display="none";
+  DAYS.forEach(d=>{["_m","_l","_n"].forEach(s=>{const e=document.getElementById("c_"+d.id+s);if(e)e.value="";});});
+  rCWSel();recalcC();
+}
+function updCL(){document.getElementById("clb").textContent=document.getElementById("cwn").value||"--";}
+
+function rDash(){
+  const wks=db.weeks;document.getElementById("wc").textContent=wks.length;
+  let tT=0,tMA=0,tFPK=0,tC=0,tP=0,tH=0;const profs=[];
+  wks.forEach(w=>{const t=cW(w);tT+=t.tips;tMA+=t.payMA;tFPK+=t.payFPK;tC+=t.comp;tP+=t.myProfit;tH+=t.totalHrs;profs.push(t.myProfit);});
+  const avg=wks.length?tP/wks.length:0;
+  const fT=wks.reduce((s,w)=>s+Object.values(w.days).reduce((a,d)=>a+(d.tips||0),0)+(w.venmo||0),0);
+  document.getElementById("kpi").innerHTML=
+    "<div class=kpi style='--kc:var(--ac)'><div class=kl>My Total Profit</div><div class=kv>"+f$(tP)+"</div><div class=ks>"+wks.length+" weeks</div></div>"+
+    "<div class=kpi style='--kc:var(--ac)'><div class=kl>Payment MA</div><div class=kv>"+f$(tMA)+"</div><div class=ks>$14/hr</div></div>"+
+    "<div class=kpi style='--kc:var(--or)'><div class=kl>Tips (your 1/2)</div><div class=kv>"+f$(tT)+"</div><div class=ks>full: "+f$(fT)+"</div></div>"+
+    "<div class=kpi style='--kc:var(--bl)'><div class=kl>Total Hours</div><div class=kv>"+fH(tH)+"</div><div class=ks>all weeks</div></div>"+
+    "<div class=kpi style='--kc:var(--bl)'><div class=kl>Weekly Average</div><div class=kv>"+f$(avg)+"</div><div class=ks>profit/week</div></div>"+
+    "<div class=kpi style='--kc:var(--re)'><div class=kl>Total Purchases</div><div class=kv>"+f$(tC)+"</div><div class=ks>reimbursements</div></div>";
+  const tb=document.getElementById("wtb");
+  if(!wks.length){tb.innerHTML="<tr><td colspan=9 class=emp>No weeks yet -- go to Weekly Entry to start</td></tr>";return;}
+  const mx=Math.max(...profs);
+  tb.innerHTML=[...wks].reverse().map(w=>{
+    const t=cW(w),df=avg?(t.myProfit-avg)/avg*100:0,bar=mx?Math.round(t.myProfit/mx*100):0;
+    return "<tr onclick='lwk(this.dataset.id)' data-id='"+w.id+"'>"+
+      "<td><span class=tg>"+(w.name||w.id)+"</span></td>"+
+      "<td class='mn g'>"+f$(t.payMA)+"</td><td class='mn o'>"+f$(t.tips)+"</td>"+
+      "<td class='mn' style='color:var(--or)'>"+f$(t.payFPK)+"</td>"+
+      "<td class='mn b'>"+fH(t.totalHrs)+"</td><td class='mn g'>"+f$(t.myProfit)+"</td>"+
+      "<td class='mn r'>"+(t.comp?f$(t.comp):"--")+"</td>"+
+      "<td class='mn o' style='font-weight:700'>"+f$(t.farberOwes)+"</td>"+
+      "<td><div style='display:flex;align-items:center;gap:8px'><div style='background:var(--bg2);border-radius:99px;height:5px;width:70px;display:inline-block;vertical-align:middle'><div style='height:5px;border-radius:99px;background:var(--bl);width:"+bar+"%'></div></div>"+(df>=0?"<span class=g>+"+df.toFixed(0)+"%</span>":"<span class=r>"+df.toFixed(0)+"%</span>")+"</div></td>"+
+      "</tr>";
+  }).join("");
+}
+function rWSel(){
+  const s=document.getElementById("wsel");
+  if(!db.weeks.length){s.innerHTML="<span style='font-size:12px;color:var(--t3)'>No saved weeks yet</span>";return;}
+  s.innerHTML=[...db.weeks].reverse().map(w=>"<button class='wp"+(eId===w.id?" on":"")+"' data-id='"+w.id+"' onclick='lwk(this.dataset.id)'>"+(w.name||w.id)+"</button>").join("");
+}
+function rCHist(){
+  const tb=document.getElementById("chtb");
+  if(!db.cashWeeks.length){tb.innerHTML="<tr><td colspan=6 class=emp>No cash weeks yet</td></tr>";return;}
+  tb.innerHTML=[...db.cashWeeks].reverse().map(w=>{
+    const t=cC(w);
+    const res=Math.abs(t.diff)<0.01?"<span class=g>Even</span>":t.diff>0?"<span class=o>Matheus pays Luiz "+f$(t.diff)+"</span>":"<span class=b>Luiz pays Matheus "+f$(Math.abs(t.diff))+"</span>";
+    return "<tr onclick='lcw(this.dataset.id)' data-id='"+w.id+"'><td><span class=tg>"+(w.name||w.id)+"</span></td><td class='mn g'>"+f$(t.me)+"</td><td class='mn b'>"+f$(t.luiz)+"</td><td class='mn o'>"+f$(t.total)+"</td><td class=mn>"+f$(t.each)+"</td><td>"+res+"</td></tr>";
+  }).join("");
+}
+function rCWSel(){
+  const s=document.getElementById("cwsel");
+  if(!db.cashWeeks.length){s.innerHTML="<span style='font-size:12px;color:var(--t3)'>No saved weeks yet</span>";return;}
+  s.innerHTML=[...db.cashWeeks].reverse().map(w=>"<button class='wp"+(ceId===w.id?" on":"")+"' data-id='"+w.id+"' onclick='lcw(this.dataset.id)'>"+(w.name||w.id)+"</button>").join("");
+}
+
+function fillR(){
+  const s=document.getElementById("rsel");const cur=s.value;
+  s.innerHTML="<option value=''>-- choose a week --</option>";
+  [...db.weeks].reverse().forEach(w=>{const o=document.createElement("option");o.value=w.id;o.textContent=w.name||w.id;s.appendChild(o);});
+  if(cur)s.value=cur;else if(db.weeks.length){const l=latW();if(l)s.value=l.id;}
+}
+
+function renderR(){
+  const s=document.getElementById("rsel");
+  if(!s.value&&db.weeks.length){const l=latW();if(l)s.value=l.id;}
+  if(!s.value)return;
+  const w=db.weeks.find(w=>w.id===s.value);if(!w)return;
+  const t=cW(w),ct_raw=db.cashWeeks.find(c=>c.name===w.name)||null,ct=ct_raw?cC(ct_raw):null;
+  const today=new Date().toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  const purch=w.purchases||[];
+
+  // --- BOSS CARD ---
+  let rows="";
+  DAYS.forEach(d=>{
+    const v=w.days[d.id]||{};
+    const mah=pH(v.hours),fpkh=pH(v.ev),daily=mah*14+fpkh*18;
+    if(!mah&&!fpkh)return;
+    rows+="<tr><td style='font-weight:600;color:#333;padding:8px 10px'>"+d.l+"</td>"+
+      "<td style='font-family:monospace;padding:8px 10px'>"+(v.hours||"--")+"</td>"+
+      "<td style='color:#555;padding:8px 10px'>"+(mah>0?"$14.00":"--")+"</td>"+
+      "<td style='padding:8px 10px'>"+(v.loc||"--")+"</td>"+
+      "<td style='font-family:monospace;padding:8px 10px'>"+(v.ev||"--")+"</td>"+
+      "<td style='color:#555;padding:8px 10px'>"+(fpkh>0?"$18.00":"--")+"</td>"+
+      "<td style='color:#2d6a4f;font-weight:600;font-family:monospace;padding:8px 10px'>"+f$(daily)+"</td></tr>";
+  });
+  if(w.venmo)rows+="<tr style='background:#e8f4ef'><td style='font-style:italic;color:#6b6860;padding:8px 10px'>Venmo/Card</td><td colspan=5 style='padding:8px 10px'>--</td><td style='color:#2d6a4f;font-weight:600;font-family:monospace;padding:8px 10px'>"+f$(w.venmo/2)+" <span style='color:#555;font-size:11px'>(full: "+f$(w.venmo)+")</span></td></tr>";
+  let pHTML="";
+  if(purch.length){
+    pHTML="<div style='margin-bottom:16px'><div style='font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#444;margin-bottom:8px'>Purchases / Reimbursements</div>";
+    purch.forEach(p=>{pHTML+="<div style='display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eeecea;font-size:13px'><span>"+p.desc+"</span><span style='color:#c0392b;font-family:monospace'>"+f$(p.amt)+"</span></div>";});
+    pHTML+="<div style='display:flex;justify-content:space-between;padding-top:8px;font-weight:700;font-size:13px;border-top:2px solid #dddbd7'><span>Total reimbursements</span><span style='color:#c0392b;font-family:monospace'>"+f$(t.comp)+"</span></div></div>";
+  }
+  const bossHTML="<div style='font-family:Inter,sans-serif;color:#1a1916'>"+
+    "<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #eeecea'>"+
+    "<div><div style='font-size:22px;font-weight:700'>Matheus <span style='color:#2d6a4f'>Ferian</span></div><div style='font-family:monospace;font-size:13px;color:#444;margin-top:3px'>Week: "+w.name+"</div></div>"+
+    "<div style='text-align:right'><div style='font-size:16px;font-weight:700'>Work Hours Report</div><div style='font-size:11px;color:#666;letter-spacing:1px;text-transform:uppercase;margin-top:2px'>Farber Parking &middot; "+today+"</div></div></div>"+
+    "<table style='width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13px'>"+
+    "<thead><tr style='background:#eeecea'>"+
+    "<th style='text-align:left;padding:8px 10px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555'>Day</th>"+
+    "<th style='text-align:left;padding:8px 10px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555'>MA Hours</th>"+
+    "<th style='text-align:left;padding:8px 10px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555'>$/Hr</th>"+
+    "<th style='text-align:left;padding:8px 10px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555'>FPK Location</th>"+
+    "<th style='text-align:left;padding:8px 10px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555'>FPK Hours</th>"+
+    "<th style='text-align:left;padding:8px 10px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555'>$/Hr</th>"+
+    "<th style='text-align:left;padding:8px 10px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555'>Daily Total</th>"+
+    "</tr></thead><tbody>"+rows+
+    "<tr style='font-weight:700;border-top:2px solid #dddbd7'><td style='padding:10px'>TOTAL</td>"+
+    "<td style='padding:10px;font-family:monospace'>"+fH(t.mah)+"</td><td style='padding:10px'>--</td><td style='padding:10px'>--</td>"+
+    "<td style='padding:10px;font-family:monospace'>"+fH(t.fpkh)+"</td><td style='padding:10px'>--</td>"+
+    "<td style='padding:10px;color:#c96a1a;font-family:monospace;font-weight:700'>"+f$(t.farberOwes)+"</td></tr></tbody></table>"+
+    "<div style='display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px'>"+
+    "<div style='background:#eeecea;border-radius:8px;padding:11px;border-top:3px solid #2d6a4f'><div style='font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>Makers Air</div><div style='font-family:monospace;font-size:16px;font-weight:500;color:#2d6a4f'>"+f$(t.payMA)+"</div><div style='font-size:11px;color:#666;margin-top:3px'>"+fH(t.mah)+" x $14</div></div>"+
+    "<div style='background:#eeecea;border-radius:8px;padding:11px;border-top:3px solid #c96a1a'><div style='font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>FPK Events</div><div style='font-family:monospace;font-size:16px;font-weight:500;color:#c96a1a'>"+f$(t.payFPK)+"</div><div style='font-size:11px;color:#666;margin-top:3px'>"+fH(t.fpkh)+" x $18</div></div>"+
+    "<div style='background:#eeecea;border-radius:8px;padding:11px;border-top:3px solid #1a4a7a'><div style='font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>Total Hours</div><div style='font-family:monospace;font-size:16px;font-weight:500;color:#1a4a7a'>"+fH(t.totalHrs)+"</div><div style='font-size:11px;color:#666;margin-top:3px'>MA "+fH(t.mah)+" + FPK "+fH(t.fpkh)+"</div></div>"+
+    "<div style='background:#eeecea;border-radius:8px;padding:11px;border-top:3px solid #c0392b'><div style='font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>Reimbursements</div><div style='font-family:monospace;font-size:16px;font-weight:500;color:#c0392b'>"+(t.comp?f$(t.comp):"$0.00")+"</div></div>"+
+    "<div style='background:#fef3e8;border-radius:8px;padding:11px;border-top:3px solid #c96a1a'>"
+    +"<div style='font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>Farber Owes (work)</div>"
+    +"<div style='font-family:monospace;font-size:14px;font-weight:600;color:#c96a1a'>"+f$(t.farberOwes)+"</div>"
+    +(t.comp>0
+      ?"<div style='font-size:11px;color:#555;margin-top:5px;font-family:monospace'>+ Reimb. "+f$(t.comp)+"</div>"
+       +"<div style='font-family:monospace;font-size:18px;font-weight:700;color:#c96a1a;border-top:1px solid rgba(201,106,26,.25);margin-top:6px;padding-top:6px'>= "+f$(t.farberOwes+t.comp)+"</div>"
+      :"")
+    +"</div>"+
+    "</div>"+pHTML+
+    "<div style='margin-top:16px;padding-top:12px;border-top:1px solid #eeecea;display:flex;justify-content:space-between'><span style='font-size:11px;color:#666'>Generated "+today+"</span><span style='font-size:12px;font-weight:600;color:#333'>Matheus Ferian</span></div></div>";
+  document.getElementById("rcB").innerHTML=bossHTML;
+
+  // --- LUIZ CARD ---
+  if(ct){
+    let vd="";
+    if(Math.abs(ct.diff)<0.01)vd="<div style='font-weight:700;color:#2d6a4f;font-size:18px'>All even - no transfer needed</div>";
+    else if(ct.diff>0)vd="<span style='font-size:16px;font-weight:700;color:#2d6a4f'>Matheus</span> pays <span style='font-family:monospace;font-size:22px;font-weight:700;color:#c96a1a'>"+f$(ct.diff)+"</span> to <span style='font-size:16px;font-weight:700;color:#1a4a7a'>Luiz</span>";
+    else vd="<span style='font-size:16px;font-weight:700;color:#1a4a7a'>Luiz</span> pays <span style='font-family:monospace;font-size:22px;font-weight:700;color:#c96a1a'>"+f$(Math.abs(ct.diff))+"</span> to <span style='font-size:16px;font-weight:700;color:#2d6a4f'>Matheus</span>";
+    const luizHTML="<div style='font-family:Inter,sans-serif;color:#1a1916'>"+
+      "<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #eeecea'>"+
+      "<div><div style='font-size:22px;font-weight:700'>Tips Split <span style='color:#1a4a7a'>— Luiz</span></div><div style='font-family:monospace;font-size:13px;color:#444;margin-top:3px'>Week: "+w.name+"</div></div>"+
+      "<div style='text-align:right;font-size:11px;color:#555'>"+today+"</div></div>"+
+      "<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px'>"+
+      "<div style='background:#e8f4ef;border-radius:10px;padding:14px;border:1px solid rgba(45,106,79,.25)'><div style='font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>Matheus holds</div><div style='font-family:monospace;font-size:20px;font-weight:500;color:#2d6a4f'>"+f$(ct.me)+"</div><div style='font-size:11px;color:#666;margin-top:3px'>should have "+f$(ct.each)+"</div></div>"+
+      "<div style='background:#e8f0fa;border-radius:10px;padding:14px;border:1px solid rgba(26,74,122,.2)'><div style='font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>Luiz holds</div><div style='font-family:monospace;font-size:20px;font-weight:500;color:#1a4a7a'>"+f$(ct.luiz)+"</div><div style='font-size:11px;color:#666;margin-top:3px'>should have "+f$(ct.each)+"</div></div></div>"+
+      "<div style='background:#fef3e8;border:1px solid rgba(201,106,26,.25);border-radius:10px;padding:16px;text-align:center'>"+
+      "<div style='font-size:12px;color:#6b6860;margin-bottom:6px'>Total pool: "+f$(ct.total)+" &middot; Each gets: "+f$(ct.each)+"</div>"+
+      "<div style='font-family:monospace;font-size:26px;font-weight:700;color:#c96a1a;margin:8px 0'>"+f$(ct.each)+"</div>"+
+      vd+"</div>"+
+      "<div style='margin-top:16px;padding-top:12px;border-top:1px solid #eeecea;display:flex;justify-content:space-between'><span style='font-size:11px;color:#666'>Generated "+today+"</span><span style='font-size:12px;font-weight:600;color:#333'>Matheus Ferian</span></div></div>";
+    document.getElementById("rcL").style.display="block";
+    document.getElementById("rcL").innerHTML=luizHTML;
+  } else {
+    document.getElementById("rcL").style.display="none";
+  }
+
+  // --- WHATSAPP BOSS (no tips, hours + amounts + farber owes) ---
+  const wbLines=["*Work Report - Week "+w.name+"*","================================",""];
+  wbLines.push("*Total Hours: "+fH(t.totalHrs)+"*","");
+  wbLines.push("*Makers Air:*","  Hours: "+fH(t.mah)+" x $14.00","  Amount: "+f$(t.payMA),"");
+  if(t.fpkh>0){
+    wbLines.push("*FPK Events:*");
+    DAYS.forEach(d=>{const v=w.days[d.id]||{};if(pH(v.ev)>0)wbLines.push("  "+d.l+": "+(v.loc||"--")+" - "+v.ev+" hrs");});
+    wbLines.push("  Amount: "+f$(t.payFPK),"");
+  }
+  if(purch.length){wbLines.push("*Reimbursements:*");purch.forEach(p=>wbLines.push("  - "+p.desc+": "+f$(p.amt)));wbLines.push("  Total: "+f$(t.comp),"");}
+  wbLines.push("================================","*Work total: "+f$(t.farberOwes)+"*",(t.comp>0?"*+ Reimbursements: "+f$(t.comp)+"*":""),( t.comp>0?"*Grand Total: "+f$(t.farberOwes+t.comp)+"*":"*Total Farber Owes: "+f$(t.farberOwes)+"*"),"","_Matheus Ferian_");
+  document.getElementById("waB").textContent=wbLines.join("\n");
+
+
+  // --- WHATSAPP LUIZ (detailed daily + settlement) ---
+  const wlLines=["*Tips Split - Week "+w.name+"*","================================",""];
+  wlLines.push("*Daily breakdown:*");
+  if(ct_raw){
+    DAYS.forEach(d=>{
+      const v=ct_raw.days[d.id]||{};
+      const wv=w.days[d.id]||{};
+      const tips=wv.tips||0,me=v.me||0,luiz=v.luiz||0,total=me+luiz;
+      if(!tips&&!me&&!luiz)return;
+      let line="  "+d.l+":";
+      if(tips>0)line+=" tips $"+tips.toFixed(2);
+      if(me>0&&luiz>0)line+=" | Matheus $"+me.toFixed(2)+" / Luiz $"+luiz.toFixed(2);
+      else if(me>0)line+=" | Matheus has $"+me.toFixed(2);
+      else if(luiz>0)line+=" | Luiz has $"+luiz.toFixed(2);
+      wlLines.push(line);
+    });
+    if(w.venmo>0)wlLines.push("  Venmo/Card: $"+w.venmo.toFixed(2)+" (1/2 each)");
+    const tipsTotal=t.tr+(w.venmo||0);
+    wlLines.push("","================================","*Total tips pool: "+f$(tipsTotal)+"*","*Each should get: "+f$(ct.each)+"*","","Matheus held: "+f$(ct.me),"Luiz held: "+f$(ct.luiz),"","================================");
+    if(Math.abs(ct.diff)<0.01)wlLines.push("*All even - no transfer needed*");
+    else if(ct.diff>0)wlLines.push("*Matheus pays Luiz: "+f$(ct.diff)+"*");
+    else wlLines.push("*Luiz pays Matheus: "+f$(Math.abs(ct.diff))+"*");
+  } else {
+    DAYS.forEach(d=>{const v=w.days[d.id]||{};if(!v.tips)return;wlLines.push("  "+d.l+": tips $"+v.tips.toFixed(2));});
+    if(w.venmo>0)wlLines.push("  Venmo/Card: $"+w.venmo.toFixed(2));
+    const tipsTotal=t.tr+(w.venmo||0);
+    wlLines.push("","================================","*Total tips: "+f$(tipsTotal)+"*","*Each gets: "+f$(t.tips)+"*","","(Fill Cash Split tab for transfer details)");
+  }
+  wlLines.push("","_Matheus_");
+  document.getElementById("waL").textContent=wlLines.join("\n");
+
+}
+
+function printR(who){
+  const s=document.getElementById("rsel");
+  if(!s.value&&db.weeks.length){const l=latW();if(l)s.value=l.id;}
+  if(!s.value){toast("No weeks available!");return;}
+  renderR();
+  const card=who==="boss"?document.getElementById("rcB"):document.getElementById("rcL");
+  if(!card||card.style.display==="none"||card.querySelector(".emp")){
+    if(who==="luiz")toast("No Luiz data - fill Cash Split tab first!");
+    else toast("No data - select a week first!");
+    return;
+  }
+  const content=card.innerHTML;
+  const title=who==="boss"?"Work Report - Farber Parking":"Tips Split - Luiz";
+  let po=document.getElementById("po");if(po)po.remove();
+  po=document.createElement("div");po.id="po";
+  const ctrl=document.createElement("div");
+  ctrl.style.cssText="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #ddd;max-width:820px;margin-left:auto;margin-right:auto";
+  ctrl.innerHTML="<span style='font-size:16px;font-weight:700;color:#1a1916'>"+title+"</span>"+
+    "<div style='display:flex;gap:8px'>"+
+    "<button onclick='window.print()' style='font-size:13px;font-weight:600;padding:9px 20px;background:#2d6a4f;color:#fff;border:none;border-radius:8px;cursor:pointer'>Print / Save PDF</button>"+
+    "<button onclick='closePO()' style='font-size:13px;padding:9px 20px;background:#f0eeeb;color:#6b6860;border:1px solid #ddd;border-radius:8px;cursor:pointer'>Close</button>"+
+    "</div>";
+  const wrap=document.createElement("div");
+  wrap.style.cssText="max-width:820px;margin:0 auto;background:#fff";
+  wrap.innerHTML=content;
+  po.appendChild(ctrl);po.appendChild(wrap);
+  document.body.appendChild(po);
+}
+function closePO(){const p=document.getElementById("po");if(p)p.remove();}
+
+function cpWA(id,btn){
+  const text=document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(()=>{btn.textContent="Copied!";btn.classList.add("cp");setTimeout(()=>{btn.textContent="Copy";btn.classList.remove("cp");},2000);});
+}
+
+function goTab(tab,btn){
+  document.querySelectorAll(".pn").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("tab-"+tab).classList.add("active");
+  if(btn)btn.classList.add("active");
+  if(tab==="report"){fillR();renderR();}
+  if(tab==="entry"&&!eId&&db.weeks.length)lwk(latW().id);
+  if(tab==="cash"&&!ceId&&db.cashWeeks.length)lcw(latCW().id);
+}
+function goRT(t,btn){
+  document.querySelectorAll(".rp").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".rt").forEach(b=>b.classList.remove("on"));
+  document.getElementById("rp-"+t).classList.add("active");
+  if(btn)btn.classList.add("on");
+}
+
+function toast(msg){const e=document.getElementById("toast");e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2500);}
+
+document.getElementById("yr").textContent=new Date().getFullYear();
+buildDG();buildCG();recalc();recalcC();
+setTimeout(load,300);
+</script>
+</body>
+</html>
