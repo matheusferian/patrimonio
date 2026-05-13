@@ -425,10 +425,11 @@ function nextMonth(){curMonth++;if(curMonth>11){curMonth=0;curYear++;}render();}
 
 // ── Matheus income from weeks table ─────────────────────────────────────────
 function getMattIncome(mk){
-  // mk = "2026-05"
+  // mk = "2026-05" — only counts weeks marked as farberPaid
   const [y,m] = mk.split('-');
   let total=0, payFP=0, tips=0, ev=0;
   weeksData.forEach(w=>{
+    if(!w.farberPaid) return; // skip unpaid weeks
     const d = w.data||{};
     // check if week falls in this month using period or saved_at
     const saved = (w.saved_at||'').slice(0,7);
@@ -615,9 +616,9 @@ function render(){
   const incEl = document.getElementById('income-list');
   let incHTML = '';
   if(matt.total>0){
-    incHTML += `<div class="inc-row"><div class="inc-ico ico-m">M</div><div class="inc-info"><div class="inc-name" style="flex:1;font-size:13px;color:var(--t)">Matheus — Work Tracker</div><div class="inc-sub">Farber $${matt.payFP.toFixed(0)} · Tips $${matt.tips.toFixed(0)} · Events $${matt.ev.toFixed(0)}</div></div><div class="inc-amt amt-blue">${fmt(matt.total)}</div></div>`;
+    incHTML += `<div class="inc-row"><div class="inc-ico ico-m">M</div><div class="inc-info"><div class="inc-name" style="flex:1;font-size:13px;color:var(--t)">Matheus — Farber (semanas pagas)</div><div class="inc-sub">Farber $${matt.payFP.toFixed(0)} · Tips $${matt.tips.toFixed(0)} · Events $${matt.ev.toFixed(0)}</div></div><div class="inc-amt amt-blue">${fmt(matt.total)}</div></div>`;
   } else {
-    incHTML += `<div class="inc-row"><div class="inc-ico ico-m">M</div><div style="flex:1;font-size:13px;color:var(--t3)">Matheus — sem dados</div><div class="inc-amt" style="color:var(--t3)">$0.00</div></div>`;
+    incHTML += `<div class="inc-row"><div class="inc-ico ico-m">M</div><div style="flex:1;font-size:13px;color:var(--t3)">Matheus — nenhuma semana marcada como paga</div><div class="inc-amt" style="color:var(--t3)">$0.00</div></div>`;
   }
   if(lidy.cheques>0||lidy.tips>0){
     incHTML += `<div class="inc-row"><div class="inc-ico ico-l">L</div><div style="flex:1"><div style="font-size:13px;color:var(--t)">Lidy — Seabra Bakery</div><div class="inc-sub">${lidy.countC} cheque(s) · ${lidy.countT} tips</div></div><div class="inc-amt amt-green">${fmt(lidy.total)}</div></div>`;
