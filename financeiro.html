@@ -9,7 +9,7 @@
 :root{
   --bg:#0f1117;--s:#1e2535;--s2:#252d40;--b:#2d3650;
   --t:#e8eaf0;--t2:#8892a4;--t3:#4a5568;
-  --green:#1D9E75;--blue:#378ADD;--amber:#EF9F27;--red:#E24B4A;
+  --green:#1D9E75;--blue:#378ADD;--amber:#EF9F27;--red:#E24B4A;--orange:#F97316;
   --r:10px;--mo:'DM Mono',monospace;--sa:'Inter',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -25,11 +25,15 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--t3)}
 .dot.ok{background:#22c55e}.dot.err{background:var(--red)}.dot.ld{background:var(--amber);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* month nav */
 .month-row{display:flex;align-items:center;gap:10px;margin:22px 0 18px}
 .mnav-btn{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:6px 13px;cursor:pointer;font-size:14px;color:var(--t2)}
 .mnav-btn:hover{background:var(--s2)}
 .month-title{font-size:19px;font-weight:700;color:var(--t);flex:1}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:22px}
+
+/* metrics */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
 .mc{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden}
 .mc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
 .mc.green::after{background:var(--green)}.mc.red::after{background:var(--red)}
@@ -39,12 +43,32 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .mc.green .mc-val{color:var(--green)}.mc.red .mc-val{color:var(--red)}
 .mc.amber .mc-val{color:var(--amber)}.mc.blue .mc-val{color:var(--blue)}
 .mc-sub{font-size:11px;color:var(--t3);margin-top:3px}
+
+/* alerts strip */
+.alerts{margin-bottom:18px;display:flex;flex-direction:column;gap:6px}
+.alert-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);border:1px solid}
+.alert-item.urgent{background:rgba(226,75,74,.08);border-color:rgba(226,75,74,.3)}
+.alert-item.warn{background:rgba(239,159,39,.08);border-color:rgba(239,159,39,.3)}
+.alert-item.info{background:rgba(55,138,221,.08);border-color:rgba(55,138,221,.2)}
+.alert-icon{font-size:15px;flex-shrink:0}
+.alert-text{flex:1;font-size:13px}
+.alert-text b{font-weight:600}
+.alert-days{font-family:var(--mo);font-size:11px;padding:3px 8px;border-radius:99px}
+.urgent .alert-days{background:rgba(226,75,74,.2);color:var(--red)}
+.warn .alert-days{background:rgba(239,159,39,.2);color:var(--amber)}
+.info .alert-days{background:rgba(55,138,221,.2);color:var(--blue)}
+
+/* grid */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
 @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+
+/* card */
 .card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:14px 16px}
-.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .card-title{font-size:11px;font-weight:600;color:var(--t2);font-family:var(--mo);text-transform:uppercase;letter-spacing:.05em}
 .card-count{font-family:var(--mo);font-size:11px}
+
+/* income rows */
 .inc-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--b)}
 .inc-row:last-child{border-bottom:none}
 .inc-ico{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;font-weight:700}
@@ -54,29 +78,57 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .inc-sub{font-size:11px;color:var(--t3);margin-top:1px}
 .inc-amt{font-size:14px;font-weight:700}
 .amt-blue{color:var(--blue)}.amt-green{color:var(--green)}
-.bill-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--b)}
+
+/* bill rows */
+.bill-row{display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--b)}
 .bill-row:last-child{border-bottom:none}
 .bill-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.bill-dot.paid{background:var(--green)}.bill-dot.pend{background:var(--amber)}
-.bill-day{font-family:var(--mo);font-size:11px;color:var(--t3);width:24px;flex-shrink:0;text-align:center}
+.bill-dot.paid{background:var(--green)}.bill-dot.pend{background:var(--amber)}.bill-dot.urgent{background:var(--red)}
+.bill-day{font-family:var(--mo);font-size:11px;color:var(--t3);width:22px;flex-shrink:0;text-align:center}
 .bill-name{flex:1;font-size:13px;color:var(--t)}
 .bill-name.strike{color:var(--t3);text-decoration:line-through}
+.bill-warn{font-size:10px;font-family:var(--mo);padding:2px 6px;border-radius:99px;flex-shrink:0;white-space:nowrap}
+.bill-warn.red{background:rgba(226,75,74,.15);color:var(--red)}
+.bill-warn.amber{background:rgba(239,159,39,.15);color:var(--amber)}
 .bill-amt{font-size:13px;font-weight:600}
 .bill-amt.pend{color:var(--amber)}.bill-amt.done{color:var(--t3)}
 .bill-toggle{width:20px;height:20px;border-radius:5px;border:1px solid var(--b);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;background:none;color:transparent;transition:all .15s}
 .bill-toggle:hover{border-color:var(--green);color:var(--green)}
 .bill-toggle.done{background:var(--green);border-color:var(--green);color:#fff}
-.del-bill{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:2px 4px;flex-shrink:0}
+.del-bill{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:2px 3px;flex-shrink:0}
 .del-bill:hover{color:var(--red)}
+
+/* editable */
 .editable{cursor:pointer;border-bottom:1px dashed var(--t3);padding:1px 2px;border-radius:2px;transition:all .15s}
 .editable:hover{border-bottom-color:var(--amber);color:var(--amber)}
 .ie{background:rgba(239,159,39,.1);border:1px solid var(--amber);border-radius:4px;color:var(--t);font-size:13px;font-family:var(--sa);padding:2px 5px;outline:none}
-.ie.day-i{width:36px;text-align:center}.ie.amt-i{width:80px;text-align:right;font-family:var(--mo)}
+.ie.day-i{width:34px;text-align:center}.ie.amt-i{width:78px;text-align:right;font-family:var(--mo)}
+
+/* add bill */
 .add-bill-btn{width:100%;background:none;border:1px dashed var(--b);border-radius:var(--r);padding:6px;font-size:11px;font-family:var(--mo);color:var(--t3);cursor:pointer;transition:all .15s;margin-top:8px}
 .add-bill-btn:hover{border-color:var(--green);color:var(--green)}
+
+/* total pill */
 .total-pill{display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.3);border-radius:var(--r);padding:9px 12px;margin-top:10px}
 .tp-label{font-size:11px;color:var(--t3);font-family:var(--mo)}
 .tp-val{font-size:15px;font-weight:700}
+
+/* recurring manage */
+.rec-section{margin-bottom:14px}
+.rec-toggle{background:none;border:1px solid var(--b);border-radius:var(--r);padding:7px 14px;font-size:12px;font-family:var(--mo);color:var(--t3);cursor:pointer;width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between}
+.rec-toggle:hover{background:var(--s2)}
+.rec-panel{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:14px;margin-top:6px;display:none}
+.rec-list{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;max-height:300px;overflow-y:auto}
+.rec-item{display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--s2);border-radius:6px;font-size:13px}
+.rec-item input[type=checkbox]{width:15px;height:15px;cursor:pointer;flex-shrink:0}
+.rec-day{font-family:var(--mo);font-size:11px;color:var(--t3);width:30px}
+.rec-name{flex:1;color:var(--t)}
+.rec-amt{font-family:var(--mo);font-size:12px;color:var(--amber)}
+.rec-advance{font-size:10px;font-family:var(--mo);padding:2px 6px;border-radius:99px;background:rgba(226,75,74,.15);color:var(--red);white-space:nowrap}
+.apply-btn{background:var(--green);color:#fff;border:none;border-radius:var(--r);padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--mo)}
+.apply-btn:hover{opacity:.85}
+
+/* chart */
 .chart-wrap{position:relative;width:100%;height:190px;margin-top:8px}
 .legend{display:flex;gap:12px;font-size:11px;color:var(--t3);margin-bottom:6px;font-family:var(--mo);flex-wrap:wrap}
 .legend span{display:flex;align-items:center;gap:4px}
@@ -107,39 +159,42 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
   <button class="mnav-btn" onclick="nextMonth()">›</button>
 </div>
 
+<!-- Alerts strip -->
+<div class="alerts" id="alerts-strip"></div>
+
+<!-- Metrics -->
 <div class="metrics">
-  <div class="mc green">
-    <div class="mc-label">Receita total</div>
-    <div class="mc-val" id="m-inc">$0</div>
-    <div class="mc-sub" id="m-inc-sub">Matheus + Lidy</div>
-  </div>
-  <div class="mc red">
-    <div class="mc-label">Total despesas</div>
-    <div class="mc-val" id="m-exp">$0</div>
-    <div class="mc-sub" id="m-exp-sub">0 pagas · 0 pendentes</div>
-  </div>
-  <div class="mc amber">
-    <div class="mc-label">Ainda a pagar</div>
-    <div class="mc-val" id="m-pend">$0</div>
-    <div class="mc-sub" id="m-pend-sub">pendente</div>
-  </div>
-  <div class="mc blue" id="balance-mc">
-    <div class="mc-label">Saldo livre</div>
-    <div class="mc-val" id="m-bal">$0</div>
-    <div class="mc-sub" id="m-bal-sub">receita − tudo</div>
+  <div class="mc green"><div class="mc-label">Receita total</div><div class="mc-val" id="m-inc">$0</div><div class="mc-sub" id="m-inc-sub">Matheus + Lidy</div></div>
+  <div class="mc red"><div class="mc-label">Total despesas</div><div class="mc-val" id="m-exp">$0</div><div class="mc-sub" id="m-exp-sub">—</div></div>
+  <div class="mc amber"><div class="mc-label">Ainda a pagar</div><div class="mc-val" id="m-pend">$0</div><div class="mc-sub" id="m-pend-sub">—</div></div>
+  <div class="mc blue" id="balance-mc"><div class="mc-label">Saldo livre</div><div class="mc-val" id="m-bal">$0</div><div class="mc-sub" id="m-bal-sub">receita − tudo</div></div>
+</div>
+
+<!-- Recurring apply -->
+<div class="rec-section">
+  <button class="rec-toggle" onclick="toggleRec()">
+    <span>🔄 Contas recorrentes — adicionar ao mês</span>
+    <span id="rec-arrow" style="font-family:var(--mo);font-size:12px">▸</span>
+  </button>
+  <div class="rec-panel" id="rec-panel">
+    <div style="font-size:11px;color:var(--t3);margin-bottom:10px;font-family:var(--mo)">Selecione as contas para adicionar ao mês atual. Valores editáveis depois.</div>
+    <div class="rec-list" id="rec-list"></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="apply-btn" onclick="applyRecurring()">✓ Adicionar selecionadas</button>
+      <button style="background:none;border:1px solid var(--b);border-radius:var(--r);padding:7px 12px;font-size:12px;font-family:var(--mo);color:var(--t3);cursor:pointer" onclick="selectAllRec()">Selecionar todas</button>
+    </div>
   </div>
 </div>
 
 <div class="grid2">
+  <!-- Income -->
   <div class="card">
     <div class="card-head"><div class="card-title">📥 Entradas do mês</div></div>
     <div id="inc-list"><div class="empty">carregando...</div></div>
-    <div class="total-pill">
-      <div class="tp-label">Total entradas</div>
-      <div class="tp-val" style="color:var(--green)" id="inc-pill">$0.00</div>
-    </div>
+    <div class="total-pill"><div class="tp-label">Total entradas</div><div class="tp-val" style="color:var(--green)" id="inc-pill">$0.00</div></div>
   </div>
 
+  <!-- Pending -->
   <div class="card">
     <div class="card-head">
       <div class="card-title">⏳ Pendentes</div>
@@ -148,25 +203,21 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
     <div class="edit-hint">clique para editar · ✓ para marcar pago</div>
     <div id="pend-list"><div class="empty">nenhuma pendente 🎉</div></div>
     <button class="add-bill-btn" onclick="addBill()">+ adicionar conta</button>
-    <div class="total-pill">
-      <div class="tp-label">Total pendente</div>
-      <div class="tp-val" style="color:var(--amber)" id="pend-pill">$0.00</div>
-    </div>
+    <div class="total-pill"><div class="tp-label">Total pendente</div><div class="tp-val" style="color:var(--amber)" id="pend-pill">$0.00</div></div>
   </div>
 </div>
 
+<!-- Paid -->
 <div class="card" style="margin-bottom:14px">
   <div class="card-head">
     <div class="card-title">✅ Pagas</div>
     <span class="card-count" style="color:var(--green)" id="paid-count"></span>
   </div>
   <div id="paid-list"><div class="empty">nenhuma paga ainda</div></div>
-  <div class="total-pill">
-    <div class="tp-label">Total pago</div>
-    <div class="tp-val" style="color:var(--green)" id="paid-pill">$0.00</div>
-  </div>
+  <div class="total-pill"><div class="tp-label">Total pago</div><div class="tp-val" style="color:var(--green)" id="paid-pill">$0.00</div></div>
 </div>
 
+<!-- Chart -->
 <div class="card">
   <div class="card-head"><div class="card-title">📊 Últimos 6 meses</div></div>
   <div class="legend">
@@ -192,51 +243,37 @@ async function sb(m,p,b=null){
   return r.status===204?null:r.json();
 }
 
-const BILLS_DB={
-  "2026-05":[
-    {day:1,name:"Aluguel",amt:1740,paid:true},{day:1,name:"Taos",amt:535.98,paid:true},
-    {day:2,name:"FPL",amt:136.21,paid:true},{day:4,name:"Business 9289",amt:2792,paid:true},
-    {day:4,name:"Apto Lidy/Facul",amt:243,paid:true},{day:5,name:"EB2NIW 8.13",amt:1000,paid:true},
-    {day:6,name:"PayPal Card 3.3",amt:181.97,paid:true},{day:10,name:"Apto Plano Lidy",amt:70,paid:true},
-    {day:13,name:"Xfinity",amt:127.10,paid:true},{day:15,name:"Taos extra",amt:100,paid:true},
-    {day:17,name:"Notebook Carol",amt:51.09,paid:true},{day:4,name:"BJS Card",amt:230,paid:true},
-    {day:11,name:"Tax 2025",amt:350,paid:false},{day:18,name:"Planet Academia",amt:26.74,paid:false},
-    {day:19,name:"AT&T Telefone",amt:233.92,paid:false},{day:23,name:"Corolla",amt:445.12,paid:false},
-    {day:25,name:"Cartão Brasil Matheus",amt:80,paid:false},{day:29,name:"Progressive 3.6",amt:309.07,paid:false}
-  ],
-  "2026-04":[
-    {day:1,name:"Aluguel",amt:1740,paid:true},{day:1,name:"Taos",amt:535.98,paid:true},
-    {day:2,name:"FPL",amt:134.47,paid:true},{day:5,name:"EB2NIW 7.13",amt:1000,paid:true},
-    {day:6,name:"PayPal Card",amt:181.97,paid:true},{day:7,name:"Business Credit",amt:583.25,paid:true},
-    {day:10,name:"Apto Plano Lidy",amt:70,paid:true},{day:11,name:"Tax 2024",amt:305,paid:true},
-    {day:13,name:"Xfinity",amt:134.08,paid:true},{day:18,name:"Planet Academia",amt:26.74,paid:true},
-    {day:19,name:"AT&T Telefone",amt:233.92,paid:true},{day:23,name:"Corolla",amt:445.12,paid:true},
-    {day:25,name:"Cartão Brasil Matheus",amt:80,paid:true},{day:29,name:"Progressive",amt:309.07,paid:true},
-    {day:5,name:"Faculdade Lidy",amt:100,paid:true},{day:4,name:"Apto Caixa Lidy",amt:200,paid:true}
-  ],
-  "2026-03":[
-    {day:1,name:"Aluguel",amt:1740,paid:true},{day:1,name:"Taos",amt:535.98,paid:true},
-    {day:2,name:"FPL",amt:129.61,paid:true},{day:5,name:"EB2NIW 6.13",amt:1000,paid:true},
-    {day:5,name:"BofA Business",amt:4272.40,paid:true},{day:11,name:"Tax 2024",amt:305,paid:true},
-    {day:13,name:"Xfinity",amt:134.08,paid:true},{day:15,name:"Capital One",amt:860.03,paid:true},
-    {day:19,name:"AT&T Telefone",amt:234.18,paid:true},{day:23,name:"Corolla",amt:445.12,paid:true},
-    {day:25,name:"Cartão Brasil Matheus",amt:150,paid:true},{day:29,name:"Progressive",amt:309.07,paid:true}
-  ],
-  "2026-02":[
-    {day:1,name:"Aluguel",amt:1740,paid:true},{day:1,name:"Taos",amt:535.98,paid:true},
-    {day:2,name:"FPL",amt:124.93,paid:true},{day:3,name:"BofA Business",amt:6700,paid:true},
-    {day:5,name:"EB2NIW 5.13",amt:1000,paid:true},{day:11,name:"Tax 2024",amt:305,paid:true},
-    {day:13,name:"Xfinity",amt:73.23,paid:true},{day:19,name:"AT&T Telefone",amt:234.18,paid:true},
-    {day:23,name:"Corolla",amt:445.12,paid:true},{day:25,name:"Cartão Brasil Matheus",amt:95,paid:true}
-  ]
-};
+// ── Recurring bills master list ──────────────────────────────────────────────
+// advance: days before due date you need to ACT (Remitly takes 3-5 days, use 7 to be safe)
+const RECURRING = [
+  {day:1, name:"Aluguel",            amt:1740.00},
+  {day:1, name:"Taos",               amt:535.98},
+  {day:2, name:"FPL",                amt:136.00,  note:"valor varia"},
+  {day:4, name:"BJS Card",           amt:230.00,  note:"valor varia"},
+  {day:5, name:"EB2NIW",             amt:1000.00},
+  {day:6, name:"PayPal Card",        amt:181.97},
+  {day:10,name:"Apto Plano Lidy",    amt:70.00},
+  {day:11,name:"Tax",                amt:305.00,  note:"valor varia"},
+  {day:13,name:"Xfinity",            amt:127.00,  note:"valor varia"},
+  {day:18,name:"Planet Academia",    amt:26.74},
+  {day:19,name:"AT&T Telefone",      amt:234.00,  note:"valor varia"},
+  {day:23,name:"Corolla",            amt:445.12},
+  {day:25,name:"Cartão Brasil Matheus", amt:80.00, advance:7, advanceNote:"enviar Remitly antes"},
+  {day:29,name:"Progressive",        amt:309.07,  note:"valor varia"},
+  // Lidy
+  {day:4, name:"Apto Caixa Lidy",    amt:200.00,  advance:7, advanceNote:"enviar antes via Remitly"},
+  {day:5, name:"Faculdade Lidy",     amt:100.00,  advance:7, advanceNote:"enviar antes via Remitly"},
+];
 
+// ── State ────────────────────────────────────────────────────────────────────
 let weeksData=[],lidyData=[],billsState={},billsEdits={},billsAdded={};
-let curYear=new Date().getFullYear(),curMonth=new Date().getMonth();
+let curYear=new Date().getFullYear(), curMonth=new Date().getMonth();
 let histChart=null;
+
 const MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const fmt=v=>'$'+parseFloat(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const mk=()=>curYear+'-'+(curMonth+1).toString().padStart(2,'0');
+const isCurrentMonth=()=>curYear===new Date().getFullYear()&&curMonth===new Date().getMonth();
 
 function setSS(s,msg){
   document.getElementById('sync-dot').className='dot '+(s==='ok'?'ok':s==='err'?'err':'ld');
@@ -254,12 +291,13 @@ async function loadAll(){
     weeksData=weeks||[]; lidyData=lidy||[];
     (bstate||[]).forEach(r=>{billsState[r.key]=r.paid;});
     setSS('ok','sincronizado ✓'); render();
-  }catch(e){setSS('err','erro');render();}
+  }catch(e){setSS('err','erro de conexão');render();}
 }
 
 function prevMonth(){curMonth--;if(curMonth<0){curMonth=11;curYear--;}render();}
 function nextMonth(){curMonth++;if(curMonth>11){curMonth=0;curYear++;}render();}
 
+// ── Income ───────────────────────────────────────────────────────────────────
 function getMattIncome(m){
   const[,mo]=m.split('-');
   const abbr=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'][parseInt(mo)-1];
@@ -289,20 +327,23 @@ function pH(s){
 function getLidyIncome(m){
   const e=lidyData.filter(x=>x.date&&x.date.startsWith(m));
   const c=e.filter(x=>x.type==='cheque'),t=e.filter(x=>x.type==='tips');
-  return{total:e.reduce((s,x)=>s+parseFloat(x.amount||0),0),cc:c.length,tc:t.length,
-    cheques:c.reduce((s,x)=>s+parseFloat(x.amount||0),0)};
+  return{total:e.reduce((s,x)=>s+parseFloat(x.amount||0),0),cc:c.length,tc:t.length};
 }
 
+// ── Bills ────────────────────────────────────────────────────────────────────
 function getBills(m){
-  const base=(BILLS_DB[m]||[]).map((b,i)=>{
-    const key=m+'_'+i+'_'+b.name.replace(/\W/g,'');
-    const e=billsEdits[key]||{};
-    const pOver=billsState[key];
-    return{day:e.day!==undefined?e.day:b.day,name:e.name!==undefined?e.name:b.name,
-      amt:e.amt!==undefined?e.amt:b.amt,paid:pOver!==undefined?pOver:b.paid,key,deleted:e.deleted||false};
-  }).filter(b=>!b.deleted);
-  (billsAdded[m]||[]).forEach(b=>base.push(b));
-  return base.sort((a,b)=>a.day-b.day);
+  const base=(billsAdded[m]||[]).map(b=>({...b}));
+  // Apply edits
+  base.forEach(b=>{
+    const e=billsEdits[b.key]||{};
+    if(e.day!==undefined)b.day=e.day;
+    if(e.name!==undefined)b.name=e.name;
+    if(e.amt!==undefined)b.amt=e.amt;
+    if(e.deleted)b.deleted=true;
+    const pOver=billsState[b.key];
+    if(pOver!==undefined)b.paid=pOver;
+  });
+  return base.filter(b=>!b.deleted).sort((a,b)=>a.day-b.day);
 }
 
 async function toggleBill(key,cur){
@@ -313,7 +354,7 @@ async function toggleBill(key,cur){
 function addBill(){
   const m=mk();
   if(!billsAdded[m])billsAdded[m]=[];
-  billsAdded[m].push({key:m+'_new_'+Date.now(),day:1,name:'Nova conta',amt:0,paid:false,isNew:true});
+  billsAdded[m].push({key:m+'_new_'+Date.now(),day:1,name:'Nova conta',amt:0,paid:false});
   render();
 }
 
@@ -345,6 +386,92 @@ function startEdit(el,key,field,val){
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key==='Escape')inp.blur();});
 }
 
+// ── Recurring ────────────────────────────────────────────────────────────────
+function toggleRec(){
+  const p=document.getElementById('rec-panel');
+  const open=p.style.display==='block';
+  p.style.display=open?'none':'block';
+  document.getElementById('rec-arrow').textContent=open?'▸':'▾';
+  if(!open) renderRecList();
+}
+
+function renderRecList(){
+  const m=mk();
+  const existing=(billsAdded[m]||[]).map(b=>b.name.toLowerCase());
+  document.getElementById('rec-list').innerHTML=RECURRING.map((r,i)=>{
+    const alreadyIn=existing.some(n=>n.includes(r.name.toLowerCase().slice(0,6)));
+    return `<div class="rec-item">
+      <input type="checkbox" id="rc${i}" ${alreadyIn?'disabled':''} ${alreadyIn?'':'checked'}>
+      <span class="rec-day">${r.day}</span>
+      <span class="rec-name">${r.name}${r.note?` <span style="font-size:10px;color:var(--t3)">(${r.note})</span>`:''}</span>
+      <span class="rec-amt">${fmt(r.amt)}</span>
+      ${r.advance?`<span class="rec-advance">⚠ ${r.advance}d antes</span>`:''}
+      ${alreadyIn?'<span style="font-size:10px;font-family:var(--mo);color:var(--green)">já adicionada</span>':''}
+    </div>`;
+  }).join('');
+}
+
+function selectAllRec(){
+  document.querySelectorAll('#rec-list input[type=checkbox]:not(:disabled)').forEach(c=>c.checked=true);
+}
+
+function applyRecurring(){
+  const m=mk();
+  if(!billsAdded[m])billsAdded[m]=[];
+  let count=0;
+  RECURRING.forEach((r,i)=>{
+    const cb=document.getElementById('rc'+i);
+    if(!cb||!cb.checked||cb.disabled)return;
+    billsAdded[m].push({
+      key:m+'_rec_'+i+'_'+Date.now(),
+      day:r.day, name:r.name, amt:r.amt, paid:false,
+      advance:r.advance||0, advanceNote:r.advanceNote||''
+    });
+    count++;
+  });
+  toast('✓ '+count+' contas adicionadas!');
+  document.getElementById('rec-panel').style.display='none';
+  document.getElementById('rec-arrow').textContent='▸';
+  render();
+}
+
+// ── Alerts (only for current month) ─────────────────────────────────────────
+function renderAlerts(bills){
+  const strip=document.getElementById('alerts-strip');
+  if(!isCurrentMonth()){strip.innerHTML='';return;}
+  const today=new Date(); today.setHours(0,0,0,0);
+  const alerts=[];
+  bills.filter(b=>!b.paid).forEach(b=>{
+    const due=new Date(curYear,curMonth,b.day);
+    const daysUntil=Math.ceil((due-today)/86400000);
+    // advance warning (Remitly etc)
+    if(b.advance&&daysUntil>0&&daysUntil<=(b.advance+3)){
+      const actionBy=new Date(due); actionBy.setDate(actionBy.getDate()-b.advance);
+      const daysToAct=Math.ceil((actionBy-today)/86400000);
+      if(daysToAct<=0){
+        alerts.push({cls:'urgent',icon:'🚨',text:`<b>${b.name}</b> vence dia ${b.day} — ${b.advanceNote||'ação necessária'}`,days:'agir HOJE'});
+      } else {
+        alerts.push({cls:'warn',icon:'⚠️',text:`<b>${b.name}</b> vence dia ${b.day} — ${b.advanceNote||'prepare com antecedência'}`,days:`agir em ${daysToAct}d`});
+      }
+    }
+    // general proximity: due in ≤5 days
+    else if(daysUntil>=0&&daysUntil<=5&&!b.advance){
+      if(daysUntil===0) alerts.push({cls:'urgent',icon:'🔴',text:`<b>${b.name}</b> vence HOJE`,days:'hoje!'});
+      else if(daysUntil===1) alerts.push({cls:'urgent',icon:'🔴',text:`<b>${b.name}</b> vence amanhã`,days:'amanhã'});
+      else alerts.push({cls:'warn',icon:'🟡',text:`<b>${b.name}</b> vence dia ${b.day}`,days:`em ${daysUntil}d`});
+    }
+  });
+  if(!alerts.length){strip.innerHTML='';return;}
+  alerts.sort((a,b)=>a.cls==='urgent'?-1:1);
+  strip.innerHTML=alerts.map(a=>`
+    <div class="alert-item ${a.cls}">
+      <span class="alert-icon">${a.icon}</span>
+      <span class="alert-text">${a.text}</span>
+      <span class="alert-days">${a.days}</span>
+    </div>`).join('');
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
 function render(){
   const m=mk();
   const matt=getMattIncome(m),lidy=getLidyIncome(m);
@@ -356,17 +483,22 @@ function render(){
   const balance=tInc-tBills;
 
   document.getElementById('month-title').textContent=MONTHS[curMonth]+' '+curYear;
+
+  // metrics
   document.getElementById('m-inc').textContent=fmt(tInc);
   document.getElementById('m-inc-sub').textContent='M: '+fmt(matt.total)+' · L: '+fmt(lidy.total);
   document.getElementById('m-exp').textContent=fmt(tBills);
   document.getElementById('m-exp-sub').textContent=paid.length+' pagas · '+pend.length+' pendentes';
   document.getElementById('m-pend').textContent=fmt(tPend);
-  document.getElementById('m-pend-sub').textContent=pend.length+' conta(s) pendente(s)';
+  document.getElementById('m-pend-sub').textContent=pend.length+' conta(s)';
   const balEl=document.getElementById('m-bal');
   balEl.textContent=fmt(Math.abs(balance));
   balEl.style.color=balance>=0?'var(--green)':'var(--red)';
   document.getElementById('m-bal-sub').textContent=balance>=0?'disponível livre':'déficit';
   document.getElementById('balance-mc').className='mc '+(balance>=0?'blue':'red');
+
+  // alerts
+  renderAlerts(bills);
 
   // income
   document.getElementById('inc-list').innerHTML=`
@@ -389,19 +521,35 @@ function render(){
   document.getElementById('inc-pill').textContent=fmt(tInc);
 
   // pending
+  const today=new Date(); today.setHours(0,0,0,0);
+  function warnTag(b){
+    if(!isCurrentMonth()||b.paid)return'';
+    const due=new Date(curYear,curMonth,b.day);
+    const d=Math.ceil((due-today)/86400000);
+    if(b.advance&&d<=(b.advance+3)){
+      const act=new Date(due); act.setDate(act.getDate()-b.advance);
+      const da=Math.ceil((act-today)/86400000);
+      return`<span class="bill-warn ${da<=0?'red':'amber'}">${da<=0?'agir hoje':'Remitly em '+da+'d'}</span>`;
+    }
+    if(d<=0)return`<span class="bill-warn red">vencida</span>`;
+    if(d<=3)return`<span class="bill-warn red">vence em ${d}d</span>`;
+    if(d<=7)return`<span class="bill-warn amber">em ${d}d</span>`;
+    return'';
+  }
+
   document.getElementById('pend-count').textContent=pend.length?pend.length+' itens':'';
   document.getElementById('pend-list').innerHTML=pend.length?pend.map(b=>`
     <div class="bill-row">
       <div class="bill-dot pend"></div>
       <div class="bill-day editable" onclick="startEdit(this,'${b.key}','day',${b.day})">${b.day}</div>
       <div class="bill-name editable" style="flex:1" onclick="startEdit(this,'${b.key}','name','${b.name.replace(/'/g,"\\'")}')">${b.name}</div>
+      ${warnTag(b)}
       <div class="bill-amt pend editable" onclick="startEdit(this,'${b.key}','amt',${b.amt})">${fmt(b.amt)}</div>
       <button class="bill-toggle" onclick="toggleBill('${b.key}',false)">✓</button>
       <button class="del-bill" onclick="deleteBill('${b.key}')">×</button>
     </div>`).join(''):'<div class="empty">nenhuma pendente 🎉</div>';
   document.getElementById('pend-pill').textContent=fmt(tPend);
 
-  // paid
   document.getElementById('paid-count').textContent=paid.length?paid.length+' itens':'';
   document.getElementById('paid-list').innerHTML=paid.length?paid.map(b=>`
     <div class="bill-row">
@@ -445,7 +593,7 @@ function renderChart(){
   });
 }
 
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
 
 loadAll();
 </script>
