@@ -1,312 +1,428 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lidyane — Seabra Bakery</title>
-  <link rel="stylesheet" href="lidyane.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lidyane — Seabra Bakery</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f4f0;--s:#fff;--s2:#f0eeeb;--b:#dddbd7;--b2:#cac8c4;
+  --t:#1a1916;--t2:#6b6860;--t3:#a09e9a;
+  --ac:#2d6a4f;--al:#e8f4ef;
+  --or:#c96a1a;--ol:#fef3e8;
+  --bl:#1a4a7a;--bll:#e8f0fa;
+  --re:#c0392b;--rl:#fdecea;
+  --r:10px;--mo:'DM Mono',monospace;--sa:'Inter',sans-serif;
+  --sh:0 1px 3px rgba(0,0,0,.08);--shm:0 4px 12px rgba(0,0,0,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t);font-family:var(--sa);min-height:100vh;font-size:14px}
+.wrap{max-width:680px;margin:0 auto;padding:0 20px 80px}
+header{padding:24px 0 18px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.logo{font-size:18px;font-weight:700;letter-spacing:-.4px}
+.logo span{color:var(--ac)}
+.logo-sub{font-family:var(--mo);font-size:10px;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+.back{font-family:var(--mo);font-size:11px;color:var(--t2);text-decoration:none;padding:5px 12px;border-radius:99px;border:1px solid var(--b);background:var(--s)}
+.back:hover{background:var(--s2)}
+.sync{font-family:var(--mo);font-size:11px;padding:5px 12px;border-radius:99px;border:1px solid var(--b);background:var(--s);display:flex;align-items:center;gap:6px;color:var(--t2)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--t3)}
+.dot.ok{background:#22c55e}.dot.err{background:var(--re)}.dot.ld{background:var(--or);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* metrics */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}
+.mc{background:var(--s);border-radius:var(--r);padding:14px 16px;border:1px solid var(--b);box-shadow:var(--sh)}
+.mc-label{font-size:11px;color:var(--t3);font-family:var(--mo);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+.mc-val{font-size:22px;font-weight:700;color:var(--t)}
+.mc-val.green{color:var(--ac)}
+.mc-val.blue{color:var(--bl)}
+.mc-val.orange{color:var(--or)}
+.mc-sub{font-size:11px;color:var(--t3);margin-top:3px}
+
+/* month nav */
+.month-nav{display:flex;align-items:center;gap:10px;margin:0 0 16px}
+.month-nav button{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:6px 12px;cursor:pointer;font-size:13px;color:var(--t2)}
+.month-nav button:hover{background:var(--s2)}
+.month-label{font-size:16px;font-weight:600;flex:1;text-align:center;color:var(--t)}
+
+/* section */
+.section{margin-bottom:24px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.section-title{font-size:12px;font-weight:600;color:var(--t2);letter-spacing:.06em;text-transform:uppercase;font-family:var(--mo)}
+.add-btn{background:var(--t);color:#fff;border:none;border-radius:var(--r);padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.add-btn:hover{opacity:.85}
+
+/* form card */
+.form-card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--sh)}
+.form-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.form-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px}
+.form-group label{font-size:11px;color:var(--t2);font-weight:500}
+.form-group input,.form-group select,.form-group textarea{
+  padding:8px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--bg);
+  color:var(--t);font-size:13px;font-family:var(--sa);width:100%
+}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--ac)}
+.form-actions{display:flex;gap:8px;margin-top:10px}
+.btn-save{background:var(--ac);color:#fff;border:none;border-radius:var(--r);padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-save:hover{opacity:.88}
+.btn-cancel{background:none;border:1px solid var(--b);border-radius:var(--r);padding:8px 14px;font-size:13px;cursor:pointer;color:var(--t2)}
+.btn-cancel:hover{background:var(--s2)}
+
+/* list */
+.entries-list{display:flex;flex-direction:column;gap:6px}
+.entry{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh)}
+.entry-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.icon-cheque{background:var(--bll);color:var(--bl)}
+.icon-tips{background:var(--al);color:var(--ac)}
+.entry-info{flex:1}
+.entry-name{font-size:13px;font-weight:500;color:var(--t)}
+.entry-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.entry-amt{font-size:15px;font-weight:700;color:var(--t)}
+.entry-amt.cheque{color:var(--bl)}
+.entry-amt.tips{color:var(--ac)}
+.del-btn{background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:4px}
+.del-btn:hover{color:var(--re)}
+.empty{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:24px;text-align:center;color:var(--t3);font-size:13px}
+
+/* total bar */
+.total-bar{background:var(--t);color:#fff;border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin:16px 0 24px;box-shadow:var(--shm)}
+.total-bar-label{font-size:12px;opacity:.6;font-family:var(--mo);letter-spacing:.04em;text-transform:uppercase}
+.total-bar-val{font-size:20px;font-weight:700}
+
+/* toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--t);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:500;box-shadow:var(--shm);opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:none}
+
+/* history table */
+.history-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--s2);padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--t2);letter-spacing:.04em;text-transform:uppercase;font-family:var(--mo)}
+td{padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t)}
+tr:last-child td{border-bottom:none}
+.t-cheque{color:var(--bl);font-weight:600}
+.t-tips{color:var(--ac);font-weight:600}
+.t-total{font-weight:700}
+</style>
 </head>
 <body>
-
-<div class="lid-app">
-
-  <!-- Header -->
-  <header class="lid-header">
-    <div>
-      <div class="lid-header-title">🧁 Seabra Bakery</div>
-      <div class="lid-header-sub">Lidyane Ferian</div>
-    </div>
-    <a href="index.html" class="lid-back-btn">← Matheus</a>
-  </header>
-
-  <!-- Connection status -->
-  <div class="lid-status">
-    <div class="lid-status-dot" id="lid-status-dot"></div>
-    <span id="lid-status-text">connecting...</span>
+<div class="wrap">
+<header>
+  <div>
+    <div class="logo">🧁 Seabra <span>Bakery</span></div>
+    <div class="logo-sub">Lidyane Ferian</div>
   </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <div class="sync" id="sync-status"><div class="dot ld" id="sync-dot"></div><span id="sync-text">connecting...</span></div>
+    <a href="/" class="back">← Matheus</a>
+  </div>
+</header>
 
-  <!-- Tab navigation -->
-  <nav class="lid-tabs">
-    <div class="lid-tab active" data-tab="dashboard">📊 Resumo</div>
-    <div class="lid-tab" data-tab="entry">⏱ Dia</div>
-    <div class="lid-tab" data-tab="tips">💵 Tips</div>
-    <div class="lid-tab" data-tab="history">📋 Histórico</div>
-  </nav>
-
-  <!-- ══════════════════════════════════════════════
-       TAB 1 — Dashboard
-  ══════════════════════════════════════════════ -->
-  <section class="lid-section active" id="tab-dashboard">
-
-    <!-- Period navigation bar -->
-    <div id="lid-period-bar" style="display:none">
-      <div class="lid-period-bar">
-        <button class="lid-period-btn" id="lid-prev-period">‹</button>
-        <div class="lid-period-label" id="lid-period-label">—</div>
-        <button class="lid-period-btn" id="lid-next-period">›</button>
-      </div>
-    </div>
-
-    <!-- No period state -->
-    <div class="lid-no-period" id="lid-no-period">
-      <p>Nenhuma quinzena encontrada.<br>Crie a primeira para começar.</p>
-      <button class="lid-btn lid-btn-primary" onclick="LID.openNewPeriodModal()">+ Nova Quinzena</button>
-    </div>
-
-    <!-- Dashboard content (shown when period exists) -->
-    <div id="lid-dashboard-content" style="display:none">
-
-      <div class="lid-card">
-        <div class="lid-card-header">Quinzena atual</div>
-        <div class="lid-stats-grid">
-          <div class="lid-stat">
-            <div class="lid-stat-label">Horas trabalhadas</div>
-            <div class="lid-stat-value accent3" id="lid-stat-hours">0<span>h</span></div>
-          </div>
-          <div class="lid-stat">
-            <div class="lid-stat-label">Dias trabalhados</div>
-            <div class="lid-stat-value" id="lid-stat-days">0<span>/14</span></div>
-          </div>
-          <div class="lid-stat">
-            <div class="lid-stat-label">Salário base</div>
-            <div class="lid-stat-value accent3" id="lid-stat-base">$0</div>
-          </div>
-          <div class="lid-stat">
-            <div class="lid-stat-label">Total tips</div>
-            <div class="lid-stat-value accent2" id="lid-stat-tips">$0</div>
-          </div>
-        </div>
-
-        <div class="lid-total-row">
-          <div class="lid-total-label">Total com tips</div>
-          <div class="lid-total-value" id="lid-stat-total">$0.00</div>
-        </div>
-      </div>
-
-      <!-- Weekly breakdown -->
-      <div class="lid-card">
-        <div class="lid-card-header">Semanas</div>
-        <div id="lid-weeks-breakdown"></div>
-      </div>
-
-      <!-- Paycheck info -->
-      <div class="lid-card" id="lid-paycheck-card">
-        <div class="lid-card-header">Paycheck</div>
-        <div id="lid-paycheck-info"></div>
-        <button class="lid-btn lid-btn-secondary" style="margin-top:10px"
-                onclick="LID.openPaycheckModal()">Registrar Paycheck</button>
-      </div>
-
-      <!-- Period actions -->
-      <div style="display:flex;gap:10px;margin-top:4px">
-        <button class="lid-btn lid-btn-secondary" style="flex:1"
-                onclick="LID.openNewPeriodModal()">+ Nova Quinzena</button>
-        <button class="lid-btn lid-btn-danger lid-btn-sm" style="flex:0;padding:12px 16px"
-                onclick="LID.confirmDeletePeriod()">🗑</button>
-      </div>
-    </div>
-
-  </section>
-
-  <!-- ══════════════════════════════════════════════
-       TAB 2 — Daily Entry
-  ══════════════════════════════════════════════ -->
-  <section class="lid-section" id="tab-entry">
-
-    <div class="lid-no-period" id="lid-entry-no-period" style="display:none">
-      <p>Crie uma quinzena primeiro.</p>
-      <button class="lid-btn lid-btn-primary" onclick="LID.switchTab('dashboard')">← Ir para Resumo</button>
-    </div>
-
-    <div id="lid-entry-form-wrap">
-      <div class="lid-card">
-        <div class="lid-card-header" id="lid-entry-form-title">Registrar dia de trabalho</div>
-
-        <div class="lid-form-group">
-          <label class="lid-label">Data</label>
-          <input type="date" class="lid-input" id="lid-entry-date" />
-        </div>
-
-        <div class="lid-checkbox-row">
-          <input type="checkbox" id="lid-day-off" />
-          <label for="lid-day-off">Dia de folga</label>
-        </div>
-
-        <div id="lid-clock-fields">
-          <div class="lid-input-row">
-            <div class="lid-form-group">
-              <label class="lid-label">Clock In</label>
-              <input type="time" class="lid-input" id="lid-clock-in" />
-            </div>
-            <div class="lid-form-group">
-              <label class="lid-label">Clock Out</label>
-              <input type="time" class="lid-input" id="lid-clock-out" />
-            </div>
-          </div>
-
-          <div class="lid-input-row">
-            <div class="lid-form-group">
-              <label class="lid-label">Break Out</label>
-              <input type="time" class="lid-input" id="lid-break-out" />
-            </div>
-            <div class="lid-form-group">
-              <label class="lid-label">Break In</label>
-              <input type="time" class="lid-input" id="lid-break-in" />
-            </div>
-          </div>
-        </div>
-
-        <div class="lid-form-group">
-          <label class="lid-label">Observação (opcional)</label>
-          <input type="text" class="lid-input" id="lid-entry-notes" placeholder="ex: saí mais cedo" />
-        </div>
-
-        <!-- Live calc preview -->
-        <div class="lid-calc-preview" id="lid-calc-preview">
-          <span id="lid-calc-text"></span>
-        </div>
-
-        <input type="hidden" id="lid-entry-editing-id" value="" />
-
-        <button class="lid-btn lid-btn-primary" id="lid-save-entry-btn"
-                onclick="LID.saveEntry()">💾 Salvar Registro</button>
-
-        <button class="lid-btn lid-btn-secondary" id="lid-cancel-edit-btn"
-                onclick="LID.cancelEditEntry()" style="margin-top:8px;display:none">
-          Cancelar edição
-        </button>
-      </div>
-
-      <!-- Today's entries for the current period -->
-      <div class="lid-section-title">Registros da quinzena</div>
-      <div class="lid-entry-list" id="lid-entry-mini-list"></div>
-    </div>
-
-  </section>
-
-  <!-- ══════════════════════════════════════════════
-       TAB 3 — Tips
-  ══════════════════════════════════════════════ -->
-  <section class="lid-section" id="tab-tips">
-
-    <div class="lid-no-period" id="lid-tips-no-period" style="display:none">
-      <p>Crie uma quinzena primeiro.</p>
-      <button class="lid-btn lid-btn-primary" onclick="LID.switchTab('dashboard')">← Ir para Resumo</button>
-    </div>
-
-    <div id="lid-tips-form-wrap">
-      <div class="lid-card">
-        <div class="lid-card-header">Registrar tips da semana</div>
-        <p style="font-size:11px;color:var(--lid-muted);font-family:var(--lid-mono);margin-bottom:14px">
-          Tips recebidos toda segunda-feira, referentes à semana anterior (Dom→Sáb).
-        </p>
-
-        <div class="lid-form-group">
-          <label class="lid-label">Semana (domingo de início)</label>
-          <select class="lid-select" id="lid-tip-week-select"></select>
-        </div>
-
-        <div class="lid-form-group">
-          <label class="lid-label">Data de recebimento (segunda-feira)</label>
-          <input type="date" class="lid-input" id="lid-tip-received-on" />
-        </div>
-
-        <div class="lid-form-group">
-          <label class="lid-label">Valor dos tips ($)</label>
-          <input type="number" class="lid-input" id="lid-tip-amount"
-                 placeholder="0.00" step="0.01" min="0" />
-        </div>
-
-        <div class="lid-form-group">
-          <label class="lid-label">Observação (opcional)</label>
-          <input type="text" class="lid-input" id="lid-tip-notes" placeholder="ex: semana do Thanksgiving" />
-        </div>
-
-        <input type="hidden" id="lid-tip-editing-id" value="" />
-
-        <button class="lid-btn lid-btn-primary" id="lid-save-tip-btn"
-                onclick="LID.saveTip()">💾 Salvar Tips</button>
-
-        <button class="lid-btn lid-btn-secondary" id="lid-cancel-tip-btn"
-                onclick="LID.cancelEditTip()" style="margin-top:8px;display:none">
-          Cancelar edição
-        </button>
-      </div>
-
-      <div class="lid-section-title">Tips desta quinzena</div>
-      <div id="lid-tips-list"></div>
-    </div>
-
-  </section>
-
-  <!-- ══════════════════════════════════════════════
-       TAB 4 — History
-  ══════════════════════════════════════════════ -->
-  <section class="lid-section" id="tab-history">
-    <div class="lid-section-title">Todas as quinzenas</div>
-    <div id="lid-history-list"></div>
-  </section>
-
-</div><!-- /.lid-app -->
-
-<!-- ══ Modal: New Period ══════════════════════════════════════ -->
-<div class="lid-modal-overlay" id="lid-modal-period">
-  <div class="lid-modal">
-    <div class="lid-modal-title">
-      Nova Quinzena
-      <button class="lid-modal-close" onclick="LID.closeModal('lid-modal-period')">✕</button>
-    </div>
-
-    <div class="lid-form-group">
-      <label class="lid-label">Data de início (domingo)</label>
-      <input type="date" class="lid-input" id="lid-new-period-start" />
-    </div>
-
-    <div class="lid-form-group">
-      <label class="lid-label">Taxa horária ($)</label>
-      <input type="number" class="lid-input" id="lid-new-period-rate"
-             value="15" step="0.50" min="1" />
-    </div>
-
-    <div class="lid-form-group">
-      <label class="lid-label">Observação (opcional)</label>
-      <input type="text" class="lid-input" id="lid-new-period-notes" placeholder="" />
-    </div>
-
-    <button class="lid-btn lid-btn-primary" onclick="LID.savePeriod()">Criar Quinzena</button>
+<!-- Metrics -->
+<div class="metrics">
+  <div class="mc">
+    <div class="mc-label">Mês atual</div>
+    <div class="mc-val green" id="m-month">$0</div>
+    <div class="mc-sub" id="m-month-name">—</div>
+  </div>
+  <div class="mc">
+    <div class="mc-label">Cheques</div>
+    <div class="mc-val blue" id="m-cheques">$0</div>
+    <div class="mc-sub" id="m-cheques-count">0 recebidos</div>
+  </div>
+  <div class="mc">
+    <div class="mc-label">Tips</div>
+    <div class="mc-val orange" id="m-tips">$0</div>
+    <div class="mc-sub" id="m-tips-count">0 registros</div>
   </div>
 </div>
 
-<!-- ══ Modal: Paycheck ════════════════════════════════════════ -->
-<div class="lid-modal-overlay" id="lid-modal-paycheck">
-  <div class="lid-modal">
-    <div class="lid-modal-title">
-      Registrar Paycheck
-      <button class="lid-modal-close" onclick="LID.closeModal('lid-modal-paycheck')">✕</button>
-    </div>
+<!-- Month nav -->
+<div class="month-nav">
+  <button onclick="prevMonth()">‹</button>
+  <div class="month-label" id="month-label">—</div>
+  <button onclick="nextMonth()">›</button>
+</div>
 
-    <div class="lid-form-group">
-      <label class="lid-label">Data do pagamento</label>
-      <input type="date" class="lid-input" id="lid-paycheck-date" />
+<!-- Cheque section -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-title">💳 Cheques Quinzenais</div>
+    <button class="add-btn" onclick="toggleForm('cheque')">+ Registrar Cheque</button>
+  </div>
+  <div id="cheque-form" style="display:none">
+    <div class="form-card">
+      <div class="form-row">
+        <div class="form-group" style="max-width:150px">
+          <label>Data do cheque</label>
+          <input type="date" id="c-date">
+        </div>
+        <div class="form-group" style="max-width:140px">
+          <label>Valor ($)</label>
+          <input type="number" id="c-val" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Observação (opcional)</label>
+          <input type="text" id="c-obs" placeholder="ex: quinzena 1–15">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-save" onclick="saveEntry('cheque')">💾 Salvar</button>
+        <button class="btn-cancel" onclick="toggleForm('cheque')">Cancelar</button>
+      </div>
     </div>
+  </div>
+  <div class="entries-list" id="cheque-list"></div>
+</div>
 
-    <div class="lid-form-group">
-      <label class="lid-label">Valor recebido ($)</label>
-      <input type="number" class="lid-input" id="lid-paycheck-amount"
-             placeholder="0.00" step="0.01" min="0" />
+<!-- Tips section -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-title">💵 Tips em Dinheiro</div>
+    <button class="add-btn" onclick="toggleForm('tips')">+ Registrar Tips</button>
+  </div>
+  <div id="tips-form" style="display:none">
+    <div class="form-card">
+      <div class="form-row">
+        <div class="form-group" style="max-width:150px">
+          <label>Data</label>
+          <input type="date" id="t-date">
+        </div>
+        <div class="form-group" style="max-width:140px">
+          <label>Valor ($)</label>
+          <input type="number" id="t-val" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Observação (opcional)</label>
+          <input type="text" id="t-obs" placeholder="ex: semana boa">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-save" onclick="saveEntry('tips')">💾 Salvar</button>
+        <button class="btn-cancel" onclick="toggleForm('tips')">Cancelar</button>
+      </div>
     </div>
+  </div>
+  <div class="entries-list" id="tips-list"></div>
+</div>
 
-    <button class="lid-btn lid-btn-primary" onclick="LID.savePaycheck()">Salvar</button>
+<!-- Total bar for current month view -->
+<div class="total-bar" id="total-bar">
+  <div>
+    <div class="total-bar-label">Total do mês</div>
+    <div id="total-bar-month" style="font-size:12px;opacity:.5;margin-top:2px">—</div>
+  </div>
+  <div class="total-bar-val" id="total-bar-val">$0.00</div>
+</div>
+
+<!-- History -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-title">📋 Histórico Geral</div>
+  </div>
+  <div class="history-wrap">
+    <table>
+      <thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Obs</th><th></th></tr></thead>
+      <tbody id="history-body"></tbody>
+    </table>
   </div>
 </div>
 
-<!-- ══ Toast ══════════════════════════════════════════════════ -->
-<div class="lid-toast" id="lid-toast"></div>
+<div class="toast" id="toast"></div>
+</div>
 
-<!-- Supabase CDN — same version used by app.js -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- Lidyane logic — standalone, does NOT import app.js -->
-<script src="lidyane.js"></script>
+<script>
+const SB_URL='https://icatgbqspkbwzjqtaaoz.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXRnYnFzcGtid3pqcXRhYW96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNDMzNTAsImV4cCI6MjA5MzgxOTM1MH0.3NQA6ui4n19yDT5aAkCArluKpTg0VXjb5bjvyvPW7Oc';
 
+async function sbReq(method,path,body=null){
+  const h={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+  if(method==='POST'||method==='PATCH') h['Prefer']='return=representation';
+  const r=await fetch(SB_URL+'/rest/v1'+path,{method,headers:h,body:body?JSON.stringify(body):undefined});
+  if(!r.ok){const e=await r.text();throw new Error(r.status+': '+e);}
+  return r.status===204?null:r.json();
+}
+
+let entries=[];
+let curYear=new Date().getFullYear();
+let curMonth=new Date().getMonth(); // 0-indexed
+
+function fmtDate(d){
+  if(!d)return'—';
+  const p=d.split('-');
+  return `${p[2]}/${p[1]}/${p[1]?p[0].slice(2):p[0]}`;
+}
+function fmtMoney(v){return'$'+parseFloat(v||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function monthName(m,y){
+  const names=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  return names[m]+' '+y;
+}
+
+function setSyncStatus(state,msg){
+  const dot=document.getElementById('sync-dot');
+  const txt=document.getElementById('sync-text');
+  dot.className='dot '+(state==='ok'?'ok':state==='err'?'err':'ld');
+  txt.textContent=msg;
+}
+
+async function load(){
+  setSyncStatus('loading','conectando...');
+  try{
+    const data=await sbReq('GET','/lidy_entries?select=*&order=date.desc');
+    entries=data||[];
+    setSyncStatus('ok','sincronizado ✓');
+    render();
+  }catch(e){
+    console.error(e);
+    setSyncStatus('err','erro — sem conexão');
+    entries=[];
+    render();
+  }
+}
+
+function toggleForm(type){
+  const el=document.getElementById(type+'-form');
+  const isOpen=el.style.display!=='none';
+  el.style.display=isOpen?'none':'block';
+  if(!isOpen){
+    const today=new Date().toISOString().slice(0,10);
+    document.getElementById(type==='cheque'?'c-date':'t-date').value=today;
+    document.getElementById(type==='cheque'?'c-val':'t-val').value='';
+    document.getElementById(type==='cheque'?'c-obs':'t-obs').value='';
+  }
+}
+
+async function saveEntry(type){
+  const dateEl=document.getElementById(type==='cheque'?'c-date':'t-date');
+  const valEl=document.getElementById(type==='cheque'?'c-val':'t-val');
+  const obsEl=document.getElementById(type==='cheque'?'c-obs':'t-obs');
+  const date=dateEl.value, val=parseFloat(valEl.value||0), obs=obsEl.value.trim();
+  if(!date){toast('Informe a data!');return;}
+  if(!val||val<=0){toast('Informe um valor válido!');return;}
+  const row={id:Date.now().toString(),type,date,amount:val,obs,saved_at:new Date().toISOString()};
+  setSyncStatus('loading','salvando...');
+  try{
+    await sbReq('POST','/lidy_entries',row);
+    entries.unshift(row);
+    setSyncStatus('ok','sincronizado ✓');
+    toast('✓ '+(type==='cheque'?'Cheque':'Tips')+' registrado!');
+    toggleForm(type);
+    render();
+  }catch(e){
+    setSyncStatus('err','erro ao salvar');
+    toast('Erro ao salvar — tente novamente');
+    console.error(e);
+  }
+}
+
+async function deleteEntry(id){
+  if(!confirm('Remover este registro?'))return;
+  setSyncStatus('loading','removendo...');
+  try{
+    await sbReq('DELETE','/lidy_entries?id=eq.'+id);
+    entries=entries.filter(e=>e.id!==id);
+    setSyncStatus('ok','sincronizado ✓');
+    toast('Removido');
+    render();
+  }catch(e){
+    setSyncStatus('err','erro');
+    toast('Erro ao remover');
+  }
+}
+
+function prevMonth(){curMonth--;if(curMonth<0){curMonth=11;curYear--;}render();}
+function nextMonth(){curMonth++;if(curMonth>11){curMonth=0;curYear++;}render();}
+
+function render(){
+  // filter by current month
+  const monthStr=(curMonth+1).toString().padStart(2,'0');
+  const prefix=curYear+'-'+monthStr;
+  const monthEntries=entries.filter(e=>e.date&&e.date.startsWith(prefix));
+  const cheques=monthEntries.filter(e=>e.type==='cheque');
+  const tips=monthEntries.filter(e=>e.type==='tips');
+  const totalCheque=cheques.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+  const totalTips=tips.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+  const totalMonth=totalCheque+totalTips;
+
+  // current month metrics (always current real month)
+  const now=new Date();
+  const nowPrefix=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
+  const nowEntries=entries.filter(e=>e.date&&e.date.startsWith(nowPrefix));
+  const nowCheques=nowEntries.filter(e=>e.type==='cheque');
+  const nowTips=nowEntries.filter(e=>e.type==='tips');
+  document.getElementById('m-month').textContent=fmtMoney(nowEntries.reduce((s,e)=>s+parseFloat(e.amount||0),0));
+  document.getElementById('m-month-name').textContent=monthName(now.getMonth(),now.getFullYear());
+  document.getElementById('m-cheques').textContent=fmtMoney(nowCheques.reduce((s,e)=>s+parseFloat(e.amount||0),0));
+  document.getElementById('m-cheques-count').textContent=nowCheques.length+(nowCheques.length===1?' recebido':' recebidos');
+  document.getElementById('m-tips').textContent=fmtMoney(nowTips.reduce((s,e)=>s+parseFloat(e.amount||0),0));
+  document.getElementById('m-tips-count').textContent=nowTips.length+(nowTips.length===1?' registro':' registros');
+
+  // month nav label
+  document.getElementById('month-label').textContent=monthName(curMonth,curYear);
+
+  // cheque list
+  const cl=document.getElementById('cheque-list');
+  if(!cheques.length){
+    cl.innerHTML='<div class="empty">Nenhum cheque registrado neste mês</div>';
+  }else{
+    cl.innerHTML=cheques.map(e=>`
+      <div class="entry">
+        <div class="entry-icon icon-cheque">💳</div>
+        <div class="entry-info">
+          <div class="entry-name">${e.obs||'Cheque quinzenal'}</div>
+          <div class="entry-sub">${fmtDate(e.date)}</div>
+        </div>
+        <div class="entry-amt cheque">${fmtMoney(e.amount)}</div>
+        <button class="del-btn" onclick="deleteEntry('${e.id}')" title="Remover">×</button>
+      </div>`).join('');
+  }
+
+  // tips list
+  const tl=document.getElementById('tips-list');
+  if(!tips.length){
+    tl.innerHTML='<div class="empty">Nenhum tips registrado neste mês</div>';
+  }else{
+    tl.innerHTML=tips.map(e=>`
+      <div class="entry">
+        <div class="entry-icon icon-tips">💵</div>
+        <div class="entry-info">
+          <div class="entry-name">${e.obs||'Tips em dinheiro'}</div>
+          <div class="entry-sub">${fmtDate(e.date)}</div>
+        </div>
+        <div class="entry-amt tips">${fmtMoney(e.amount)}</div>
+        <button class="del-btn" onclick="deleteEntry('${e.id}')" title="Remover">×</button>
+      </div>`).join('');
+  }
+
+  // total bar
+  document.getElementById('total-bar-month').textContent=monthName(curMonth,curYear);
+  document.getElementById('total-bar-val').textContent=fmtMoney(totalMonth);
+
+  // history table - all entries sorted by date desc
+  const tbody=document.getElementById('history-body');
+  const sorted=[...entries].sort((a,b)=>b.date.localeCompare(a.date));
+  if(!sorted.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:20px">Nenhum registro ainda</td></tr>';
+  }else{
+    tbody.innerHTML=sorted.map(e=>`
+      <tr>
+        <td>${fmtDate(e.date)}</td>
+        <td>${e.type==='cheque'?'<span class="t-cheque">Cheque</span>':'<span class="t-tips">Tips</span>'}</td>
+        <td class="${e.type==='cheque'?'t-cheque':'t-tips'}">${fmtMoney(e.amount)}</td>
+        <td style="color:var(--t3)">${e.obs||'—'}</td>
+        <td><button class="del-btn" onclick="deleteEntry('${e.id}')" title="Remover">×</button></td>
+      </tr>`).join('');
+  }
+}
+
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// init
+load();
+</script>
 </body>
 </html>
