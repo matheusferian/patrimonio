@@ -30,6 +30,22 @@ header{padding:24px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .dot.ok{background:#22c55e}.dot.err{background:var(--re)}.dot.ld{background:var(--or);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
+/* upcoming payments */
+.upcoming{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:14px 16px;margin:0 0 20px;box-shadow:var(--sh)}
+.upcoming-title{font-size:11px;font-weight:600;color:var(--t2);font-family:var(--mo);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.up-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--b)}
+.up-item:last-child{border-bottom:none}
+.up-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;font-family:var(--mo);flex-shrink:0;white-space:nowrap}
+.up-badge.cheque{background:var(--bll);color:var(--bl)}
+.up-badge.tips{background:var(--al);color:var(--ac)}
+.up-info{flex:1}
+.up-date{font-size:13px;font-weight:600;color:var(--t)}
+.up-period{font-size:11px;color:var(--t3);margin-top:1px}
+.up-days{font-size:11px;font-family:var(--mo);padding:3px 8px;border-radius:99px;flex-shrink:0;white-space:nowrap}
+.up-days.today{background:#fef3e8;color:var(--or);font-weight:600}
+.up-days.soon{background:#e8f4ef;color:var(--ac);font-weight:600}
+.up-days.future{background:var(--s2);color:var(--t3)}
+
 /* metrics */
 .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}
 .mc{background:var(--s);border-radius:var(--r);padding:14px 16px;border:1px solid var(--b);box-shadow:var(--sh)}
@@ -135,6 +151,12 @@ tr:last-child td{border-bottom:none}
     <div class="mc-val orange" id="m-tips">$0</div>
     <div class="mc-sub" id="m-tips-count">0 registros</div>
   </div>
+</div>
+
+<!-- Upcoming payments -->
+<div class="upcoming">
+  <div class="upcoming-title">📅 Próximos pagamentos</div>
+  <div id="upcoming-list"></div>
 </div>
 
 <!-- Month nav -->
@@ -421,7 +443,124 @@ function toast(msg){
   setTimeout(()=>el.classList.remove('show'),2500);
 }
 
+// ── Upcoming payments logic ─────────────────────────────────────────────────
+// Quinzena: starts Sunday, ends Saturday (14 days), cheque arrives next Saturday
+// Tips: week Sun-Sat, received following Monday
+
+function getNextSaturday(from){
+  const d = new Date(from);
+  const day = d.getDay(); // 0=Sun,6=Sat
+  const diff = day===6 ? 7 : (6-day);
+  d.setDate(d.getDate()+diff);
+  return d;
+}
+function getNextMonday(from){
+  const d = new Date(from);
+  const day = d.getDay();
+  const diff = day===1 ? 7 : (1-day+7)%7||7;
+  d.setDate(d.getDate()+diff);
+  return d;
+}
+function getPrevSunday(from){
+  const d = new Date(from);
+  const day = d.getDay();
+  d.setDate(d.getDate()-day);
+  return d;
+}
+function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function fmtFull(d){
+  return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+}
+function fmtShort(d){
+  return (d.getDate()).toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0');
+}
+
+function renderUpcoming(){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  // --- CHEQUES ---
+  // Find current quinzena start (last Sunday that started a quinzena)
+  // Quinzenas start every other Sunday. Anchor: 2026-04-19 was a Sunday start
+  const anchor = new Date('2026-04-19');
+  const diffDays = Math.floor((today - anchor) / 86400000);
+  const qzIndex = Math.floor(diffDays / 14);
+  const currentQzStart = addDays(anchor, qzIndex * 14);
+  const currentQzEnd = addDays(currentQzStart, 13); // Saturday
+  const currentChequeDate = addDays(currentQzEnd, 7); // next Saturday after end
+
+  const nextQzStart = addDays(currentQzStart, 14);
+  const nextQzEnd = addDays(nextQzStart, 13);
+  const nextChequeDate = addDays(nextQzEnd, 7);
+
+  // --- TIPS ---
+  // Current week: Sun to Sat, tips paid next Monday
+  const weekStart = getPrevSunday(today);
+  const weekEnd = addDays(weekStart, 6);
+  const tipsDate = addDays(weekEnd, 2); // Monday after Saturday
+
+  const nextWeekStart = addDays(weekStart, 7);
+  const nextWeekEnd = addDays(nextWeekStart, 6);
+  const nextTipsDate = addDays(nextWeekEnd, 2);
+
+  function daysLabel(date){
+    const diff = Math.floor((date - today) / 86400000);
+    if(diff === 0) return {label:'hoje!', cls:'today'};
+    if(diff === 1) return {label:'amanhã', cls:'today'};
+    if(diff <= 7) return {label:'em '+diff+' dias', cls:'soon'};
+    return {label:'em '+diff+' dias', cls:'future'};
+  }
+
+  const items = [
+    {
+      type:'tips', date:tipsDate,
+      label:'Tips — semana '+fmtShort(weekStart)+' a '+fmtShort(weekEnd),
+      ...daysLabel(tipsDate)
+    },
+    {
+      type:'cheque', date:currentChequeDate,
+      label:'Cheque — quinzena '+fmtShort(currentQzStart)+' a '+fmtShort(currentQzEnd),
+      ...daysLabel(currentChequeDate)
+    },
+    {
+      type:'tips', date:nextTipsDate,
+      label:'Tips — semana '+fmtShort(nextWeekStart)+' a '+fmtShort(nextWeekEnd),
+      ...daysLabel(nextTipsDate)
+    },
+    {
+      type:'cheque', date:nextChequeDate,
+      label:'Cheque — quinzena '+fmtShort(nextQzStart)+' a '+fmtShort(nextQzEnd),
+      ...daysLabel(nextChequeDate)
+    }
+  ].sort((a,b)=>a.date-b.date).slice(0,4);
+
+  document.getElementById('upcoming-list').innerHTML = items.map(item=>`
+    <div class="up-item">
+      <span class="up-badge ${item.type}">${item.type==='cheque'?'Cheque':'Tips'}</span>
+      <div class="up-info">
+        <div class="up-date">${fmtFull(item.date)}</div>
+        <div class="up-period">${item.label}</div>
+      </div>
+      <span class="up-days ${item.cls}">${item.label2||item.label.includes('hoje')?'':''} ${item.label}</span>
+      <span class="up-days ${item.cls}">${item.cls==='today'?item.label:item.label}</span>
+    </div>`).join('');
+
+  // cleaner render
+  document.getElementById('upcoming-list').innerHTML = items.map(item=>{
+    const dl = daysLabel(item.date);
+    return `<div class="up-item">
+      <span class="up-badge ${item.type}">${item.type==='cheque'?'💳 Cheque':'💵 Tips'}</span>
+      <div class="up-info">
+        <div class="up-date">${fmtFull(item.date)}</div>
+        <div class="up-period">${item.label}</div>
+      </div>
+      <span class="up-days ${dl.cls}">${dl.label}</span>
+    </div>`;
+  }).join('');
+}
+
 // init
+renderUpcoming();
 load();
 </script>
 </body>
