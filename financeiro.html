@@ -135,6 +135,29 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .ld{width:9px;height:9px;border-radius:2px;flex-shrink:0}
 .empty{text-align:center;color:var(--t3);font-size:12px;padding:14px 0;font-family:var(--mo)}
 .edit-hint{font-size:10px;color:var(--t3);font-family:var(--mo);margin-bottom:8px}
+/* edit recurring modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding-top:60px}
+.modal-bg.hidden{display:none}
+.modal{background:var(--s);border:1px solid var(--b);border-radius:var(--r);width:100%;max-width:600px;max-height:80vh;overflow-y:auto;padding:18px 20px;margin:0 16px}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.modal-title{font-size:14px;font-weight:600;color:var(--t)}
+.modal-close{background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;padding:0 4px}
+.modal-close:hover{color:var(--t)}
+.rec-edit-item{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid var(--b)}
+.rec-edit-item:last-child{border-bottom:none}
+.re-day{width:40px;font-family:var(--mo);font-size:12px}
+.re-name{flex:1;min-width:0}
+.re-amt{width:80px;font-family:var(--mo);font-size:12px;text-align:right}
+.re-adv{width:32px;text-align:center;font-family:var(--mo);font-size:12px}
+.re-inp{background:var(--s2);border:1px solid var(--b);border-radius:5px;color:var(--t);font-size:12px;font-family:var(--sa);padding:4px 7px;outline:none;width:100%}
+.re-inp:focus{border-color:var(--amber)}
+.re-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px;padding:2px 4px;flex-shrink:0}
+.re-del:hover{color:var(--red)}
+.add-rec-btn{background:none;border:1px dashed var(--b);border-radius:var(--r);padding:6px;font-size:11px;font-family:var(--mo);color:var(--t3);cursor:pointer;width:100%;margin-top:8px}
+.add-rec-btn:hover{border-color:var(--green);color:var(--green)}
+.save-rec-btn{background:var(--green);color:#fff;border:none;border-radius:var(--r);padding:8px 18px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--mo);margin-top:12px;width:100%}
+.save-rec-btn:hover{opacity:.88}
+
 .toast{position:fixed;bottom:20px;right:20px;background:var(--s2);color:var(--t);border:1px solid var(--b);padding:9px 16px;border-radius:var(--r);font-size:13px;opacity:0;transform:translateY(6px);transition:all .22s;pointer-events:none;z-index:99}
 .toast.show{opacity:1;transform:none}
 </style>
@@ -172,10 +195,13 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 
 <!-- Recurring apply -->
 <div class="rec-section">
-  <button class="rec-toggle" onclick="toggleRec()">
-    <span>🔄 Contas recorrentes — adicionar ao mês</span>
-    <span id="rec-arrow" style="font-family:var(--mo);font-size:12px">▸</span>
-  </button>
+  <div style="display:flex;gap:6px">
+    <button class="rec-toggle" style="flex:1" onclick="toggleRec()">
+      <span>🔄 Contas recorrentes — adicionar ao mês</span>
+      <span id="rec-arrow" style="font-family:var(--mo);font-size:12px">▸</span>
+    </button>
+    <button onclick="openRecModal()" style="background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:7px 14px;font-size:12px;font-family:var(--mo);color:var(--t3);cursor:pointer;white-space:nowrap;flex-shrink:0">✏️ Editar</button>
+  </div>
   <div class="rec-panel" id="rec-panel">
     <div style="font-size:11px;color:var(--t3);margin-bottom:10px;font-family:var(--mo)">Selecione as contas para adicionar ao mês atual. Valores editáveis depois.</div>
     <div class="rec-list" id="rec-list"></div>
@@ -228,6 +254,22 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Edit recurring modal -->
+<div class="modal-bg hidden" id="rec-modal" onclick="closeRecModal(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">✏️ Editar contas recorrentes</span>
+      <button class="modal-close" onclick="document.getElementById('rec-modal').classList.add('hidden')">×</button>
+    </div>
+    <div style="font-size:11px;color:var(--t3);font-family:var(--mo);margin-bottom:12px;display:grid;grid-template-columns:40px 1fr 80px 32px 30px;gap:6px;padding:0 4px">
+      <span>Dia</span><span>Nome</span><span style="text-align:right">Valor</span><span style="text-align:center" title="Dias de antecedência para alerta">Aviso</span><span></span>
+    </div>
+    <div id="rec-edit-list"></div>
+    <button class="add-rec-btn" onclick="addRecItem()">+ nova conta recorrente</button>
+    <button class="save-rec-btn" onclick="saveRecurring()">💾 Salvar alterações</button>
+  </div>
+</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -245,25 +287,29 @@ async function sb(m,p,b=null){
 
 // ── Recurring bills master list ──────────────────────────────────────────────
 // advance: days before due date you need to ACT (Remitly takes 3-5 days, use 7 to be safe)
-const RECURRING = [
-  {day:1, name:"Aluguel",            amt:1740.00},
-  {day:1, name:"Taos",               amt:535.98},
-  {day:2, name:"FPL",                amt:136.00,  note:"valor varia"},
-  {day:4, name:"BJS Card",           amt:230.00,  note:"valor varia"},
-  {day:5, name:"EB2NIW",             amt:1000.00},
-  {day:6, name:"PayPal Card",        amt:181.97},
-  {day:10,name:"Apto Plano Lidy",    amt:70.00},
-  {day:11,name:"Tax",                amt:305.00,  note:"valor varia"},
-  {day:13,name:"Xfinity",            amt:127.00,  note:"valor varia"},
-  {day:18,name:"Planet Academia",    amt:26.74},
-  {day:19,name:"AT&T Telefone",      amt:234.00,  note:"valor varia"},
-  {day:23,name:"Corolla",            amt:445.12},
-  {day:25,name:"Cartão Brasil Matheus", amt:80.00, advance:7, advanceNote:"enviar Remitly antes"},
-  {day:29,name:"Progressive",        amt:309.07,  note:"valor varia"},
-  // Lidy
-  {day:4, name:"Apto Caixa Lidy",    amt:200.00,  advance:7, advanceNote:"enviar antes via Remitly"},
-  {day:5, name:"Faculdade Lidy",     amt:100.00,  advance:7, advanceNote:"enviar antes via Remitly"},
+const RECURRING_DEFAULT = [
+  {day:1, name:"Aluguel",               amt:1740.00},
+  {day:1, name:"Taos",                  amt:535.98},
+  {day:2, name:"FPL",                   amt:136.00},
+  {day:4, name:"BJS Card",              amt:230.00},
+  {day:5, name:"EB2NIW",                amt:1000.00},
+  {day:6, name:"PayPal Card",           amt:181.97},
+  {day:10,name:"Apto Plano Lidy",       amt:70.00},
+  {day:11,name:"Tax",                   amt:305.00},
+  {day:13,name:"Xfinity",               amt:127.00},
+  {day:18,name:"Planet Academia",       amt:26.74},
+  {day:19,name:"AT&T Telefone",         amt:234.00},
+  {day:23,name:"Corolla",               amt:445.12},
+  {day:25,name:"Cartão Brasil Matheus", amt:80.00,  advance:7, advanceNote:"enviar via Remitly antes"},
+  {day:29,name:"Progressive",           amt:309.07},
+  {day:4, name:"Apto Caixa Lidy",       amt:200.00, advance:7, advanceNote:"enviar via Remitly antes"},
+  {day:5, name:"Faculdade Lidy",        amt:100.00, advance:7, advanceNote:"enviar via Remitly antes"},
 ];
+let RECURRING = JSON.parse(localStorage.getItem('recurring_v1')||'null') || RECURRING_DEFAULT.map((r,i)=>({...r,id:i}));
+
+function saveRecurringLocal(){
+  localStorage.setItem('recurring_v1', JSON.stringify(RECURRING));
+}
 
 // ── State ────────────────────────────────────────────────────────────────────
 let weeksData=[],lidyData=[],billsState={},billsEdits={},billsAdded={};
@@ -594,6 +640,68 @@ function renderChart(){
 }
 
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
+
+// ── Edit Recurring Modal ────────────────────────────────────────────────────
+function openRecModal(){
+  renderRecEditList();
+  document.getElementById('rec-modal').classList.remove('hidden');
+}
+
+function closeRecModal(e){
+  if(e.target===document.getElementById('rec-modal'))
+    document.getElementById('rec-modal').classList.add('hidden');
+}
+
+function renderRecEditList(){
+  document.getElementById('rec-edit-list').innerHTML = RECURRING.map((r,i)=>`
+    <div class="rec-edit-item" id="rei-${i}">
+      <div class="re-day"><input class="re-inp" type="number" min="1" max="31" value="${r.day}" onchange="updateRec(${i},'day',this.value)"></div>
+      <div class="re-name"><input class="re-inp" type="text" value="${r.name.replace(/"/g,'&quot;')}" onchange="updateRec(${i},'name',this.value)"></div>
+      <div class="re-amt"><input class="re-inp" type="number" min="0" step="0.01" value="${r.amt}" onchange="updateRec(${i},'amt',this.value)" style="text-align:right"></div>
+      <div class="re-adv" title="Dias de antecedência para alerta Remitly (0 = sem aviso)">
+        <input class="re-inp" type="number" min="0" max="30" value="${r.advance||0}" onchange="updateRec(${i},'advance',this.value)" style="text-align:center">
+      </div>
+      <button class="re-del" onclick="deleteRec(${i})">×</button>
+    </div>`).join('');
+}
+
+function updateRec(i,field,val){
+  if(field==='day'||field==='advance') RECURRING[i][field]=parseInt(val)||0;
+  else if(field==='amt') RECURRING[i][field]=parseFloat(val)||0;
+  else RECURRING[i][field]=val;
+}
+
+function deleteRec(i){
+  RECURRING.splice(i,1);
+  renderRecEditList();
+}
+
+function addRecItem(){
+  RECURRING.push({day:1,name:'Nova conta',amt:0,advance:0,advanceNote:''});
+  renderRecEditList();
+  // scroll to bottom
+  const list=document.getElementById('rec-edit-list');
+  list.scrollTop=list.scrollHeight;
+}
+
+function saveRecurring(){
+  // collect all current values from inputs
+  RECURRING.forEach((r,i)=>{
+    const row=document.getElementById('rei-'+i);
+    if(!row)return;
+    const inputs=row.querySelectorAll('input');
+    r.day=parseInt(inputs[0].value)||1;
+    r.name=inputs[1].value.trim()||r.name;
+    r.amt=parseFloat(inputs[2].value)||0;
+    r.advance=parseInt(inputs[3].value)||0;
+    if(r.advance>0&&!r.advanceNote) r.advanceNote='enviar via Remitly antes';
+    if(r.advance===0) r.advanceNote='';
+  });
+  RECURRING.sort((a,b)=>a.day-b.day);
+  saveRecurringLocal();
+  document.getElementById('rec-modal').classList.add('hidden');
+  toast('✓ Contas recorrentes salvas!');
+}
 
 loadAll();
 </script>
