@@ -316,16 +316,18 @@ async function loadRecurring(){
 
 async function saveRecurringRemote(){
   try{
-    await sb('POST','/fin_recurring',{id:'1',data:RECURRING,updated_at:new Date().toISOString()});
-  }catch(e){
-    // try PATCH if POST fails due to conflict
-    try{await sb('PATCH','/fin_recurring?id=eq.1',{data:RECURRING,updated_at:new Date().toISOString()});}
-    catch(e2){console.error('save recurring failed',e2);}
-  }
+    // upsert: insert or update if exists
+    const h={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'resolution=merge-duplicates,return=representation'};
+    await fetch(SB_URL+'/rest/v1/fin_recurring',{
+      method:'POST', headers:h,
+      body:JSON.stringify({id:'1',data:RECURRING,updated_at:new Date().toISOString()})
+    });
+  }catch(e){console.error('save recurring failed',e);}
 }
 
 // ── State ────────────────────────────────────────────────────────────────────
-let weeksData=[],lidyData=[],billsState={},billsEdits={},billsAdded={};
+let weeksData=[],lidyData=[];
+let monthBills={}; // {mk: [{key,day,name,amt,paid}]} — stored in Supabase
 let curYear=new Date().getFullYear(), curMonth=new Date().getMonth();
 let histChart=null;
 
@@ -342,16 +344,29 @@ function setSS(s,msg){
 async function loadAll(){
   setSS('ld','conectando...');
   try{
-    const[weeks,lidy,bstate]=await Promise.all([
+    const[weeks,lidy,mbills]=await Promise.all([
       sb('GET','/weeks?select=*&order=saved_at.desc').catch(()=>[]),
       sb('GET','/lidy_entries?select=*&order=date.desc').catch(()=>[]),
-      sb('GET','/fin_bills_state?select=*').catch(()=>[]),
+      sb('GET','/fin_month_bills?select=*').catch(()=>[])
     ]);
     weeksData=weeks||[]; lidyData=lidy||[];
-    (bstate||[]).forEach(r=>{billsState[r.key]=r.paid;});
+    // rebuild monthBills from DB
+    monthBills={};
+    (mbills||[]).forEach(r=>{monthBills[r.month_key]=r.bills||[];});
     await loadRecurring();
     setSS('ok','sincronizado ✓'); render();
   }catch(e){setSS('err','erro de conexão');render();}
+}
+
+async function saveMonthBills(mk){
+  const bills=monthBills[mk]||[];
+  try{
+    const h={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'resolution=merge-duplicates,return=representation'};
+    await fetch(SB_URL+'/rest/v1/fin_month_bills',{
+      method:'POST',headers:h,
+      body:JSON.stringify({month_key:mk,bills,updated_at:new Date().toISOString()})
+    });
+  }catch(e){console.error('saveMonthBills failed',e);}
 }
 
 function prevMonth(){curMonth--;if(curMonth<0){curMonth=11;curYear--;}render();}
@@ -392,37 +407,31 @@ function getLidyIncome(m){
 
 // ── Bills ────────────────────────────────────────────────────────────────────
 function getBills(m){
-  const base=(billsAdded[m]||[]).map(b=>({...b}));
-  // Apply edits
-  base.forEach(b=>{
-    const e=billsEdits[b.key]||{};
-    if(e.day!==undefined)b.day=e.day;
-    if(e.name!==undefined)b.name=e.name;
-    if(e.amt!==undefined)b.amt=e.amt;
-    if(e.deleted)b.deleted=true;
-    const pOver=billsState[b.key];
-    if(pOver!==undefined)b.paid=pOver;
-  });
-  return base.filter(b=>!b.deleted).sort((a,b)=>a.day-b.day);
+  return (monthBills[m]||[]).slice().sort((a,b)=>a.day-b.day);
 }
 
 async function toggleBill(key,cur){
-  const nv=!cur; billsState[key]=nv; render();
-  try{await sb('POST','/fin_bills_state',{key,paid:nv});}catch(e){console.error(e);}
-}
-
-function addBill(){
   const m=mk();
-  if(!billsAdded[m])billsAdded[m]=[];
-  billsAdded[m].push({key:m+'_new_'+Date.now(),day:1,name:'Nova conta',amt:0,paid:false});
+  if(!monthBills[m])monthBills[m]=[];
+  const b=monthBills[m].find(x=>x.key===key);
+  if(b){b.paid=!cur;}
   render();
+  await saveMonthBills(m);
 }
 
-function deleteBill(key){
-  const m=mk(),arr=billsAdded[m]||[],i=arr.findIndex(b=>b.key===key);
-  if(i>=0){arr.splice(i,1);render();return;}
-  if(!billsEdits[key])billsEdits[key]={};
-  billsEdits[key].deleted=true; render();
+async function addBill(){
+  const m=mk();
+  if(!monthBills[m])monthBills[m]=[];
+  monthBills[m].push({key:m+'_new_'+Date.now(),day:1,name:'Nova conta',amt:0,paid:false});
+  render();
+  await saveMonthBills(m);
+}
+
+async function deleteBill(key){
+  const m=mk();
+  monthBills[m]=(monthBills[m]||[]).filter(b=>b.key!==key);
+  render();
+  await saveMonthBills(m);
 }
 
 function startEdit(el,key,field,val){
@@ -434,13 +443,15 @@ function startEdit(el,key,field,val){
   if(field==='day'){inp.min=1;inp.max=31;}
   if(field==='amt'){inp.min=0;inp.step='0.01';}
   el.innerHTML=''; el.appendChild(inp); inp.focus(); inp.select();
-  function save(){
+  async function save(){
     let v=inp.value.trim();
     if(field==='amt')v=parseFloat(v)||0;
     if(field==='day')v=parseInt(v)||1;
-    const m=mk(),arr=billsAdded[m]||[],item=arr.find(b=>b.key===key);
-    if(item){item[field]=v;}else{if(!billsEdits[key])billsEdits[key]={};billsEdits[key][field]=v;}
+    const m=mk();
+    const b=(monthBills[m]||[]).find(x=>x.key===key);
+    if(b){b[field]=v;}
     render();
+    await saveMonthBills(m);
   }
   inp.addEventListener('blur',save);
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key==='Escape')inp.blur();});
@@ -457,7 +468,7 @@ function toggleRec(){
 
 function renderRecList(){
   const m=mk();
-  const existing=(billsAdded[m]||[]).map(b=>b.name.toLowerCase());
+  const existing=(monthBills[m]||[]).map(b=>b.name.toLowerCase());
   document.getElementById('rec-list').innerHTML=RECURRING.map((r,i)=>{
     const alreadyIn=existing.some(n=>n.includes(r.name.toLowerCase().slice(0,6)));
     return `<div class="rec-item">
@@ -475,14 +486,14 @@ function selectAllRec(){
   document.querySelectorAll('#rec-list input[type=checkbox]:not(:disabled)').forEach(c=>c.checked=true);
 }
 
-function applyRecurring(){
+async function applyRecurring(){
   const m=mk();
-  if(!billsAdded[m])billsAdded[m]=[];
+  if(!monthBills[m])monthBills[m]=[];
   let count=0;
   RECURRING.forEach((r,i)=>{
     const cb=document.getElementById('rc'+i);
     if(!cb||!cb.checked||cb.disabled)return;
-    billsAdded[m].push({
+    monthBills[m].push({
       key:m+'_rec_'+i+'_'+Date.now(),
       day:r.day, name:r.name, amt:r.amt, paid:false,
       advance:r.advance||0, advanceNote:r.advanceNote||''
@@ -493,6 +504,7 @@ function applyRecurring(){
   document.getElementById('rec-panel').style.display='none';
   document.getElementById('rec-arrow').textContent='▸';
   render();
+  await saveMonthBills(m);
 }
 
 // ── Alerts (only for current month) ─────────────────────────────────────────
