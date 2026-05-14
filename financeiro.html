@@ -305,10 +305,23 @@ const RECURRING_DEFAULT = [
   {day:4, name:"Apto Caixa Lidy",       amt:200.00, advance:7, advanceNote:"enviar via Remitly antes"},
   {day:5, name:"Faculdade Lidy",        amt:100.00, advance:7, advanceNote:"enviar via Remitly antes"},
 ];
-let RECURRING = JSON.parse(localStorage.getItem('recurring_v1')||'null') || RECURRING_DEFAULT.map((r,i)=>({...r,id:i}));
+let RECURRING = RECURRING_DEFAULT.map((r,i)=>({...r,id:i}));
 
-function saveRecurringLocal(){
-  localStorage.setItem('recurring_v1', JSON.stringify(RECURRING));
+async function loadRecurring(){
+  try{
+    const res = await sb('GET','/fin_recurring?id=eq.1&select=*');
+    if(res&&res.length&&res[0].data) RECURRING = res[0].data;
+  }catch(e){console.log('recurring load failed, using default');}
+}
+
+async function saveRecurringRemote(){
+  try{
+    await sb('POST','/fin_recurring',{id:'1',data:RECURRING,updated_at:new Date().toISOString()});
+  }catch(e){
+    // try PATCH if POST fails due to conflict
+    try{await sb('PATCH','/fin_recurring?id=eq.1',{data:RECURRING,updated_at:new Date().toISOString()});}
+    catch(e2){console.error('save recurring failed',e2);}
+  }
 }
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -332,10 +345,11 @@ async function loadAll(){
     const[weeks,lidy,bstate]=await Promise.all([
       sb('GET','/weeks?select=*&order=saved_at.desc').catch(()=>[]),
       sb('GET','/lidy_entries?select=*&order=date.desc').catch(()=>[]),
-      sb('GET','/fin_bills_state?select=*').catch(()=>[])
+      sb('GET','/fin_bills_state?select=*').catch(()=>[]),
     ]);
     weeksData=weeks||[]; lidyData=lidy||[];
     (bstate||[]).forEach(r=>{billsState[r.key]=r.paid;});
+    await loadRecurring();
     setSS('ok','sincronizado ✓'); render();
   }catch(e){setSS('err','erro de conexão');render();}
 }
@@ -684,7 +698,7 @@ function addRecItem(){
   list.scrollTop=list.scrollHeight;
 }
 
-function saveRecurring(){
+async function saveRecurring(){
   // collect all current values from inputs
   RECURRING.forEach((r,i)=>{
     const row=document.getElementById('rei-'+i);
@@ -698,7 +712,7 @@ function saveRecurring(){
     if(r.advance===0) r.advanceNote='';
   });
   RECURRING.sort((a,b)=>a.day-b.day);
-  saveRecurringLocal();
+  await saveRecurringRemote();
   document.getElementById('rec-modal').classList.add('hidden');
   toast('✓ Contas recorrentes salvas!');
 }
