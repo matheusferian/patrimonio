@@ -329,29 +329,43 @@ input:focus{border-color:var(--ac)}input::placeholder{color:var(--t3)}
 <div class="pn" id="tab-cash">
   <div class="fh">
     <div>
-      <div class="ftt">Divisão <span id="clb" style="font-size:15px;color:var(--t2)">&mdash;</span></div>
-      <div style="font-family:var(--mo);font-size:11px;color:var(--t3);margin-top:2px">Valor exato que cada um segura por dia</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <span style="font-family:var(--mo);font-size:10px;color:var(--t3);letter-spacing:.1em;text-transform:uppercase">Semana</span>
-      <input type="text" id="cwn" placeholder="ex: May 11-17" style="width:150px" oninput="updCL()">
+      <div class="ftt">Divisão <span id="clb" style="font-size:15px;color:var(--ac)">&mdash;</span></div>
+      <div style="font-family:var(--mo);font-size:11px;color:var(--t3);margin-top:2px">Por dia: quem fechou fica com tudo → domingo vocês acertam</div>
     </div>
   </div>
-  <div class="sl">💵 Cash por dia</div>
-  <div class="ccl"><span></span><span style="color:var(--ac)">Matheus ($)</span><span style="color:var(--bl)">Luiz ($)</span><span style="color:var(--t3)">Obs</span></div>
-  <div class="cg" id="cg"></div>
-  <div class="sl">⚖️ Acerto</div>
-  <div class="set" id="setbox"><div class="set-t">resumo do acerto</div><div class="emp" style="padding:12px">Preencha os valores acima</div></div>
+
+  <!-- SELETOR -->
+  <div class="sl">selecionar semana</div>
+  <div class="ws" id="cwsel"></div>
+
+  <!-- DIAS: quem fechou + valor -->
+  <div class="sl">📅 quem fechou cada dia</div>
+  <div style="background:var(--bg2);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:90px 1fr 120px;gap:0;font-family:var(--mo);font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);padding:9px 14px;background:var(--bg3);border-bottom:1px solid var(--b)">
+      <span>Dia</span><span>Quem fechou</span><span style="text-align:right">Tips do dia ($)</span>
+    </div>
+    <div id="div-dias"></div>
+  </div>
+
+  <!-- RESULTADO DO ACERTO -->
+  <div id="div-acerto-wrap">
+    <div class="sl">⚖️ acerto do domingo</div>
+    <div id="div-acerto-box" style="background:var(--bg2);border:1px solid var(--b);border-radius:var(--r);padding:18px;margin-bottom:14px">
+      <div class="emp" style="padding:8px">Preencha os dias acima</div>
+    </div>
+  </div>
+
+  <!-- SALVAR -->
   <div class="bg">
-    <button class="btn bp" onclick="saveC()">💾 Salvar</button>
+    <button class="btn bp" onclick="saveC()">💾 Salvar acerto</button>
     <button class="btn bs" onclick="clearC()">↻ Limpar</button>
     <button class="btn bd" id="cdelbtn" onclick="delC()" style="display:none">🗑 Apagar</button>
   </div>
-  <div class="sl">semanas salvas — clique para editar</div>
-  <div class="ws" id="cwsel"></div>
-  <div class="st" style="cursor:default">histórico divisão</div>
+
+  <!-- HISTÓRICO -->
+  <div class="st" style="cursor:default">histórico de acertos</div>
   <div class="tw"><table>
-    <thead><tr><th>Semana</th><th>Matheus</th><th>Luiz</th><th>Total</th><th>Cada um</th><th>Transferência</th></tr></thead>
+    <thead><tr><th>Semana</th><th>Matheus ficou</th><th>Luiz ficou</th><th>Total pool</th><th>Cada um</th><th>Acerto</th></tr></thead>
     <tbody id="chtb"></tbody>
   </table></div>
 </div>
@@ -390,7 +404,7 @@ let db={weeks:[],cashWeeks:[]},eId=null,ceId=null;
 
 // ── API ──────────────────────────────────────────
 async function req(m,p,b){const h={"Content-Type":"application/json","apikey":SK,"Authorization":"Bearer "+SK};if(m==="POST")h["Prefer"]="resolution=merge-duplicates,return=minimal";const r=await fetch(SB+"/rest/v1"+p,{method:m,headers:h,body:b?JSON.stringify(b):undefined});if(!r.ok)throw new Error(await r.text());const t=await r.text();return t?JSON.parse(t):null;}
-async function load(retry){ss("ld","sincronizando...");try{const[w,c]=await Promise.all([req("GET","/weeks?select=*&order=saved_at.desc"),req("GET","/cash_weeks?select=*&order=saved_at.desc")]);db.weeks=(w||[]).map(r=>({...r.data,id:r.id,name:r.name,savedAt:r.saved_at}));db.cashWeeks=(c||[]).map(r=>({...r.data,id:r.id,name:r.name,savedAt:r.saved_at}));ss("ok","sincronizado");rDash();rWSel();rCHist();rCWSel();fillR();const ap=document.querySelector(".pn.active");if(ap&&ap.id==="tab-entry"&&!eId&&db.weeks.length)lwk(latW().id);if(ap&&ap.id==="tab-cash"&&!ceId&&db.cashWeeks.length)lcw(latCW().id);if(ap&&ap.id==="tab-report")renderR();}catch(e){if(!retry||retry<2){ss("ld","tentando...");setTimeout(()=>load((retry||0)+1),1500);}else ss("err","offline");}}
+async function load(retry){ss("ld","sincronizando...");try{const[w,c]=await Promise.all([req("GET","/weeks?select=*&order=saved_at.desc"),req("GET","/cash_weeks?select=*&order=saved_at.desc")]);db.weeks=(w||[]).map(r=>({...r.data,id:r.id,name:r.name,savedAt:r.saved_at}));db.cashWeeks=(c||[]).map(r=>({...r.data,id:r.id,name:r.name,savedAt:r.saved_at}));ss("ok","sincronizado");rDash();rWSel();rCHist();rCWSel();fillR();const ap=document.querySelector(".pn.active");if(ap&&ap.id==="tab-entry"&&!eId&&db.weeks.length)lwk(latW().id);if(ap&&ap.id==="tab-cash"){rCWSel();if(db.cashWeeks.length)lcw(db.cashWeeks[0].id);else if(db.weeks.length)loadDivByWeek(latW().id);}if(ap&&ap.id==="tab-report")renderR();}catch(e){if(!retry||retry<2){ss("ld","tentando...");setTimeout(()=>load((retry||0)+1),1500);}else ss("err","offline");}}
 async function pw(w){ss("ld","salvando...");try{await req("POST","/weeks",{id:w.id,name:w.name,data:w,saved_at:w.savedAt});ss("ok","salvo");}catch(e){ss("err","erro");throw e;}}
 async function pc(w){ss("ld","salvando...");try{await req("POST","/cash_weeks",{id:w.id,name:w.name,data:w,saved_at:w.savedAt});ss("ok","salvo");}catch(e){ss("err","erro");throw e;}}
 function ss(c,t){document.getElementById("dot").className="dot "+c;document.getElementById("st").textContent=t;}
@@ -580,16 +594,192 @@ function goLanc(id){goTab("entry",document.querySelector(".tab:nth-child(2)"));l
 function clearW(){eId=null;document.getElementById("wn").value="";document.getElementById("wlb").textContent="--";document.getElementById("ven").value="";document.getElementById("delbtn").style.display="none";DAYS.forEach(d=>{["_t","_h","_loc","_ev"].forEach(s=>{const e=document.getElementById(d.id+s);if(e)e.value="";});});document.getElementById("pl").innerHTML="";rWSel();recalc();}
 function updL(){document.getElementById("wlb").textContent=document.getElementById("wn").value||"--";}
 
-// ── CASH SPLIT ────────────────────────────────────
-function buildCG(){document.getElementById("cg").innerHTML=DAYS.map(d=>`<div class="cr"><div class="cd">${d.l.slice(0,3)}</div><div><input type="number" id="c_${d.id}_m" placeholder="0.00" step="0.01" oninput="recalcC()" style="border-left:3px solid rgba(0,255,136,.4)"></div><div><input type="number" id="c_${d.id}_l" placeholder="0.00" step="0.01" oninput="recalcC()" style="border-left:3px solid rgba(107,143,255,.4)"></div><div><input type="text" id="c_${d.id}_n" placeholder="obs..."></div></div>`).join("");}
-function recalcC(){let me=0,luiz=0;DAYS.forEach(d=>{me+=parseFloat(document.getElementById("c_"+d.id+"_m")?.value||0)||0;luiz+=parseFloat(document.getElementById("c_"+d.id+"_l")?.value||0)||0;});const total=me+luiz,each=total/2,diff=me-each,box=document.getElementById("setbox");if(total===0){box.innerHTML="<div class=set-t>resumo do acerto</div><div class='emp' style='padding:12px'>Preencha os valores acima</div>";return;}let vd="";if(Math.abs(diff)<0.01)vd="<div class=vd><span class='vw g'>Em dia! Sem transferência necessária.</span></div>";else if(diff>0)vd="<div class=vd><span class='vw g'>Matheus</span> paga <span class='va o'>"+f$(diff)+"</span> para <span class='vw b'>Luiz</span></div>";else vd="<div class=vd><span class='vw b'>Luiz</span> paga <span class='va o'>"+f$(Math.abs(diff))+"</span> para <span class='vw g'>Matheus</span></div>";box.innerHTML="<div class=set-t>resumo do acerto</div><div class=sg><div class=sb><div class=sn>Matheus tem</div><div class='sv g'>"+f$(me)+"</div><div class=ss>deveria ter "+f$(each)+"</div></div><div class=sb><div class=sn>Luiz tem</div><div class='sv b'>"+f$(luiz)+"</div><div class=ss>deveria ter "+f$(each)+"</div></div><div class=sb><div class=sn>Total pool</div><div class='sv o'>"+f$(total)+"</div><div class=ss>cada um: "+f$(each)+"</div></div></div>"+vd;}
+// ── DIVISÃO DE CASH ───────────────────────────────
+// Estrutura por dia: {who: "mat"|"luiz"|"", tips: number}
+// "mat" = Matheus fechou e ficou com tudo; "luiz" = Luiz fechou e ficou com tudo
 
-function gCF(){const name=document.getElementById("cwn").value.trim(),days={};DAYS.forEach(d=>{days[d.id]={me:parseFloat(document.getElementById("c_"+d.id+"_m").value)||0,luiz:parseFloat(document.getElementById("c_"+d.id+"_l").value)||0,note:document.getElementById("c_"+d.id+"_n").value||""};});return{name,days,savedAt:new Date().toISOString()};}
-async function saveC(){const data=gCF();if(!data.name){toast("Informe o período!");return;}if(ceId){const i=db.cashWeeks.findIndex(w=>w.id===ceId);if(i>=0){data.id=ceId;db.cashWeeks[i]=data;}else{data.id="c"+Date.now();ceId=data.id;db.cashWeeks.push(data);}}else{data.id="c"+Date.now();ceId=data.id;db.cashWeeks.push(data);}try{await pc(data);toast("Divisão salva!");}catch(e){toast("Erro!");}rCHist();rCWSel();document.getElementById("cdelbtn").style.display="block";}
-async function delC(){if(!ceId||!confirm("Apagar?"))return;const id=ceId;db.cashWeeks=db.cashWeeks.filter(w=>w.id!==id);try{await req("DELETE","/cash_weeks?id=eq."+encodeURIComponent(id));}catch(e){}toast("Apagado.");ceId=null;rCHist();rCWSel();clearC();}
-function lcw(id){const w=db.cashWeeks.find(w=>w.id===id);if(!w)return;ceId=id;document.getElementById("cwn").value=w.name;document.getElementById("clb").textContent=w.name;DAYS.forEach(d=>{const v=w.days[d.id]||{};document.getElementById("c_"+d.id+"_m").value=v.me||"";document.getElementById("c_"+d.id+"_l").value=v.luiz||"";document.getElementById("c_"+d.id+"_n").value=v.note||"";});document.getElementById("cdelbtn").style.display="block";rCWSel();recalcC();}
-function clearC(){ceId=null;document.getElementById("cwn").value="";document.getElementById("clb").textContent="--";document.getElementById("cdelbtn").style.display="none";DAYS.forEach(d=>{["_m","_l","_n"].forEach(s=>{const e=document.getElementById("c_"+d.id+s);if(e)e.value="";});});rCWSel();recalcC();}
-function updCL(){document.getElementById("clb").textContent=document.getElementById("cwn").value||"--";}
+function buildDias(week){
+  // Pega tips do lançamento se existir, senão 0
+  const wk=week||null;
+  document.getElementById("div-dias").innerHTML=DAYS.map(d=>{
+    const tipsDoLanc=wk?((wk.days[d.id]||{}).tips||0):0;
+    const saved=ceId?(db.cashWeeks.find(w=>w.id===ceId)||null):null;
+    const sv=saved?(saved.days[d.id]||{}):null;
+    const who=sv?sv.who||"":"";
+    const tips=sv?sv.tips||tipsDoLanc:tipsDoLanc;
+    return `<div style="display:grid;grid-template-columns:90px 1fr 120px;gap:0;align-items:center;padding:10px 14px;border-bottom:1px solid var(--b)" id="drow-${d.id}">
+      <div style="font-family:var(--mo);font-size:12px;font-weight:600;color:var(--t2)">${d.l}</div>
+      <div style="display:flex;gap:6px">
+        <button class="dwho ${who==="mat"?"dwho-on-m":""}" onclick="setWho('${d.id}','mat')" id="dw-${d.id}-mat">Matheus</button>
+        <button class="dwho ${who==="luiz"?"dwho-on-l":""}" onclick="setWho('${d.id}','luiz')" id="dw-${d.id}-luiz">Luiz</button>
+        <button class="dwho ${who===""?"dwho-on-n":""}" onclick="setWho('${d.id}','')" id="dw-${d.id}-none" style="opacity:.5">—</button>
+      </div>
+      <div style="text-align:right">
+        <input type="number" id="ct-${d.id}" value="${tips||""}" placeholder="0.00" step="0.01"
+          style="width:100px;text-align:right;border-left:none;border-color:${who==="mat"?"rgba(0,255,136,.4)":who==="luiz"?"rgba(107,143,255,.4)":"var(--b)"}"
+          oninput="recalcC()">
+      </div>
+    </div>`;
+  }).join("")+"<style>.dwho{font-family:var(--mo);font-size:9px;font-weight:700;padding:5px 12px;border-radius:6px;border:1px solid var(--b);background:var(--bg3);color:var(--t3);cursor:pointer;text-transform:uppercase;letter-spacing:.06em;transition:all .15s}.dwho:hover{border-color:var(--t2);color:var(--t2)}.dwho-on-m{background:rgba(0,255,136,.15)!important;border-color:var(--ac)!important;color:var(--ac)!important}.dwho-on-l{background:rgba(107,143,255,.15)!important;border-color:var(--bl)!important;color:var(--bl)!important}.dwho-on-n{background:transparent!important}</style>";
+  recalcC();
+}
+
+function setWho(dayId,who){
+  // Atualizar botões
+  ["mat","luiz",""].forEach(w=>{
+    const key=w===""?"none":w;
+    const btn=document.getElementById("dw-"+dayId+"-"+key);
+    if(!btn)return;
+    btn.className="dwho"+(w===who?(w==="mat"?" dwho-on-m":w==="luiz"?" dwho-on-l":" dwho-on-n"):"");
+  });
+  // Atualizar cor do input
+  const inp=document.getElementById("ct-"+dayId);
+  if(inp)inp.style.borderColor=who==="mat"?"rgba(0,255,136,.4)":who==="luiz"?"rgba(107,143,255,.4)":"var(--b)";
+  recalcC();
+}
+
+function getWho(dayId){
+  if(document.getElementById("dw-"+dayId+"-mat")?.classList.contains("dwho-on-m"))return"mat";
+  if(document.getElementById("dw-"+dayId+"-luiz")?.classList.contains("dwho-on-l"))return"luiz";
+  return"";
+}
+
+function recalcC(){
+  let matTem=0,luizTem=0;
+  DAYS.forEach(d=>{
+    const tips=parseFloat(document.getElementById("ct-"+d.id)?.value||0)||0;
+    const who=getWho(d.id);
+    if(who==="mat")matTem+=tips;
+    else if(who==="luiz")luizTem+=tips;
+  });
+  const total=matTem+luizTem,each=total/2,diff=matTem-each;
+  const box=document.getElementById("div-acerto-box");
+  if(total===0){box.innerHTML="<div class='emp' style='padding:8px'>Preencha os dias acima</div>";return;}
+  let transferHTML="";
+  if(Math.abs(diff)<0.01){
+    transferHTML=`<div style="text-align:center;padding:16px 0 4px"><span style="font-family:var(--mo);font-size:16px;font-weight:700;color:var(--ac)">✅ Em dia! Sem transferência.</span></div>`;
+  }else if(diff>0){
+    // Matheus ficou com mais → paga pro Luiz
+    transferHTML=`<div style="text-align:center;padding:16px 0 4px">
+      <div style="font-family:var(--mo);font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">transferir no domingo</div>
+      <div style="font-family:var(--mo);font-size:36px;font-weight:700;color:var(--ac);">${f$(diff)}</div>
+      <div style="font-family:var(--mo);font-size:13px;color:var(--t2);margin-top:6px">
+        <span style="color:var(--ac);font-weight:700">Matheus</span> paga <span style="color:var(--bl);font-weight:700">Luiz</span>
+      </div>
+    </div>`;
+  }else{
+    // Luiz ficou com mais → paga pro Matheus
+    transferHTML=`<div style="text-align:center;padding:16px 0 4px">
+      <div style="font-family:var(--mo);font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">transferir no domingo</div>
+      <div style="font-family:var(--mo);font-size:36px;font-weight:700;color:var(--ac);">${f$(Math.abs(diff))}</div>
+      <div style="font-family:var(--mo);font-size:13px;color:var(--t2);margin-top:6px">
+        <span style="color:var(--bl);font-weight:700">Luiz</span> paga <span style="color:var(--ac);font-weight:700">Matheus</span>
+      </div>
+    </div>`;
+  }
+  box.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class=sb><div class=sn>Matheus ficou com</div><div class="sv g">${f$(matTem)}</div><div class=ss>deveria ter ${f$(each)}</div></div>
+      <div class=sb><div class=sn>Luiz ficou com</div><div class="sv b">${f$(luizTem)}</div><div class=ss>deveria ter ${f$(each)}</div></div>
+      <div class=sb><div class=sn>Total pool</div><div class="sv o">${f$(total)}</div><div class=ss>cada um: ${f$(each)}</div></div>
+    </div>
+    ${transferHTML}`;
+}
+
+function gCF(){
+  const wname=ceId?(db.cashWeeks.find(w=>w.id===ceId)||{}).name||"":
+    (db.weeks.find(w=>w.id===eId)||{}).name||"";
+  const days={};
+  DAYS.forEach(d=>{
+    days[d.id]={who:getWho(d.id),tips:parseFloat(document.getElementById("ct-"+d.id)?.value||0)||0};
+  });
+  return{name:wname,days,savedAt:new Date().toISOString()};
+}
+
+async function saveC(){
+  const data=gCF();
+  if(!data.name){toast("Selecione uma semana primeiro!");return;}
+  if(ceId){const i=db.cashWeeks.findIndex(w=>w.id===ceId);if(i>=0){data.id=ceId;db.cashWeeks[i]=data;}else{data.id="c"+Date.now();ceId=data.id;db.cashWeeks.push(data);}}
+  else{data.id="c"+Date.now();ceId=data.id;db.cashWeeks.push(data);}
+  try{await pc(data);toast("Acerto salvo!");}catch(e){toast("Erro!");}
+  rCHist();rCWSel();document.getElementById("cdelbtn").style.display="block";
+}
+
+async function delC(){if(!ceId||!confirm("Apagar este acerto?"))return;const id=ceId;db.cashWeeks=db.cashWeeks.filter(w=>w.id!==id);try{await req("DELETE","/cash_weeks?id=eq."+encodeURIComponent(id));}catch(e){}toast("Apagado.");ceId=null;rCHist();rCWSel();clearC();}
+
+function lcw(id){
+  const cw=db.cashWeeks.find(w=>w.id===id);if(!cw)return;
+  ceId=id;
+  document.getElementById("clb").textContent=cw.name||id;
+  // Tenta pegar os tips do lançamento correspondente
+  const wk=db.weeks.find(w=>w.name===cw.name)||null;
+  buildDias(wk);
+  // Aplica quem fechou + tips salvos
+  DAYS.forEach(d=>{
+    const v=cw.days[d.id]||{};
+    if(v.who)setWho(d.id,v.who);
+    const inp=document.getElementById("ct-"+d.id);
+    if(inp&&v.tips)inp.value=v.tips;
+  });
+  document.getElementById("cdelbtn").style.display="block";
+  rCWSel();recalcC();
+}
+
+function clearC(){
+  ceId=null;
+  document.getElementById("clb").textContent="--";
+  document.getElementById("cdelbtn").style.display="none";
+  buildDias(null);rCWSel();
+}
+
+function rCWSel(){
+  const s=document.getElementById("cwsel");
+  if(!db.weeks.length){s.innerHTML="<span style='font-size:12px;color:var(--t3);font-family:var(--mo)'>Nenhuma semana salva ainda</span>";return;}
+  // Mostra semanas do lançamento (fonte da verdade)
+  s.innerHTML=[...db.weeks].reverse().map(w=>{
+    const hasCash=db.cashWeeks.find(c=>c.name===w.name);
+    const isActive=ceId&&db.cashWeeks.find(c=>c.id===ceId&&c.name===w.name);
+    return "<button class='wp"+(isActive?" on":"")+"' onclick='loadDivByWeek(\""+w.id+"\")'>"+(w.name||w.id)+(hasCash?" ✓":"")+"</button>";
+  }).join("");
+}
+
+function loadDivByWeek(wkId){
+  const wk=db.weeks.find(w=>w.id===wkId);if(!wk)return;
+  const existing=db.cashWeeks.find(c=>c.name===wk.name);
+  if(existing){lcw(existing.id);}
+  else{
+    // Nova divisão para esta semana
+    ceId=null;
+    document.getElementById("clb").textContent=wk.name;
+    buildDias(wk);
+    document.getElementById("cdelbtn").style.display="none";
+    rCWSel();
+  }
+}
+
+function cC(w){
+  let mat=0,luiz=0;
+  Object.values(w.days).forEach(d=>{
+    const tips=d.tips||0;
+    if(d.who==="mat")mat+=tips;
+    else if(d.who==="luiz")luiz+=tips;
+  });
+  const total=mat+luiz,each=total/2,diff=mat-each;
+  return{me:mat,luiz,total,each,diff};
+}
+
+function rCHist(){
+  const tb=document.getElementById("chtb");
+  if(!db.cashWeeks.length){tb.innerHTML="<tr><td colspan=6 class=emp>Nenhum acerto registrado ainda</td></tr>";return;}
+  tb.innerHTML=[...db.cashWeeks].reverse().map(w=>{
+    const c=cC(w);
+    let tr="";
+    if(Math.abs(c.diff)<0.01)tr="<span class=g>Em dia</span>";
+    else if(c.diff>0)tr="<span class=g>Mat</span> → <span class='mn o'>"+f$(c.diff)+"</span> → <span class=b>Luiz</span>";
+    else tr="<span class=b>Luiz</span> → <span class='mn o'>"+f$(Math.abs(c.diff))+"</span> → <span class=g>Mat</span>";
+    return "<tr onclick='lcw(\""+w.id+"\")' style='cursor:pointer'><td><span class=tg>"+(w.name||w.id)+"</span></td><td class='mn g'>"+f$(c.me)+"</td><td class='mn b'>"+f$(c.luiz)+"</td><td class='mn o'>"+f$(c.total)+"</td><td class='mn g'>"+f$(c.each)+"</td><td>"+tr+"</td></tr>";
+  }).join("");
+}
 
 // ── RELATÓRIO ─────────────────────────────────────
 function fillR(){const s=document.getElementById("rsel");const cur=s.value;s.innerHTML="<option value=''>-- escolha uma semana --</option>";[...db.weeks].reverse().forEach(w=>{const o=document.createElement("option");o.value=w.id;o.textContent=w.name||w.id;s.appendChild(o);});if(cur)s.value=cur;else if(db.weeks.length){const l=latW();if(l)s.value=l.id;}}
@@ -626,7 +816,7 @@ function renderR(){
   const wlLines=["*Split de Tips - Semana "+w.name+"*","================================",""];
   if(w.venmo>0){wlLines.push("🔔 *LEMBRETE — Tips Venmo/Cartão*","Houve *"+f$(w.venmo)+"* em tips via Venmo/Cartão.","Cobrar *"+f$(w.venmo/2)+"* do Farber — não está no split.","================================","");}
   wlLines.push("*Detalhamento diário:*");
-  if(ct_raw){DAYS.forEach(d=>{const v=ct_raw.days[d.id]||{},wv=w.days[d.id]||{},tips=wv.tips||0,me=v.me||0,luiz=v.luiz||0;if(!tips&&!me&&!luiz)return;let line="  "+d.l+":";if(tips>0)line+=" tips $"+tips.toFixed(2);if(me>0&&luiz>0)line+=" | Matheus $"+me.toFixed(2)+" / Luiz $"+luiz.toFixed(2);else if(me>0)line+=" | Matheus tem $"+me.toFixed(2);else if(luiz>0)line+=" | Luiz tem $"+luiz.toFixed(2);wlLines.push(line);});const tipsTotal=t.tr+(w.venmo||0);wlLines.push("","================================","*Total pool: "+f$(tipsTotal)+"*","*Cada um deveria ter: "+f$(ct.each)+"*","","Matheus tem: "+f$(ct.me),"Luiz tem: "+f$(ct.luiz),"","================================");if(Math.abs(ct.diff)<0.01)wlLines.push("*Em dia — sem transferência*");else if(ct.diff>0)wlLines.push("*Matheus paga Luiz: "+f$(ct.diff)+"*");else wlLines.push("*Luiz paga Matheus: "+f$(Math.abs(ct.diff))+"*");}else{DAYS.forEach(d=>{const v=w.days[d.id]||{};if(!v.tips)return;wlLines.push("  "+d.l+": tips $"+v.tips.toFixed(2));});const tipsTotal=t.tr+(w.venmo||0);wlLines.push("","================================","*Total tips: "+f$(tipsTotal)+"*","*Cada um recebe: "+f$(t.tips)+"*","","(Preencha a aba Divisão para detalhes)");}
+  if(ct_raw){const c=cC(ct_raw);DAYS.forEach(d=>{const v=ct_raw.days[d.id]||{},wv=w.days[d.id]||{},tips=v.tips||wv.tips||0;if(!tips)return;const quem=v.who==="mat"?"Matheus fechou":v.who==="luiz"?"Luiz fechou":"—";let line="  "+d.l+": "+quem+" — tips $"+tips.toFixed(2);wlLines.push(line);});const tipsTotal=t.tr+(w.venmo||0);wlLines.push("","================================","*Total pool: "+f$(tipsTotal)+"*","*Cada um deveria ter: "+f$(c.each)+"*","","Matheus ficou com: "+f$(c.me),"Luiz ficou com: "+f$(c.luiz),"","================================");if(Math.abs(c.diff)<0.01)wlLines.push("*Em dia — sem transferência*");else if(c.diff>0)wlLines.push("*Matheus paga Luiz: "+f$(c.diff)+"*");else wlLines.push("*Luiz paga Matheus: "+f$(Math.abs(c.diff))+"*");}else{DAYS.forEach(d=>{const v=w.days[d.id]||{};if(!v.tips)return;wlLines.push("  "+d.l+": tips $"+v.tips.toFixed(2));});const tipsTotal=t.tr+(w.venmo||0);wlLines.push("","================================","*Total tips: "+f$(tipsTotal)+"*","*Cada um recebe: "+f$(t.tips)+"*","","(Preencha a aba Divisão para detalhes)");}
   wlLines.push("","_Matheus_");
   document.getElementById("waL").textContent=wlLines.join("\n");
 }
@@ -636,13 +826,13 @@ function closePO(){const p=document.getElementById("po");if(p)p.remove();}
 function cpWA(id,btn){const text=document.getElementById(id).textContent;navigator.clipboard.writeText(text).then(()=>{btn.textContent="Copiado!";btn.classList.add("cp");setTimeout(()=>{btn.textContent="📋 Copiar";btn.classList.remove("cp");},2000);});}
 
 // ── NAVEGAÇÃO ─────────────────────────────────────
-function goTab(tab,btn){document.querySelectorAll(".pn").forEach(p=>p.classList.remove("active"));document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.getElementById("tab-"+tab).classList.add("active");if(btn)btn.classList.add("active");if(tab==="report"){fillR();renderR();}if(tab==="entry"&&!eId&&db.weeks.length)lwk(latW().id);if(tab==="cash"&&!ceId&&db.cashWeeks.length)lcw(latCW().id);}
+function goTab(tab,btn){document.querySelectorAll(".pn").forEach(p=>p.classList.remove("active"));document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.getElementById("tab-"+tab).classList.add("active");if(btn)btn.classList.add("active");if(tab==="report"){fillR();renderR();}if(tab==="entry"&&!eId&&db.weeks.length)lwk(latW().id);if(tab==="cash"){rCWSel();if(!ceId&&db.cashWeeks.length)lcw(db.cashWeeks[0].id);else if(!ceId&&db.weeks.length)loadDivByWeek(latW().id);}}
 function goRT(t,btn){document.querySelectorAll(".rp").forEach(p=>p.classList.remove("active"));document.querySelectorAll(".rt").forEach(b=>b.classList.remove("on"));document.getElementById("rp-"+t).classList.add("active");if(btn)btn.classList.add("on");}
 function toast(msg){const e=document.getElementById("toast");e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2500);}
 
 // ── INIT ──────────────────────────────────────────
 document.getElementById("yr").textContent=new Date().getFullYear();
-buildDG();buildCG();recalc();recalcC();
+buildDG();buildDias(null);recalc();
 setTimeout(load,300);
 </script>
 </body>
