@@ -420,7 +420,10 @@ function latW(){return[...db.weeks].sort((a,b)=>new Date(b.savedAt)-new Date(a.s
 function latCW(){return[...db.cashWeeks].sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt))[0];}
 
 // ── CÁLCULOS ─────────────────────────────────────
-function cW(w){let tr=0,mah=0,fpkh=0,comp=0;Object.values(w.days).forEach(d=>{tr+=d.tips||0;mah+=pH(d.hours);fpkh+=pH(d.ev);});comp=(w.purchases||[]).reduce((s,p)=>s+(p.amt||0),0);const tips=(tr+(w.venmo||0))/2,payMA=mah*14,payFPK=fpkh*18;return{tips,tr,payMA,payFPK,mah,fpkh,totalHrs:mah+fpkh,comp,myProfit:tips+payMA+payFPK,farberOwes:payMA+payFPK};}
+function cW(w){let tr=0,mah=0,fpkh=0,comp=0;Object.values(w.days).forEach(d=>{tr+=d.tips||0;mah+=pH(d.hours);fpkh+=pH(d.ev);});comp=(w.purchases||[]).reduce((s,p)=>s+(p.amt||0),0);const venmo=w.venmo||0;const tipsDeposit=tr/2;// só cash — vai pro banco domingo
+const tipsFarber=venmo/2;// Farber já mandou via Venmo — não deposita
+const tips=tipsDeposit+tipsFarber;// total incluindo ambos (para lucro)
+const payMA=mah*14,payFPK=fpkh*18;return{tips,tipsDeposit,tipsFarber,tr,venmo,payMA,payFPK,mah,fpkh,totalHrs:mah+fpkh,comp,myProfit:tips+payMA+payFPK,farberOwes:payMA+payFPK};}
 function cC(w){let me=0,luiz=0;Object.values(w.days).forEach(d=>{me+=d.me||0;luiz+=d.luiz||0;});const total=me+luiz,each=total/2,diff=me-each;return{me,luiz,total,each,diff};}
 
 // ── PARSEAR DOMINGO DA SEMANA ────────────────────
@@ -437,8 +440,8 @@ function rHoje(){
   const semanaAtual=db.weeks.find(w=>{const sun=parseSunday(w.name);if(!sun)return false;const start=new Date(sun);start.setDate(start.getDate()-6);start.setHours(0,0,0,0);sun.setHours(0,0,0,0);return today>=start&&today<=sun;});
   if(!semanaAtual&&db.weeks.length>0)items.push({icon:"📋",text:"Semana atual sem lançamento",tag:"urgente",amt:""});
   // Tips a depositar: domingo desta semana ainda nao chegou
-  const tipsPendentes=db.weeks.filter(w=>!isSundayPast(w)&&cW(w).tips>0);
-  if(tipsPendentes.length){const tot=tipsPendentes.reduce((s,w)=>s+cW(w).tips,0);const sun=parseSunday(tipsPendentes[0].name);const sunLabel=sun?sun.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"}):"domingo";items.push({icon:"💰",text:"Depositar tips no "+sunLabel+(tipsPendentes.length>1?" ("+tipsPendentes.length+" semanas)":""),tag:"urgente",amt:f$(tot)});}
+  const tipsPendentes=db.weeks.filter(w=>!isSundayPast(w)&&cW(w).tipsDeposit>0);
+  if(tipsPendentes.length){const tot=tipsPendentes.reduce((s,w)=>s+cW(w).tipsDeposit,0);const sun=parseSunday(tipsPendentes[0].name);const sunLabel=sun?sun.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"}):"domingo";items.push({icon:"💰",text:"Depositar tips cash no "+sunLabel+(tipsPendentes.length>1?" ("+tipsPendentes.length+" semanas)":""),tag:"urgente",amt:f$(tot)});}
   // Reembolsos pendentes
   const reimbPend=db.weeks.filter(w=>cW(w).comp>0&&!w.reimbPaid);
   if(reimbPend.length){const tot=reimbPend.reduce((s,w)=>s+cW(w).comp,0);items.push({icon:"🧾",text:"Cobrar reembolso do Farber"+(reimbPend.length>1?" ("+reimbPend.length+" semanas)":""),tag:"urgente",amt:f$(tot)});}
@@ -482,25 +485,27 @@ function rReimb(){
 
 // ── TIPS ─────────────────────────────────────────
 function rTips(){
-  const wks=[...db.weeks].reverse().filter(w=>cW(w).tips>0);
+  const wks=[...db.weeks].reverse().filter(w=>cW(w).tipsDeposit>0||cW(w).tipsFarber>0);
   const sum=document.getElementById("tips-summary");const list=document.getElementById("tips-list");
   if(!wks.length){sum.innerHTML="";list.innerHTML="<div class='emp' style='padding:16px'>Nenhuma semana com tips ainda</div>";return;}
   const dep=wks.filter(w=>isSundayPast(w)),pend=wks.filter(w=>!isSundayPast(w));
-  const depAmt=dep.reduce((s,w)=>s+cW(w).tips,0),pendAmt=pend.reduce((s,w)=>s+cW(w).tips,0);
+  const depCash=dep.reduce((s,w)=>s+cW(w).tipsDeposit,0);
+  const pendCash=pend.reduce((s,w)=>s+cW(w).tipsDeposit,0);
+  const totalVenmo=wks.reduce((s,w)=>s+cW(w).tipsFarber,0);
   sum.innerHTML=
-    "<div class='sum3-card' style='border-color:rgba(0,255,136,.25)'><div class='sum3-label'>✅ Depositado</div><div class='sum3-val' style='color:var(--ac)'>"+f$(depAmt)+"</div><div class='sum3-sub'>"+dep.length+" domingo"+(dep.length!==1?"s passados":"")+"</div></div>"+
-    "<div class='sum3-card' style='border-color:rgba(255,107,61,.3)'><div class='sum3-label'>⏳ A depositar</div><div class='sum3-val' style='color:var(--fp)'>"+f$(pendAmt)+"</div><div class='sum3-sub'>"+pend.length+" semana"+(pend.length!==1?"s":"")+" em aberto</div></div>"+
-    "<div class='sum3-card'><div class='sum3-label'>💰 Total Tips (½)</div><div class='sum3-val' style='color:var(--pk)'>"+f$(depAmt+pendAmt)+"</div><div class='sum3-sub'>todas as semanas</div></div>";
+    "<div class='sum3-card' style='border-color:rgba(0,255,136,.25)'><div class='sum3-label'>✅ Cash depositado</div><div class='sum3-val' style='color:var(--ac)'>"+f$(depCash)+"</div><div class='sum3-sub'>"+dep.length+" domingo"+(dep.length!==1?"s passados":"")+"</div></div>"+
+    "<div class='sum3-card' style='border-color:rgba(255,107,61,.3)'><div class='sum3-label'>⏳ Cash a depositar</div><div class='sum3-val' style='color:var(--fp)'>"+f$(pendCash)+"</div><div class='sum3-sub'>"+pend.length+" semana"+(pend.length!==1?"s":"")+" em aberto</div></div>"+
+    "<div class='sum3-card' style='border-color:rgba(107,143,255,.3)'><div class='sum3-label'>💳 Venmo (já recebido)</div><div class='sum3-val' style='color:var(--bl)'>"+f$(totalVenmo)+"</div><div class='sum3-sub'>enviado pelo Farber</div></div>";
   list.innerHTML=wks.map(w=>{
     const t=cW(w),isDep=isSundayPast(w);
     const sun=parseSunday(w.name);
     const sunLabel=sun?sun.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"}):"domingo";
-    const rows=DAYS.map(d=>{const v=w.days[d.id]||{};const tips=v.tips||0;if(!tips)return"";return"<div class='wcard-row'><span class='wcard-day'>"+d.l+"</span><span style='font-size:10px;color:var(--t3);font-family:var(--mo)'>pool: "+f$(tips)+"</span><span class='wcard-val' style='color:var(--pk)'>sua ½: "+f$(tips/2)+"</span></div>";}).filter(Boolean).join("");
-    const venmoRow=w.venmo>0?"<div class='wcard-row'><span class='wcard-day' style='color:var(--bl)'>Venmo/Cartão</span><span style='font-size:10px;color:var(--t3);font-family:var(--mo)'>pool: "+f$(w.venmo)+"</span><span class='wcard-val' style='color:var(--bl)'>sua ½: "+f$(w.venmo/2)+"</span></div>":"";
+    const rows=DAYS.map(d=>{const v=w.days[d.id]||{};const tips=v.tips||0;if(!tips)return"";return"<div class='wcard-row'><span class='wcard-day'>"+d.l+"</span><span style='font-size:10px;color:var(--t3);font-family:var(--mo)'>pool: "+f$(tips)+"</span><span class='wcard-val' style='color:var(--pk)'>depositar: "+f$(tips/2)+"</span></div>";}).filter(Boolean).join("");
+    const venmoRow=t.tipsFarber>0?"<div class='wcard-row'><span class='wcard-day' style='color:var(--bl)'>💳 Venmo (Farber)</span><span style='font-size:10px;color:var(--bl);font-family:var(--mo)'>já na sua conta — não depositar</span><span class='wcard-val' style='color:var(--bl)'>"+f$(t.tipsFarber)+"</span></div>":"";
     const badge=isDep
-      ?"<span class='wcard-status dep'>✅ depositado "+sunLabel+"</span>"
-      :"<span class='wcard-status pend'>⏳ depositar "+sunLabel+"</span>";
-    return "<div class='wcard "+(isDep?"dep":"pend")+"'><div class='wcard-head'><div class='wcard-name'>"+( w.name||w.id)+"</div><div class='wcard-right'><div style='text-align:right'><div class='wcard-amt' style='color:var(--pk)'>"+f$(t.tips)+"</div><div style='font-size:9px;color:var(--t3);font-family:var(--mo)'>sua metade</div></div>"+badge+"</div></div>"+(rows||venmoRow?"<div class='wcard-body'>"+rows+venmoRow+"</div>":"")+"</div>";
+      ?"<span class='wcard-status dep'>✅ cash depositado "+sunLabel+"</span>"
+      :"<span class='wcard-status pend'>⏳ depositar cash "+sunLabel+"</span>";
+    return "<div class='wcard "+(isDep?"dep":"pend")+"'><div class='wcard-head'><div class='wcard-name'>"+(w.name||w.id)+"</div><div class='wcard-right'><div style='text-align:right'><div class='wcard-amt' style='color:var(--pk)'>"+f$(t.tipsDeposit)+"</div><div style='font-size:9px;color:var(--t3);font-family:var(--mo)'>cash"+(t.tipsFarber>0?" · +"+f$(t.tipsFarber)+" Venmo":"")+"</div></div>"+badge+"</div></div>"+(rows||venmoRow?"<div class='wcard-body'>"+rows+venmoRow+"</div>":"")+"</div>";
   }).join("");
 }
 
