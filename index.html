@@ -791,37 +791,237 @@ function renderR(){
   const t=cW(w),ct_raw=db.cashWeeks.find(c=>c.name===w.name)||null,ct=ct_raw?cC(ct_raw):null;
   const today=new Date().toLocaleDateString("pt-BR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
   const purch=w.purchases||[];
-  let rows="";
-  DAYS.forEach(d=>{const v=w.days[d.id]||{},mah=pH(v.hours),fpkh=pH(v.ev),daily=mah*14+fpkh*18;if(!mah&&!fpkh)return;rows+="<tr><td style='font-weight:600;color:#333;padding:8px 10px'>"+d.l+"</td><td style='font-family:monospace;padding:8px 10px'>"+(v.hours||"--")+"</td><td style='color:#555;padding:8px 10px'>"+(mah>0?"$14.00":"--")+"</td><td style='padding:8px 10px'>"+(v.loc||"--")+"</td><td style='font-family:monospace;padding:8px 10px'>"+(v.ev||"--")+"</td><td style='color:#555;padding:8px 10px'>"+(fpkh>0?"$18.00":"--")+"</td><td style='color:#2d6a4f;font-weight:600;font-family:monospace;padding:8px 10px'>"+f$(daily)+"</td></tr>";});
+
+  // ── RELATÓRIO DO FARBER (mobile-first, sem tabela larga) ──────────────
+  let diasRows="";
+  DAYS.forEach(d=>{
+    const v=w.days[d.id]||{};
+    const mah=pH(v.hours), fpkh=pH(v.ev);
+    if(!mah&&!fpkh)return;
+    const daily=mah*14+fpkh*18;
+    // MA row
+    if(mah>0){
+      diasRows+=`<div style='display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #f0f0f0'>
+        <div><span style='font-weight:600;color:#1a1916;font-size:14px'>${d.l}</span>
+        <span style='font-size:11px;color:#888;margin-left:8px'>Makers Air</span></div>
+        <div style='text-align:right'>
+          <span style='font-family:monospace;font-size:13px;color:#333'>${v.hours}</span>
+          <span style='font-size:11px;color:#888;margin-left:6px'>× $14</span>
+          <span style='font-family:monospace;font-weight:700;color:#2d6a4f;font-size:14px;margin-left:10px'>${f$(mah*14)}</span>
+        </div></div>`;
+    }
+    // FPK row
+    if(fpkh>0){
+      diasRows+=`<div style='display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #f0f0f0;background:#fffbf5'>
+        <div><span style='font-weight:600;color:#1a1916;font-size:14px'>${d.l}</span>
+        <span style='font-size:11px;color:#c96a1a;margin-left:8px'>FPK${v.loc?" — "+v.loc:""}</span></div>
+        <div style='text-align:right'>
+          <span style='font-family:monospace;font-size:13px;color:#333'>${v.ev}</span>
+          <span style='font-size:11px;color:#888;margin-left:6px'>× $18</span>
+          <span style='font-family:monospace;font-weight:700;color:#c96a1a;font-size:14px;margin-left:10px'>${f$(fpkh*18)}</span>
+        </div></div>`;
+    }
+  });
+
+  // Linha de total
+  diasRows+=`<div style='display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:#f7f7f7;border-top:2px solid #ddd'>
+    <div style='font-weight:700;font-size:14px;color:#1a1916'>TOTAL — ${fH(t.totalHrs)} hrs</div>
+    <div style='font-family:monospace;font-size:18px;font-weight:700;color:#c96a1a'>${f$(t.farberOwes)}</div>
+  </div>`;
+
+  // Cards de resumo (2 por linha — cabe no celular)
+  let cardsHTML=`<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0'>
+    <div style='background:#f0f0f0;border-radius:8px;padding:12px;border-top:3px solid #2d6a4f'>
+      <div style='font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:4px'>Makers Air</div>
+      <div style='font-family:monospace;font-size:18px;font-weight:700;color:#2d6a4f'>${f$(t.payMA)}</div>
+      <div style='font-size:11px;color:#666;margin-top:2px'>${fH(t.mah)} × $14</div>
+    </div>
+    <div style='background:#f0f0f0;border-radius:8px;padding:12px;border-top:3px solid #c96a1a'>
+      <div style='font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:4px'>FPK Events</div>
+      <div style='font-family:monospace;font-size:18px;font-weight:700;color:#c96a1a'>${f$(t.payFPK)}</div>
+      <div style='font-size:11px;color:#666;margin-top:2px'>${fH(t.fpkh)} × $18</div>
+    </div>
+    <div style='background:#f0f0f0;border-radius:8px;padding:12px;border-top:3px solid #1a4a7a'>
+      <div style='font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:4px'>Total Horas</div>
+      <div style='font-family:monospace;font-size:18px;font-weight:700;color:#1a4a7a'>${fH(t.totalHrs)}</div>
+      <div style='font-size:11px;color:#666;margin-top:2px'>MA + FPK</div>
+    </div>
+    <div style='background:#fef3e8;border-radius:8px;padding:12px;border-top:3px solid #c96a1a'>
+      <div style='font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:4px'>Farber Deve</div>
+      <div style='font-family:monospace;font-size:18px;font-weight:700;color:#c96a1a'>${f$(t.farberOwes)}</div>
+      ${t.comp>0?`<div style='font-size:11px;color:#c96a1a;margin-top:2px'>+ reimb. ${f$(t.comp)} = ${f$(t.farberOwes+t.comp)}</div>`:""}
+    </div>
+  </div>`;
+
   let pHTML="";
-  if(purch.length){pHTML="<div style='margin-bottom:16px'><div style='font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#444;margin-bottom:8px'>Compras / Reembolsos</div>";purch.forEach(p=>{pHTML+="<div style='display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee;font-size:13px'><span>"+p.desc+"</span><span style='color:#c0392b;font-family:monospace'>"+f$(p.amt)+"</span></div>";});pHTML+="<div style='display:flex;justify-content:space-between;padding-top:8px;font-weight:700;font-size:13px;border-top:2px solid #ddd'><span>Total</span><span style='color:#c0392b;font-family:monospace'>"+f$(t.comp)+"</span></div></div>";}
-  const bossHTML="<div style='font-family:Inter,sans-serif;color:#1a1916'><div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #eee'><div><div style='font-size:22px;font-weight:700'>Matheus <span style='color:#2d6a4f'>Ferian</span></div><div style='font-family:monospace;font-size:13px;color:#444;margin-top:3px'>Semana: "+w.name+"</div></div><div style='text-align:right'><div style='font-size:16px;font-weight:700'>Relatório de Horas</div><div style='font-size:11px;color:#666;letter-spacing:1px;text-transform:uppercase;margin-top:2px'>Farber Parking &middot; "+today+"</div></div></div><table style='width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13px'><thead><tr style='background:#f0f0f0'><th style='text-align:left;padding:8px 10px;font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase'>Dia</th><th style='text-align:left;padding:8px 10px;font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase'>Horas MA</th><th style='text-align:left;padding:8px 10px;font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase'>$/Hr</th><th style='text-align:left;padding:8px 10px;font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase'>Local FPK</th><th style='text-align:left;padding:8px 10px;font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase'>Horas FPK</th><th style='text-align:left;padding:8px 10px;font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase'>$/Hr</th><th style='text-align:left;padding:8px 10px;font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase'>Total Dia</th></tr></thead><tbody>"+rows+"<tr style='font-weight:700;border-top:2px solid #ddd'><td style='padding:10px'>TOTAL</td><td style='padding:10px;font-family:monospace'>"+fH(t.mah)+"</td><td style='padding:10px'>--</td><td style='padding:10px'>--</td><td style='padding:10px;font-family:monospace'>"+fH(t.fpkh)+"</td><td style='padding:10px'>--</td><td style='padding:10px;color:#c96a1a;font-family:monospace;font-weight:700'>"+f$(t.farberOwes)+"</td></tr></tbody></table><div style='display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px'><div style='background:#f0f0f0;border-radius:8px;padding:11px;border-top:3px solid #2d6a4f'><div style='font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>Makers Air</div><div style='font-family:monospace;font-size:16px;font-weight:500;color:#2d6a4f'>"+f$(t.payMA)+"</div><div style='font-size:11px;color:#666;margin-top:3px'>"+fH(t.mah)+" x $14</div></div><div style='background:#f0f0f0;border-radius:8px;padding:11px;border-top:3px solid #c96a1a'><div style='font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>FPK</div><div style='font-family:monospace;font-size:16px;font-weight:500;color:#c96a1a'>"+f$(t.payFPK)+"</div><div style='font-size:11px;color:#666;margin-top:3px'>"+fH(t.fpkh)+" x $18</div></div><div style='background:#f0f0f0;border-radius:8px;padding:11px;border-top:3px solid #1a4a7a'><div style='font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>Horas</div><div style='font-family:monospace;font-size:16px;font-weight:500;color:#1a4a7a'>"+fH(t.totalHrs)+"</div><div style='font-size:11px;color:#666;margin-top:3px'>MA+FPK</div></div><div style='background:#f0f0f0;border-radius:8px;padding:11px;border-top:3px solid #c0392b'><div style='font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>Reembolsos</div><div style='font-family:monospace;font-size:16px;font-weight:500;color:#c0392b'>"+(t.comp?f$(t.comp):"$0.00")+"</div></div><div style='background:#fef3e8;border-radius:8px;padding:11px;border-top:3px solid #c96a1a'><div style='font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>Farber Deve</div><div style='font-family:monospace;font-size:16px;font-weight:600;color:#c96a1a'>"+f$(t.farberOwes)+"</div>"+(t.comp>0?"<div style='font-size:11px;color:#555;margin-top:4px;font-family:monospace'>+ Reemb. "+f$(t.comp)+"</div><div style='font-family:monospace;font-size:18px;font-weight:700;color:#c96a1a;border-top:1px solid rgba(201,106,26,.25);margin-top:5px;padding-top:5px'>= "+f$(t.farberOwes+t.comp)+"</div>":"")+"</div></div>"+pHTML+"<div style='margin-top:16px;padding-top:12px;border-top:1px solid #eee;display:flex;justify-content:space-between'><span style='font-size:11px;color:#666'>Gerado "+today+"</span><span style='font-size:12px;font-weight:600;color:#333'>Matheus Ferian</span></div></div>";
+  if(purch.length){
+    pHTML=`<div style='margin-bottom:16px;border:1px solid #eee;border-radius:8px;overflow:hidden'>
+      <div style='background:#fef2f2;padding:8px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#c0392b'>Reembolsos desta semana</div>`;
+    purch.forEach(p=>{pHTML+=`<div style='display:flex;justify-content:space-between;padding:8px 14px;border-top:1px solid #f0f0f0;font-size:13px'><span>${p.desc}</span><span style='color:#c0392b;font-family:monospace;font-weight:600'>${f$(p.amt)}</span></div>`;});
+    pHTML+=`<div style='display:flex;justify-content:space-between;padding:8px 14px;border-top:2px solid #ddd;font-weight:700;font-size:13px;background:#fafafa'><span>Total</span><span style='color:#c0392b;font-family:monospace'>${f$(t.comp)}</span></div></div>`;
+  }
+
+  // Reembolsos pendentes de semanas anteriores
+  const outrasPend=db.weeks.filter(x=>x.id!==w.id&&cW(x).comp>0&&!x.reimbPaid);
+  let pendOtherHTML="";
+  if(outrasPend.length){
+    const totalPend=outrasPend.reduce((s,x)=>s+cW(x).comp,0);
+    pendOtherHTML=`<div style='margin-bottom:16px;border:2px solid #f59e0b;border-radius:8px;overflow:hidden;background:#fffbeb'>
+      <div style='background:#fef3c7;padding:9px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#92400e'>
+        🔔 Reembolsos anteriores pendentes
+      </div>`;
+    outrasPend.forEach(x=>{
+      const xp=x.purchases||[];
+      pendOtherHTML+=`<div style='padding:8px 14px;border-top:1px solid #fde68a'>
+        <div style='font-size:11px;font-weight:700;color:#78350f;margin-bottom:4px'>Semana ${x.name}</div>`;
+      xp.forEach(p=>{pendOtherHTML+=`<div style='display:flex;justify-content:space-between;font-size:13px;padding:2px 0'><span style='color:#555'>${p.desc}</span><span style='color:#c0392b;font-family:monospace;font-weight:600'>${f$(p.amt)}</span></div>`;});
+      pendOtherHTML+=`</div>`;
+    });
+    pendOtherHTML+=`<div style='display:flex;justify-content:space-between;padding:9px 14px;border-top:2px solid #fde68a;font-weight:700;font-size:13px;background:#fef3c7'>
+      <span style='color:#92400e'>Total pendente anterior</span>
+      <span style='color:#c0392b;font-family:monospace'>${f$(totalPend)}</span>
+    </div></div>`;
+  }
+
+  const bossHTML=`<div style='font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#1a1916;max-width:100%'>
+    <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid #eee;flex-wrap:wrap;gap:8px'>
+      <div>
+        <div style='font-size:20px;font-weight:700'>Matheus <span style='color:#2d6a4f'>Ferian</span></div>
+        <div style='font-family:monospace;font-size:12px;color:#444;margin-top:2px'>Semana: ${w.name}</div>
+      </div>
+      <div style='text-align:right'>
+        <div style='font-size:13px;font-weight:700;color:#333'>Relatório Farber Parking</div>
+        <div style='font-size:10px;color:#888;margin-top:2px'>${today}</div>
+      </div>
+    </div>
+    <div style='border:1px solid #eee;border-radius:8px;overflow:hidden;margin-bottom:0'>${diasRows}</div>
+    ${cardsHTML}
+    ${pHTML}
+    ${pendOtherHTML}
+    <div style='margin-top:14px;padding-top:12px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:11px;color:#888'>
+      <span>Gerado ${today}</span><span style='font-weight:600;color:#333'>Matheus Ferian</span>
+    </div>
+  </div>`;
+
   document.getElementById("rcB").innerHTML=bossHTML;
+
+  // ── RELATÓRIO DO LUIZ ─────────────────────────────
   if(ct){
     let vd="";
-    if(Math.abs(ct.diff)<0.01)vd="<div style='font-weight:700;color:#2d6a4f;font-size:18px'>Em dia — sem transferência</div>";
-    else if(ct.diff>0)vd="<span style='font-size:16px;font-weight:700;color:#2d6a4f'>Matheus</span> paga <span style='font-family:monospace;font-size:22px;font-weight:700;color:#c96a1a'>"+f$(ct.diff)+"</span> para <span style='font-size:16px;font-weight:700;color:#1a4a7a'>Luiz</span>";
-    else vd="<span style='font-size:16px;font-weight:700;color:#1a4a7a'>Luiz</span> paga <span style='font-family:monospace;font-size:22px;font-weight:700;color:#c96a1a'>"+f$(Math.abs(ct.diff))+"</span> para <span style='font-size:16px;font-weight:700;color:#2d6a4f'>Matheus</span>";
-    const venmoBlock=w.venmo>0?"<div style='margin-bottom:16px;background:#fff8e1;border:2px solid #f59e0b;border-radius:10px;padding:14px 16px'><div style='font-size:11px;font-weight:700;color:#92400e;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px'>🔔 Lembrete — Tips Venmo/Cartão</div><div style='font-size:13px;color:#78350f'>Houve <strong style='font-family:monospace'>"+f$(w.venmo)+"</strong> em tips via Venmo/Cartão esta semana.</div><div style='font-size:13px;color:#78350f;margin-top:4px'>Cobrar <strong style='font-family:monospace'>"+f$(w.venmo/2)+"</strong> do Farber — <em>não incluído no split de cash.</em></div></div>":"";
-    const luizHTML="<div style='font-family:Inter,sans-serif;color:#1a1916'><div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #eee'><div><div style='font-size:22px;font-weight:700'>Split de Tips <span style='color:#1a4a7a'>— Luiz</span></div><div style='font-family:monospace;font-size:13px;color:#444;margin-top:3px'>Semana: "+w.name+"</div></div><div style='text-align:right;font-size:11px;color:#555'>"+today+"</div></div>"+venmoBlock+"<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px'><div style='background:#e8f4ef;border-radius:10px;padding:14px;border:1px solid rgba(45,106,79,.25)'><div style='font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>Matheus tem</div><div style='font-family:monospace;font-size:20px;font-weight:500;color:#2d6a4f'>"+f$(ct.me)+"</div><div style='font-size:11px;color:#666;margin-top:3px'>deveria ter "+f$(ct.each)+"</div></div><div style='background:#e8f0fa;border-radius:10px;padding:14px;border:1px solid rgba(26,74,122,.2)'><div style='font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:5px'>Luiz tem</div><div style='font-family:monospace;font-size:20px;font-weight:500;color:#1a4a7a'>"+f$(ct.luiz)+"</div><div style='font-size:11px;color:#666;margin-top:3px'>deveria ter "+f$(ct.each)+"</div></div></div><div style='background:#fef3e8;border:1px solid rgba(201,106,26,.25);border-radius:10px;padding:16px;text-align:center'><div style='font-size:12px;color:#6b6860;margin-bottom:6px'>Total pool: "+f$(ct.total)+" &middot; Cada um: "+f$(ct.each)+"</div><div style='font-family:monospace;font-size:26px;font-weight:700;color:#c96a1a;margin:8px 0'>"+f$(ct.each)+"</div>"+vd+"</div><div style='margin-top:16px;padding-top:12px;border-top:1px solid #eee;display:flex;justify-content:space-between'><span style='font-size:11px;color:#666'>Gerado "+today+"</span><span style='font-size:12px;font-weight:600;color:#333'>Matheus Ferian</span></div></div>";
+    if(Math.abs(ct.diff)<0.01)vd=`<div style='font-weight:700;color:#2d6a4f;font-size:16px;padding:12px 0'>✅ Em dia — sem transferência</div>`;
+    else if(ct.diff>0)vd=`<div style='padding:12px 0'><div style='font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px'>Matheus paga Luiz</div><div style='font-family:monospace;font-size:30px;font-weight:700;color:#c96a1a'>${f$(ct.diff)}</div></div>`;
+    else vd=`<div style='padding:12px 0'><div style='font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px'>Luiz paga Matheus</div><div style='font-family:monospace;font-size:30px;font-weight:700;color:#c96a1a'>${f$(Math.abs(ct.diff))}</div></div>`;
+    const venmoBlock=w.venmo>0?`<div style='margin-bottom:14px;background:#fff8e1;border:2px solid #f59e0b;border-radius:8px;padding:12px 14px'><div style='font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px'>🔔 Tips Venmo/Cartão</div><div style='font-size:13px;color:#78350f'>Houve <strong style='font-family:monospace'>${f$(w.venmo)}</strong> — cobrar <strong>${f$(w.venmo/2)}</strong> do Farber (fora do split).</div></div>`:"";
+    const luizHTML=`<div style='font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#1a1916;max-width:100%'>
+      <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid #eee;flex-wrap:wrap;gap:8px'>
+        <div><div style='font-size:20px;font-weight:700'>Split Tips <span style='color:#1a4a7a'>— Luiz</span></div>
+        <div style='font-family:monospace;font-size:12px;color:#444;margin-top:2px'>Semana: ${w.name}</div></div>
+        <div style='font-size:10px;color:#888'>${today}</div>
+      </div>
+      ${venmoBlock}
+      <div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px'>
+        <div style='background:#e8f4ef;border-radius:8px;padding:12px;border:1px solid rgba(45,106,79,.2)'>
+          <div style='font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:4px'>Matheus ficou</div>
+          <div style='font-family:monospace;font-size:18px;font-weight:700;color:#2d6a4f'>${f$(ct.me)}</div>
+          <div style='font-size:11px;color:#666;margin-top:2px'>deveria ter ${f$(ct.each)}</div>
+        </div>
+        <div style='background:#e8f0fa;border-radius:8px;padding:12px;border:1px solid rgba(26,74,122,.2)'>
+          <div style='font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:4px'>Luiz ficou</div>
+          <div style='font-family:monospace;font-size:18px;font-weight:700;color:#1a4a7a'>${f$(ct.luiz)}</div>
+          <div style='font-size:11px;color:#666;margin-top:2px'>deveria ter ${f$(ct.each)}</div>
+        </div>
+      </div>
+      <div style='background:#fef3e8;border:1px solid rgba(201,106,26,.25);border-radius:8px;padding:16px;text-align:center'>
+        <div style='font-size:12px;color:#888;margin-bottom:4px'>Total pool: ${f$(ct.total)} · Cada um: ${f$(ct.each)}</div>
+        ${vd}
+      </div>
+      <div style='margin-top:14px;padding-top:12px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:11px;color:#888'>
+        <span>Gerado ${today}</span><span style='font-weight:600;color:#333'>Matheus Ferian</span>
+      </div>
+    </div>`;
     document.getElementById("rcL").style.display="block";
     document.getElementById("rcL").innerHTML=luizHTML;
   }else{document.getElementById("rcL").style.display="none";}
-  const wbLines=["*Relatório de Trabalho - Semana "+w.name+"*","================================",""];
-  wbLines.push("*Total Horas: "+fH(t.totalHrs)+"*","","*Makers Air:*","  Horas: "+fH(t.mah)+" x $14.00","  Valor: "+f$(t.payMA),"");
-  if(t.fpkh>0){wbLines.push("*FPK Events:*");DAYS.forEach(d=>{const v=w.days[d.id]||{};if(pH(v.ev)>0)wbLines.push("  "+d.l+": "+(v.loc||"--")+" - "+v.ev+" hrs");});wbLines.push("  Valor: "+f$(t.payFPK),"");}
-  if(purch.length){wbLines.push("*Reembolsos:*");purch.forEach(p=>wbLines.push("  - "+p.desc+": "+f$(p.amt)));wbLines.push("  Total: "+f$(t.comp),"");}
-  wbLines.push("================================","*Total trabalho: "+f$(t.farberOwes)+"*",(t.comp>0?"*+ Reembolsos: "+f$(t.comp)+"*":""),(t.comp>0?"*Total Geral: "+f$(t.farberOwes+t.comp)+"*":"*Farber Deve: "+f$(t.farberOwes)+"*"),"","_Matheus Ferian_");
+
+  // ── WHATSAPP BOSS ─────────────────────────────────
+  const wbLines=["*Relatório — Semana "+w.name+"*",""];
+  DAYS.forEach(d=>{
+    const v=w.days[d.id]||{},mah=pH(v.hours),fpkh=pH(v.ev);
+    if(!mah&&!fpkh)return;
+    let line="*"+d.l+"*";
+    if(mah>0)line+="\n  MA: "+v.hours+" hrs × $14 = "+f$(mah*14);
+    if(fpkh>0)line+="\n  FPK"+(v.loc?" ("+v.loc+")":"")+": "+v.ev+" hrs × $18 = "+f$(fpkh*18);
+    wbLines.push(line);
+  });
+  wbLines.push("","================================");
+  if(t.mah>0)wbLines.push("Makers Air: "+fH(t.mah)+" hrs → "+f$(t.payMA));
+  if(t.fpkh>0)wbLines.push("FPK: "+fH(t.fpkh)+" hrs → "+f$(t.payFPK));
+  wbLines.push("*Total horas: "+fH(t.totalHrs)+"*");
+  if(purch.length){wbLines.push("","Reembolsos desta semana:");purch.forEach(p=>wbLines.push("  - "+p.desc+": "+f$(p.amt)));wbLines.push("  Total: "+f$(t.comp));}
+  if(outrasPend.length){wbLines.push("","🔔 Reembolsos anteriores pendentes:");outrasPend.forEach(x=>{wbLines.push("  Semana "+x.name+":");(x.purchases||[]).forEach(p=>wbLines.push("    - "+p.desc+": "+f$(cW(x).comp>0?p.amt:0)));});wbLines.push("  Total pendente: "+f$(outrasPend.reduce((s,x)=>s+cW(x).comp,0)));}
+  wbLines.push("","*Farber deve: "+f$(t.farberOwes)+(t.comp>0?" + reimb "+f$(t.comp)+" = "+f$(t.farberOwes+t.comp):"")+"*","","_Matheus Ferian_");
   document.getElementById("waB").textContent=wbLines.join("\n");
-  const wlLines=["*Split de Tips - Semana "+w.name+"*","================================",""];
-  if(w.venmo>0){wlLines.push("🔔 *LEMBRETE — Tips Venmo/Cartão*","Houve *"+f$(w.venmo)+"* em tips via Venmo/Cartão.","Cobrar *"+f$(w.venmo/2)+"* do Farber — não está no split.","================================","");}
-  wlLines.push("*Detalhamento diário:*");
-  if(ct_raw){const c=cC(ct_raw);DAYS.forEach(d=>{const v=ct_raw.days[d.id]||{},wv=w.days[d.id]||{},tips=v.tips||wv.tips||0;if(!tips)return;const quem=v.who==="mat"?"Matheus fechou":v.who==="luiz"?"Luiz fechou":"—";let line="  "+d.l+": "+quem+" — tips $"+tips.toFixed(2);wlLines.push(line);});const tipsTotal=t.tr+(w.venmo||0);wlLines.push("","================================","*Total pool: "+f$(tipsTotal)+"*","*Cada um deveria ter: "+f$(c.each)+"*","","Matheus ficou com: "+f$(c.me),"Luiz ficou com: "+f$(c.luiz),"","================================");if(Math.abs(c.diff)<0.01)wlLines.push("*Em dia — sem transferência*");else if(c.diff>0)wlLines.push("*Matheus paga Luiz: "+f$(c.diff)+"*");else wlLines.push("*Luiz paga Matheus: "+f$(Math.abs(c.diff))+"*");}else{DAYS.forEach(d=>{const v=w.days[d.id]||{};if(!v.tips)return;wlLines.push("  "+d.l+": tips $"+v.tips.toFixed(2));});const tipsTotal=t.tr+(w.venmo||0);wlLines.push("","================================","*Total tips: "+f$(tipsTotal)+"*","*Cada um recebe: "+f$(t.tips)+"*","","(Preencha a aba Divisão para detalhes)");}
+
+  // ── WHATSAPP LUIZ ─────────────────────────────────
+  const wlLines=["*Split Tips — Semana "+w.name+"*",""];
+  if(w.venmo>0)wlLines.push("🔔 Tips Venmo/Cartão: "+f$(w.venmo)+" → cobrar "+f$(w.venmo/2)+" do Farber","");
+  if(ct_raw){
+    const c=cC(ct_raw);
+    DAYS.forEach(d=>{
+      const v=ct_raw.days[d.id]||{},tips=v.tips||0;
+      if(!tips)return;
+      const quem=v.who==="mat"?"Matheus fechou":v.who==="luiz"?"Luiz fechou":"?";
+      wlLines.push("  "+d.l+": "+quem+" — "+f$(tips));
+    });
+    wlLines.push("","================================","Total pool: "+f$(c.total),"Cada um: "+f$(c.each),"","Matheus ficou: "+f$(c.me),"Luiz ficou: "+f$(c.luiz),"");
+    if(Math.abs(c.diff)<0.01)wlLines.push("*Em dia ✅*");
+    else if(c.diff>0)wlLines.push("*Matheus paga Luiz: "+f$(c.diff)+"*");
+    else wlLines.push("*Luiz paga Matheus: "+f$(Math.abs(c.diff))+"*");
+  }else{
+    const tipsTotal=t.tr+(w.venmo||0);
+    DAYS.forEach(d=>{const v=w.days[d.id]||{};if(!v.tips)return;wlLines.push("  "+d.l+": "+f$(v.tips));});
+    wlLines.push("","Total pool: "+f$(tipsTotal),"Cada um: "+f$(t.tips),"","(Preencha a aba Divisão para o acerto)");
+  }
   wlLines.push("","_Matheus_");
   document.getElementById("waL").textContent=wlLines.join("\n");
 }
 
-function printR(who){const s=document.getElementById("rsel");if(!s.value&&db.weeks.length){const l=latW();if(l)s.value=l.id;}if(!s.value){toast("Nenhuma semana disponível!");return;}renderR();const card=who==="boss"?document.getElementById("rcB"):document.getElementById("rcL");if(!card||card.style.display==="none"||card.querySelector(".emp")){if(who==="luiz")toast("Sem dados do Luiz — preencha a aba Divisão primeiro!");else toast("Sem dados — selecione uma semana!");return;}const content=card.innerHTML,title=who==="boss"?"Relatório de Trabalho — Farber Parking":"Split de Tips — Luiz";let po=document.getElementById("po");if(po)po.remove();po=document.createElement("div");po.id="po";const ctrl=document.createElement("div");ctrl.style.cssText="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #ddd;max-width:820px;margin-left:auto;margin-right:auto";ctrl.innerHTML="<span style='font-size:16px;font-weight:700;color:#1a1916'>"+title+"</span><div style='display:flex;gap:8px'><button onclick='window.print()' style='font-size:13px;font-weight:600;padding:9px 20px;background:#2d6a4f;color:#fff;border:none;border-radius:8px;cursor:pointer'>Imprimir / Salvar PDF</button><button onclick='closePO()' style='font-size:13px;padding:9px 20px;background:#f0eeeb;color:#6b6860;border:1px solid #ddd;border-radius:8px;cursor:pointer'>Fechar</button></div>";const wrap=document.createElement("div");wrap.style.cssText="max-width:820px;margin:0 auto;background:#fff";wrap.innerHTML=content;po.appendChild(ctrl);po.appendChild(wrap);document.body.appendChild(po);}
+function printR(who){
+  const s=document.getElementById("rsel");
+  if(!s.value&&db.weeks.length){const l=latW();if(l)s.value=l.id;}
+  if(!s.value){toast("Nenhuma semana disponível!");return;}
+  renderR();
+  const card=who==="boss"?document.getElementById("rcB"):document.getElementById("rcL");
+  if(!card||card.style.display==="none"||card.querySelector(".emp")){
+    if(who==="luiz")toast("Sem dados do Luiz — preencha a aba Divisão primeiro!");
+    else toast("Sem dados — selecione uma semana!");return;
+  }
+  // Abre janela de impressão dedicada, mobile-friendly
+  const title=who==="boss"?"Relatório Farber Parking":"Split de Tips — Luiz";
+  const win=window.open("","_blank","width=420,height=700");
+  win.document.write(`<!DOCTYPE html><html><head><meta charset=UTF-8>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>${title}</title>
+    <style>
+      body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;margin:0;padding:16px;background:#fff;color:#1a1916;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      @media print{@page{margin:8mm;size:A4}body{padding:0}}
+      .no-print{display:flex;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #ddd}
+      .btn-print{background:#2d6a4f;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer}
+      .btn-close{background:#f0eeeb;color:#555;border:1px solid #ddd;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer}
+      @media print{.no-print{display:none!important}}
+    </style>
+  </head><body>
+    <div class="no-print">
+      <span style="font-size:15px;font-weight:700">${title}</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn-print" onclick="window.print()">Salvar / Imprimir PDF</button>
+        <button class="btn-close" onclick="window.close()">Fechar</button>
+      </div>
+    </div>
+    ${card.innerHTML}
+  </body></html>`);
+  win.document.close();
+}
 function closePO(){const p=document.getElementById("po");if(p)p.remove();}
 function cpWA(id,btn){const text=document.getElementById(id).textContent;navigator.clipboard.writeText(text).then(()=>{btn.textContent="Copiado!";btn.classList.add("cp");setTimeout(()=>{btn.textContent="📋 Copiar";btn.classList.remove("cp");},2000);});}
 
