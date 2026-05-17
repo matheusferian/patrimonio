@@ -888,6 +888,62 @@ function renderR(){
     </div></div>`;
   }
 
+  // Bloco TOTAL A PAGAR — grande e destacado
+  const totalReimbAtual=t.comp;
+  const totalReimbAnterior=outrasPend.reduce((s,x)=>s+cW(x).comp,0);
+  const grandTotal=t.farberOwes+totalReimbAtual+totalReimbAnterior;
+
+  let totalBlockLines="";
+  // Linha: trabalho desta semana
+  totalBlockLines+=`<div style='display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.12)'>
+    <div>
+      <div style='font-size:13px;font-weight:600;color:#e8f4ef'>💼 Trabalho — Semana ${w.name}</div>
+      <div style='font-size:11px;color:#a3c4b5;margin-top:2px'>${t.mah>0?fH(t.mah)+"h MA ($14)":""}${t.mah>0&&t.fpkh>0?" + ":""}${t.fpkh>0?fH(t.fpkh)+"h FPK ($18)":""}</div>
+    </div>
+    <div style='font-family:monospace;font-size:16px;font-weight:700;color:#fff'>${f$(t.farberOwes)}</div>
+  </div>`;
+
+  // Linhas: reembolsos desta semana (cada item)
+  if(purch.length){
+    purch.forEach(p=>{
+      totalBlockLines+=`<div style='display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)'>
+        <div>
+          <div style='font-size:13px;font-weight:600;color:#fde68a'>🧾 Reembolso — Semana ${w.name}</div>
+          <div style='font-size:11px;color:#c9a84c;margin-top:2px'>${p.desc}</div>
+        </div>
+        <div style='font-family:monospace;font-size:16px;font-weight:700;color:#fde68a'>${f$(p.amt)}</div>
+      </div>`;
+    });
+  }
+
+  // Linhas: reembolsos de semanas anteriores (cada item de cada semana)
+  outrasPend.forEach(x=>{
+    (x.purchases||[]).forEach(p=>{
+      totalBlockLines+=`<div style='display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)'>
+        <div>
+          <div style='font-size:13px;font-weight:600;color:#fcd34d'>🔔 Reembolso anterior — Semana ${x.name}</div>
+          <div style='font-size:11px;color:#c9a84c;margin-top:2px'>${p.desc}</div>
+        </div>
+        <div style='font-family:monospace;font-size:16px;font-weight:700;color:#fcd34d'>${f$(p.amt)}</div>
+      </div>`;
+    });
+  });
+
+  const grandTotalBlock=`<div style='background:linear-gradient(135deg,#1a3a2a 0%,#0f2d1f 100%);border:2px solid #2d6a4f;border-radius:12px;padding:20px 22px;margin:16px 0'>
+    <div style='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6fcf97;margin-bottom:14px'>💰 Total a pagar — Farber Parking</div>
+    ${totalBlockLines}
+    <div style='margin-top:14px;padding-top:14px;border-top:2px solid rgba(255,255,255,.2);display:flex;justify-content:space-between;align-items:center'>
+      <div>
+        <div style='font-size:16px;font-weight:700;color:#fff'>TOTAL GERAL</div>
+        <div style='font-size:11px;color:#a3c4b5;margin-top:3px'>trabalho + reembolsos</div>
+      </div>
+      <div style='text-align:right'>
+        <div style='font-family:monospace;font-size:36px;font-weight:700;color:#00ff88;line-height:1'>${f$(grandTotal)}</div>
+        ${grandTotal!==t.farberOwes?`<div style='font-size:11px;color:#6fcf97;margin-top:4px'>horas: ${f$(t.farberOwes)} + reimb: ${f$(totalReimbAtual+totalReimbAnterior)}</div>`:""}
+      </div>
+    </div>
+  </div>`;
+
   const bossHTML=`<div style='font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#1a1916;max-width:100%'>
     <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid #eee;flex-wrap:wrap;gap:8px'>
       <div>
@@ -903,6 +959,7 @@ function renderR(){
     ${cardsHTML}
     ${pHTML}
     ${pendOtherHTML}
+    ${grandTotalBlock}
     <div style='margin-top:14px;padding-top:12px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:11px;color:#888'>
       <span>Gerado ${today}</span><span style='font-weight:600;color:#333'>Matheus Ferian</span>
     </div>
@@ -1003,10 +1060,12 @@ function renderR(){
   wbLines.push("","================================");
   if(t.mah>0)wbLines.push("Makers Air: "+fH(t.mah)+" hrs → "+f$(t.payMA));
   if(t.fpkh>0)wbLines.push("FPK: "+fH(t.fpkh)+" hrs → "+f$(t.payFPK));
-  wbLines.push("*Total horas: "+fH(t.totalHrs)+"*");
-  if(purch.length){wbLines.push("","Reembolsos desta semana:");purch.forEach(p=>wbLines.push("  - "+p.desc+": "+f$(p.amt)));wbLines.push("  Total: "+f$(t.comp));}
-  if(outrasPend.length){wbLines.push("","🔔 Reembolsos anteriores pendentes:");outrasPend.forEach(x=>{wbLines.push("  Semana "+x.name+":");(x.purchases||[]).forEach(p=>wbLines.push("    - "+p.desc+": "+f$(cW(x).comp>0?p.amt:0)));});wbLines.push("  Total pendente: "+f$(outrasPend.reduce((s,x)=>s+cW(x).comp,0)));}
-  wbLines.push("","*Farber deve: "+f$(t.farberOwes)+(t.comp>0?" + reimb "+f$(t.comp)+" = "+f$(t.farberOwes+t.comp):"")+"*","","_Matheus Ferian_");
+  wbLines.push("*Trabalho semana "+w.name+": "+f$(t.farberOwes)+"*");
+  if(purch.length){wbLines.push("","Reembolsos semana "+w.name+":");purch.forEach(p=>wbLines.push("  - "+p.desc+": "+f$(p.amt)));wbLines.push("  Subtotal: "+f$(t.comp));}
+  if(outrasPend.length){wbLines.push("","🔔 Reembolsos anteriores:");outrasPend.forEach(x=>{wbLines.push("  Semana "+x.name+":");(x.purchases||[]).forEach(p=>wbLines.push("    - "+p.desc+": "+f$(p.amt)));wbLines.push("  Subtotal: "+f$(cW(x).comp));});wbLines.push("  Total anterior: "+f$(totalReimbAnterior));}
+  wbLines.push("","================================","*💰 TOTAL A PAGAR: "+f$(grandTotal)+"*");
+  if(grandTotal!==t.farberOwes)wbLines.push("  horas: "+f$(t.farberOwes)+" + reembolsos: "+f$(totalReimbAtual+totalReimbAnterior));
+  wbLines.push("","_Matheus Ferian_");
   document.getElementById("waB").textContent=wbLines.join("\n");
 
   // ── WHATSAPP LUIZ ─────────────────────────────────
