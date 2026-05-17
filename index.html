@@ -916,13 +916,55 @@ function renderR(){
     if(Math.abs(ct.diff)<0.01)vd=`<div style='font-weight:700;color:#2d6a4f;font-size:16px;padding:12px 0'>✅ Em dia — sem transferência</div>`;
     else if(ct.diff>0)vd=`<div style='padding:12px 0'><div style='font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px'>Matheus paga Luiz</div><div style='font-family:monospace;font-size:30px;font-weight:700;color:#c96a1a'>${f$(ct.diff)}</div></div>`;
     else vd=`<div style='padding:12px 0'><div style='font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px'>Luiz paga Matheus</div><div style='font-family:monospace;font-size:30px;font-weight:700;color:#c96a1a'>${f$(Math.abs(ct.diff))}</div></div>`;
-    const venmoBlock=w.venmo>0?`<div style='margin-bottom:14px;background:#fff8e1;border:2px solid #f59e0b;border-radius:8px;padding:12px 14px'><div style='font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px'>🔔 Tips Venmo/Cartão</div><div style='font-size:13px;color:#78350f'>Houve <strong style='font-family:monospace'>${f$(w.venmo)}</strong> — cobrar <strong>${f$(w.venmo/2)}</strong> do Farber (fora do split).</div></div>`:"";
+
+    // Detalhamento dia a dia
+    let diasLuiz="";
+    DAYS.forEach(d=>{
+      const cv=ct_raw.days[d.id]||{},wv=w.days[d.id]||{};
+      const tips=cv.tips||wv.tips||0;
+      if(!tips)return;
+      const who=cv.who;
+      const quemFechou=who==="mat"?"Matheus fechou":who==="luiz"?"Luiz fechou":"—";
+      const corFundo=who==="mat"?"#e8f4ef":who==="luiz"?"#e8f0fa":"#f5f5f5";
+      const corBorda=who==="mat"?"rgba(45,106,79,.2)":"rgba(26,74,122,.2)";
+      const corNome=who==="mat"?"#2d6a4f":"#1a4a7a";
+      diasLuiz+=`<div style='display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f0f0f0;background:${corFundo}'>
+        <div>
+          <span style='font-weight:700;font-size:14px;color:#1a1916'>${d.l}</span>
+          <span style='font-size:11px;color:${corNome};font-weight:600;margin-left:8px'>${quemFechou}</span>
+        </div>
+        <div style='text-align:right'>
+          <div style='font-family:monospace;font-size:15px;font-weight:700;color:#1a1916'>${f$(tips)}</div>
+          <div style='font-size:10px;color:#888'>cada um: ${f$(tips/2)}</div>
+        </div>
+      </div>`;
+    });
+    // Total linha
+    diasLuiz+=`<div style='display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:#f7f7f7;border-top:2px solid #ddd'>
+      <div style='font-weight:700;font-size:14px;color:#1a1916'>TOTAL CASH</div>
+      <div style='text-align:right'>
+        <div style='font-family:monospace;font-size:16px;font-weight:700;color:#c96a1a'>${f$(ct.total)}</div>
+        <div style='font-size:10px;color:#888'>cada um: ${f$(ct.each)}</div>
+      </div>
+    </div>`;
+
+    const venmoBlock=w.venmo>0?`<div style='margin:12px 0;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:11px 14px'>
+      <div style='font-size:10px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px'>💳 Venmo (Farber paga direto)</div>
+      <div style='display:flex;justify-content:space-between;font-size:13px;color:#1e3a8a'>
+        <span>Total Venmo pool</span><span style='font-family:monospace;font-weight:700'>${f$(w.venmo)}</span>
+      </div>
+      <div style='display:flex;justify-content:space-between;font-size:13px;color:#1e3a8a;margin-top:3px'>
+        <span>Sua parte (Luiz)</span><span style='font-family:monospace;font-weight:700'>${f$(w.venmo/2)}</span>
+      </div>
+    </div>`:"";
+
     const luizHTML=`<div style='font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#1a1916;max-width:100%'>
       <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid #eee;flex-wrap:wrap;gap:8px'>
         <div><div style='font-size:20px;font-weight:700'>Split Tips <span style='color:#1a4a7a'>— Luiz</span></div>
         <div style='font-family:monospace;font-size:12px;color:#444;margin-top:2px'>Semana: ${w.name}</div></div>
         <div style='font-size:10px;color:#888'>${today}</div>
       </div>
+      <div style='border:1px solid #eee;border-radius:8px;overflow:hidden;margin-bottom:14px'>${diasLuiz}</div>
       ${venmoBlock}
       <div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px'>
         <div style='background:#e8f4ef;border-radius:8px;padding:12px;border:1px solid rgba(45,106,79,.2)'>
