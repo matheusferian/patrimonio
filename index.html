@@ -420,10 +420,18 @@ function latW(){return[...db.weeks].sort((a,b)=>new Date(b.savedAt)-new Date(a.s
 function latCW(){return[...db.cashWeeks].sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt))[0];}
 
 // ── CÁLCULOS ─────────────────────────────────────
-function cW(w){let tr=0,mah=0,fpkh=0,comp=0;Object.values(w.days).forEach(d=>{tr+=d.tips||0;mah+=pH(d.hours);fpkh+=pH(d.ev);});comp=(w.purchases||[]).reduce((s,p)=>s+(p.amt||0),0);const venmo=w.venmo||0;const tipsDeposit=tr/2;// só cash — vai pro banco domingo
-const tipsFarber=venmo/2;// Farber já mandou via Venmo — não deposita
-const tips=tipsDeposit+tipsFarber;// total incluindo ambos (para lucro)
-const payMA=mah*14,payFPK=fpkh*18;return{tips,tipsDeposit,tipsFarber,tr,venmo,payMA,payFPK,mah,fpkh,totalHrs:mah+fpkh,comp,myProfit:tips+payMA+payFPK,farberOwes:payMA+payFPK};}
+function cW(w){
+  let tr=0,mah=0,fpkh=0,comp=0;
+  Object.values(w.days).forEach(d=>{tr+=d.tips||0;mah+=pH(d.hours);fpkh+=pH(d.ev);});
+  comp=(w.purchases||[]).reduce((s,p)=>s+(p.amt||0),0);
+  const venmo=w.venmo||0;
+  const tipsDeposit=tr/2;          // cash tips → você deposita no banco domingo
+  const venmoShare=venmo/2;        // Venmo → clientes pagaram pro Farber → Farber te repassa
+  const tips=tipsDeposit+venmoShare; // seu total de tips (lucro)
+  const payMA=mah*14,payFPK=fpkh*18;
+  const farberOwes=payMA+payFPK+venmoShare; // Farber deve: horas + venmo da sua parte
+  return{tips,tipsDeposit,venmoShare,tr,venmo,payMA,payFPK,mah,fpkh,totalHrs:mah+fpkh,comp,myProfit:tips+payMA+payFPK,farberOwes};
+}
 function cC(w){let me=0,luiz=0;Object.values(w.days).forEach(d=>{me+=d.me||0;luiz+=d.luiz||0;});const total=me+luiz,each=total/2,diff=me-each;return{me,luiz,total,each,diff};}
 
 // ── PARSEAR DOMINGO DA SEMANA ────────────────────
@@ -485,27 +493,27 @@ function rReimb(){
 
 // ── TIPS ─────────────────────────────────────────
 function rTips(){
-  const wks=[...db.weeks].reverse().filter(w=>cW(w).tipsDeposit>0||cW(w).tipsFarber>0);
+  const wks=[...db.weeks].reverse().filter(w=>cW(w).tipsDeposit>0||cW(w).venmoShare>0);
   const sum=document.getElementById("tips-summary");const list=document.getElementById("tips-list");
   if(!wks.length){sum.innerHTML="";list.innerHTML="<div class='emp' style='padding:16px'>Nenhuma semana com tips ainda</div>";return;}
   const dep=wks.filter(w=>isSundayPast(w)),pend=wks.filter(w=>!isSundayPast(w));
   const depCash=dep.reduce((s,w)=>s+cW(w).tipsDeposit,0);
   const pendCash=pend.reduce((s,w)=>s+cW(w).tipsDeposit,0);
-  const totalVenmo=wks.reduce((s,w)=>s+cW(w).tipsFarber,0);
+  const totalVenmo=wks.reduce((s,w)=>s+cW(w).venmoShare,0);
   sum.innerHTML=
     "<div class='sum3-card' style='border-color:rgba(0,255,136,.25)'><div class='sum3-label'>✅ Cash depositado</div><div class='sum3-val' style='color:var(--ac)'>"+f$(depCash)+"</div><div class='sum3-sub'>"+dep.length+" domingo"+(dep.length!==1?"s passados":"")+"</div></div>"+
     "<div class='sum3-card' style='border-color:rgba(255,107,61,.3)'><div class='sum3-label'>⏳ Cash a depositar</div><div class='sum3-val' style='color:var(--fp)'>"+f$(pendCash)+"</div><div class='sum3-sub'>"+pend.length+" semana"+(pend.length!==1?"s":"")+" em aberto</div></div>"+
-    "<div class='sum3-card' style='border-color:rgba(107,143,255,.3)'><div class='sum3-label'>💳 Venmo (já recebido)</div><div class='sum3-val' style='color:var(--bl)'>"+f$(totalVenmo)+"</div><div class='sum3-sub'>enviado pelo Farber</div></div>";
+    "<div class='sum3-card' style='border-color:rgba(107,143,255,.3)'><div class='sum3-label'>💳 Venmo (Farber repassa)</div><div class='sum3-val' style='color:var(--bl)'>"+f$(totalVenmo)+"</div><div class='sum3-sub'>clientes→Farber→você</div></div>";
   list.innerHTML=wks.map(w=>{
     const t=cW(w),isDep=isSundayPast(w);
     const sun=parseSunday(w.name);
     const sunLabel=sun?sun.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"}):"domingo";
     const rows=DAYS.map(d=>{const v=w.days[d.id]||{};const tips=v.tips||0;if(!tips)return"";return"<div class='wcard-row'><span class='wcard-day'>"+d.l+"</span><span style='font-size:10px;color:var(--t3);font-family:var(--mo)'>pool: "+f$(tips)+"</span><span class='wcard-val' style='color:var(--pk)'>depositar: "+f$(tips/2)+"</span></div>";}).filter(Boolean).join("");
-    const venmoRow=t.tipsFarber>0?"<div class='wcard-row'><span class='wcard-day' style='color:var(--bl)'>💳 Venmo (Farber)</span><span style='font-size:10px;color:var(--bl);font-family:var(--mo)'>já na sua conta — não depositar</span><span class='wcard-val' style='color:var(--bl)'>"+f$(t.tipsFarber)+"</span></div>":"";
+    const venmoRow=t.venmoShare>0?"<div class='wcard-row'><span class='wcard-day' style='color:var(--bl)'>💳 Venmo (QR clientes)</span><span style='font-size:10px;color:var(--bl);font-family:var(--mo)'>Farber repassa — não depositar</span><span class='wcard-val' style='color:var(--bl)'>"+f$(t.venmoShare)+"</span></div>":"";
     const badge=isDep
       ?"<span class='wcard-status dep'>✅ cash depositado "+sunLabel+"</span>"
       :"<span class='wcard-status pend'>⏳ depositar cash "+sunLabel+"</span>";
-    return "<div class='wcard "+(isDep?"dep":"pend")+"'><div class='wcard-head'><div class='wcard-name'>"+(w.name||w.id)+"</div><div class='wcard-right'><div style='text-align:right'><div class='wcard-amt' style='color:var(--pk)'>"+f$(t.tipsDeposit)+"</div><div style='font-size:9px;color:var(--t3);font-family:var(--mo)'>cash"+(t.tipsFarber>0?" · +"+f$(t.tipsFarber)+" Venmo":"")+"</div></div>"+badge+"</div></div>"+(rows||venmoRow?"<div class='wcard-body'>"+rows+venmoRow+"</div>":"")+"</div>";
+    return "<div class='wcard "+(isDep?"dep":"pend")+"'><div class='wcard-head'><div class='wcard-name'>"+(w.name||w.id)+"</div><div class='wcard-right'><div style='text-align:right'><div class='wcard-amt' style='color:var(--pk)'>"+f$(t.tipsDeposit)+"</div><div style='font-size:9px;color:var(--t3);font-family:var(--mo)'>cash"+(t.venmoShare>0?" · +"+f$(t.venmoShare)+" Venmo":"")+"</div></div>"+badge+"</div></div>"+(rows||venmoRow?"<div class='wcard-body'>"+rows+venmoRow+"</div>":"")+"</div>";
   }).join("");
 }
 
@@ -900,8 +908,19 @@ function renderR(){
       <div style='font-size:13px;font-weight:600;color:#e8f4ef'>💼 Trabalho — Semana ${w.name}</div>
       <div style='font-size:11px;color:#a3c4b5;margin-top:2px'>${t.mah>0?fH(t.mah)+"h MA ($14)":""}${t.mah>0&&t.fpkh>0?" + ":""}${t.fpkh>0?fH(t.fpkh)+"h FPK ($18)":""}</div>
     </div>
-    <div style='font-family:monospace;font-size:16px;font-weight:700;color:#fff'>${f$(t.farberOwes)}</div>
+    <div style='font-family:monospace;font-size:16px;font-weight:700;color:#fff'>${f$(t.payMA+t.payFPK)}</div>
   </div>`;
+
+  // Linha: Venmo (se houver)
+  if(t.venmoShare>0){
+    totalBlockLines+=`<div style='display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.12)'>
+      <div>
+        <div style='font-size:13px;font-weight:600;color:#bfdbfe'>💳 Venmo QR — Semana ${w.name}</div>
+        <div style='font-size:11px;color:#93c5fd;margin-top:2px'>Clientes pagaram $${t.venmo.toFixed(2)} → minha parte ÷2</div>
+      </div>
+      <div style='font-family:monospace;font-size:16px;font-weight:700;color:#bfdbfe'>${f$(t.venmoShare)}</div>
+    </div>`;
+  }
 
   // Linhas: reembolsos desta semana (cada item)
   if(purch.length){
@@ -939,7 +958,7 @@ function renderR(){
       </div>
       <div style='text-align:right'>
         <div style='font-family:monospace;font-size:36px;font-weight:700;color:#00ff88;line-height:1'>${f$(grandTotal)}</div>
-        ${grandTotal!==t.farberOwes?`<div style='font-size:11px;color:#6fcf97;margin-top:4px'>horas: ${f$(t.farberOwes)} + reimb: ${f$(totalReimbAtual+totalReimbAnterior)}</div>`:""}
+        ${grandTotal!==(t.payMA+t.payFPK)?`<div style='font-size:11px;color:#6fcf97;margin-top:4px'>${t.payMA+t.payFPK>0?"horas: "+f$(t.payMA+t.payFPK):""}${t.venmoShare>0?" + venmo: "+f$(t.venmoShare):""}${totalReimbAtual+totalReimbAnterior>0?" + reimb: "+f$(totalReimbAtual+totalReimbAnterior):""}</div>`:""}
       </div>
     </div>
   </div>`;
@@ -1006,12 +1025,13 @@ function renderR(){
     </div>`;
 
     const venmoBlock=w.venmo>0?`<div style='margin:12px 0;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:11px 14px'>
-      <div style='font-size:10px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px'>💳 Venmo (Farber paga direto)</div>
+      <div style='font-size:10px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px'>💳 Venmo QR — Farber repassa</div>
+      <div style='font-size:12px;color:#1e3a8a;margin-bottom:6px'>Clientes leram o QR do keybox → pagaram pro Farber → Farber repassa a vocês</div>
       <div style='display:flex;justify-content:space-between;font-size:13px;color:#1e3a8a'>
         <span>Total Venmo pool</span><span style='font-family:monospace;font-weight:700'>${f$(w.venmo)}</span>
       </div>
       <div style='display:flex;justify-content:space-between;font-size:13px;color:#1e3a8a;margin-top:3px'>
-        <span>Sua parte (Luiz)</span><span style='font-family:monospace;font-weight:700'>${f$(w.venmo/2)}</span>
+        <span>Sua parte (Luiz ÷2)</span><span style='font-family:monospace;font-weight:700'>${f$(w.venmo/2)}</span>
       </div>
     </div>`:"";
 
@@ -1060,6 +1080,7 @@ function renderR(){
   wbLines.push("","================================");
   if(t.mah>0)wbLines.push("Makers Air: "+fH(t.mah)+" hrs → "+f$(t.payMA));
   if(t.fpkh>0)wbLines.push("FPK: "+fH(t.fpkh)+" hrs → "+f$(t.payFPK));
+  if(t.venmoShare>0)wbLines.push("💳 Venmo QR (pool $"+t.venmo.toFixed(2)+" ÷2) → "+f$(t.venmoShare));
   wbLines.push("*Trabalho semana "+w.name+": "+f$(t.farberOwes)+"*");
   if(purch.length){wbLines.push("","Reembolsos semana "+w.name+":");purch.forEach(p=>wbLines.push("  - "+p.desc+": "+f$(p.amt)));wbLines.push("  Subtotal: "+f$(t.comp));}
   if(outrasPend.length){wbLines.push("","🔔 Reembolsos anteriores:");outrasPend.forEach(x=>{wbLines.push("  Semana "+x.name+":");(x.purchases||[]).forEach(p=>wbLines.push("    - "+p.desc+": "+f$(p.amt)));wbLines.push("  Subtotal: "+f$(cW(x).comp));});wbLines.push("  Total anterior: "+f$(totalReimbAnterior));}
