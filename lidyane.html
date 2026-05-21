@@ -7,14 +7,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f5f4f0;--s:#fff;--s2:#f0eeeb;--b:#dddbd7;--b2:#cac8c4;
-  --t:#1a1916;--t2:#6b6860;--t3:#a09e9a;
-  --ac:#2d6a4f;--al:#e8f4ef;
-  --or:#c96a1a;--ol:#fef3e8;
-  --bl:#1a4a7a;--bll:#e8f0fa;
-  --re:#c0392b;--rl:#fdecea;
+  --bg:#0f1115;--s:#171b24;--s2:#1e2330;--b:#2a3142;
+  --t:#e8edf5;--t2:#8b95a8;--t3:#4f5a6e;
+  --ac:#22c55e;--al:rgba(34,197,94,.12);
+  --or:#f59e0b;--ol:rgba(245,158,11,.1);
+  --bl:#3b82f6;--bll:rgba(59,130,246,.12);
+  --re:#ef4444;--rl:rgba(239,68,68,.1);
   --r:10px;--mo:'DM Mono',monospace;--sa:'Inter',sans-serif;
-  --sh:0 1px 3px rgba(0,0,0,.08);--shm:0 4px 12px rgba(0,0,0,.1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--t);font-family:var(--sa);min-height:100vh;font-size:14px}
@@ -32,7 +31,7 @@ header{padding:24px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 
 /* upcoming payments */
 .upcoming{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:14px 16px;margin:0 0 20px;box-shadow:var(--sh)}
-.upcoming-title{font-size:11px;font-weight:600;color:var(--t2);font-family:var(--mo);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.upcoming-title{font-size:11px;font-weight:600;color:var(--t2);letter-spacing:.01em;margin-bottom:12px}
 .up-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--b)}
 .up-item:last-child{border-bottom:none}
 .up-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;font-family:var(--mo);flex-shrink:0;white-space:nowrap}
@@ -42,14 +41,14 @@ header{padding:24px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .up-date{font-size:13px;font-weight:600;color:var(--t)}
 .up-period{font-size:11px;color:var(--t3);margin-top:1px}
 .up-days{font-size:11px;font-family:var(--mo);padding:3px 8px;border-radius:99px;flex-shrink:0;white-space:nowrap}
-.up-days.today{background:#fef3e8;color:var(--or);font-weight:600}
-.up-days.soon{background:#e8f4ef;color:var(--ac);font-weight:600}
+.up-days.today{background:var(--ol);color:var(--or);font-weight:600}
+.up-days.soon{background:var(--al);color:var(--ac);font-weight:600}
 .up-days.future{background:var(--s2);color:var(--t3)}
 
 /* metrics */
 .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}
 .mc{background:var(--s);border-radius:var(--r);padding:14px 16px;border:1px solid var(--b);box-shadow:var(--sh)}
-.mc-label{font-size:11px;color:var(--t3);font-family:var(--mo);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+.mc-label{font-size:11px;font-weight:500;color:var(--t3);margin-bottom:6px}
 .mc-val{font-size:22px;font-weight:700;color:var(--t)}
 .mc-val.green{color:var(--ac)}
 .mc-val.blue{color:var(--bl)}
@@ -65,8 +64,8 @@ header{padding:24px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 /* section */
 .section{margin-bottom:24px}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.section-title{font-size:12px;font-weight:600;color:var(--t2);letter-spacing:.06em;text-transform:uppercase;font-family:var(--mo)}
-.add-btn{background:var(--t);color:#fff;border:none;border-radius:var(--r);padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.section-title{font-size:11px;font-weight:600;color:var(--t2);letter-spacing:.01em;text-transform:uppercase}
+.add-btn{background:var(--ac);color:#fff;border:none;border-radius:var(--r);padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:opacity .15s}
 .add-btn:hover{opacity:.85}
 
 /* form card */
@@ -75,8 +74,8 @@ header{padding:24px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .form-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px}
 .form-group label{font-size:11px;color:var(--t2);font-weight:500}
 .form-group input,.form-group select,.form-group textarea{
-  padding:8px 10px;border-radius:var(--r);border:1px solid var(--b);background:var(--bg);
-  color:var(--t);font-size:13px;font-family:var(--sa);width:100%
+  padding:9px 11px;border-radius:var(--r);border:1px solid var(--b);background:var(--s2);
+  color:var(--t);font-size:14px;font-family:var(--sa);width:100%;outline:none;transition:border-color .15s
 }
 .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--ac)}
 .form-actions{display:flex;gap:8px;margin-top:10px}
@@ -102,12 +101,12 @@ header{padding:24px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .empty{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:24px;text-align:center;color:var(--t3);font-size:13px}
 
 /* total bar */
-.total-bar{background:var(--t);color:#fff;border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin:16px 0 24px;box-shadow:var(--shm)}
-.total-bar-label{font-size:12px;opacity:.6;font-family:var(--mo);letter-spacing:.04em;text-transform:uppercase}
-.total-bar-val{font-size:20px;font-weight:700}
+.total-bar{background:var(--s2);border:1px solid var(--b);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin:16px 0 24px}
+.total-bar-label{font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.01em}
+.total-bar-val{font-family:var(--mo);font-size:20px;font-weight:700;color:var(--ac)}
 
 /* toast */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--t);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:500;box-shadow:var(--shm);opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:100}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--s2);color:var(--t);border:1px solid var(--b);padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:500;opacity:0;transform:translateY(6px);transition:all .22s;pointer-events:none;z-index:100}
 .toast.show{opacity:1;transform:none}
 
 /* history table */
@@ -130,7 +129,6 @@ tr:last-child td{border-bottom:none}
   </div>
   <div style="display:flex;gap:8px;align-items:center">
     <div class="sync" id="sync-status"><div class="dot ld" id="sync-dot"></div><span id="sync-text">connecting...</span></div>
-    <a href="/financeiro" class="back">💰 Financeiro</a>
     <a href="/" class="back">← Matheus</a>
   </div>
 </header>
@@ -273,9 +271,10 @@ let curMonth=new Date().getMonth(); // 0-indexed
 function fmtDate(d){
   if(!d)return'—';
   const p=d.split('-');
-  return `${p[2]}/${p[1]}/${p[1]?p[0].slice(2):p[0]}`;
+  return `${p[2]}/${p[1]}/${p[0].slice(2)}`;
 }
 function fmtMoney(v){return'$'+parseFloat(v||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function monthName(m,y){
   const names=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   return names[m]+' '+y;
@@ -392,7 +391,7 @@ function render(){
       <div class="entry">
         <div class="entry-icon icon-cheque">💳</div>
         <div class="entry-info">
-          <div class="entry-name">${e.obs||'Cheque quinzenal'}</div>
+          <div class="entry-name">${esc(e.obs||'Cheque quinzenal')}</div>
           <div class="entry-sub">${fmtDate(e.date)}</div>
         </div>
         <div class="entry-amt cheque">${fmtMoney(e.amount)}</div>
@@ -409,7 +408,7 @@ function render(){
       <div class="entry">
         <div class="entry-icon icon-tips">💵</div>
         <div class="entry-info">
-          <div class="entry-name">${e.obs||'Tips em dinheiro'}</div>
+          <div class="entry-name">${esc(e.obs||'Tips em dinheiro')}</div>
           <div class="entry-sub">${fmtDate(e.date)}</div>
         </div>
         <div class="entry-amt tips">${fmtMoney(e.amount)}</div>
@@ -432,7 +431,7 @@ function render(){
         <td>${fmtDate(e.date)}</td>
         <td>${e.type==='cheque'?'<span class="t-cheque">Cheque</span>':'<span class="t-tips">Tips</span>'}</td>
         <td class="${e.type==='cheque'?'t-cheque':'t-tips'}">${fmtMoney(e.amount)}</td>
-        <td style="color:var(--t3)">${e.obs||'—'}</td>
+        <td style="color:var(--t3)">${esc(e.obs||'—')}</td>
         <td><button class="del-btn" onclick="deleteEntry('${e.id}')" title="Remover">×</button></td>
       </tr>`).join('');
   }
@@ -535,18 +534,6 @@ function renderUpcoming(){
     }
   ].sort((a,b)=>a.date-b.date).slice(0,4);
 
-  document.getElementById('upcoming-list').innerHTML = items.map(item=>`
-    <div class="up-item">
-      <span class="up-badge ${item.type}">${item.type==='cheque'?'Cheque':'Tips'}</span>
-      <div class="up-info">
-        <div class="up-date">${fmtFull(item.date)}</div>
-        <div class="up-period">${item.label}</div>
-      </div>
-      <span class="up-days ${item.cls}">${item.label2||item.label.includes('hoje')?'':''} ${item.label}</span>
-      <span class="up-days ${item.cls}">${item.cls==='today'?item.label:item.label}</span>
-    </div>`).join('');
-
-  // cleaner render
   document.getElementById('upcoming-list').innerHTML = items.map(item=>{
     const dl = daysLabel(item.date);
     return `<div class="up-item">
