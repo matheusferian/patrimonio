@@ -417,6 +417,10 @@ function pH(s){if(!s||!s.trim())return 0;s=s.trim().replace(",",".");if(s.includ
 function f$(n){if(n==null)return"$-";const a=Math.abs(n),sg=n<0?"-":"";return sg+"$"+a.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,",");}
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function fH(h){if(!h)return"0:00";const hh=Math.floor(h),mm=Math.round((h-hh)*60);return hh+":"+(mm<10?"0":"")+mm;}
+// ── Date formatters (locale-independent, MM/DD/YYYY standard) ───────────────
+function formatUSDate(d){const mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return mm+'/'+dd+'/'+d.getFullYear();}
+function formatUSDateShort(d){const mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return mm+'/'+dd+'/'+String(d.getFullYear()).slice(2);}
+const _WD_PT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 function latW(){return[...db.weeks].sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt))[0];}
 function latCW(){return[...db.cashWeeks].sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt))[0];}
 
@@ -449,7 +453,7 @@ function rHoje(){
   if(!semanaAtual&&db.weeks.length>0)items.push({icon:"📋",text:"Semana atual sem lançamento",tag:"urgente",amt:""});
   // Tips a depositar: domingo desta semana ainda nao chegou
   const tipsPendentes=db.weeks.filter(w=>!isSundayPast(w)&&cW(w).tipsDeposit>0);
-  if(tipsPendentes.length){const tot=tipsPendentes.reduce((s,w)=>s+cW(w).tipsDeposit,0);const sun=parseSunday(tipsPendentes[0].name);const sunLabel=sun?sun.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"}):"domingo";items.push({icon:"💰",text:"Depositar tips cash no "+sunLabel+(tipsPendentes.length>1?" ("+tipsPendentes.length+" semanas)":""),tag:"urgente",amt:f$(tot)});}
+  if(tipsPendentes.length){const tot=tipsPendentes.reduce((s,w)=>s+cW(w).tipsDeposit,0);const sun=parseSunday(tipsPendentes[0].name);const sunLabel=sun?(_WD_PT[sun.getDay()]+' '+formatUSDateShort(sun)):"domingo";items.push({icon:"💰",text:"Depositar tips cash no "+sunLabel+(tipsPendentes.length>1?" ("+tipsPendentes.length+" semanas)":""),tag:"urgente",amt:f$(tot)});}
   // Reembolsos pendentes
   const reimbPend=db.weeks.filter(w=>cW(w).comp>0&&!w.reimbPaid);
   if(reimbPend.length){const tot=reimbPend.reduce((s,w)=>s+cW(w).comp,0);items.push({icon:"🧾",text:"Cobrar reembolso do Farber"+(reimbPend.length>1?" ("+reimbPend.length+" semanas)":""),tag:"urgente",amt:f$(tot)});}
@@ -468,7 +472,7 @@ function rHoje(){
 }
 
 // ── REEMBOLSOS ───────────────────────────────────
-async function toggleReimbPaid(wId){const w=db.weeks.find(x=>x.id===wId);if(!w)return;w.reimbPaid=!w.reimbPaid;w.reimbPaidDate=w.reimbPaid?new Date().toLocaleDateString("pt-BR"):null;try{await pw(w);toast(w.reimbPaid?"✅ Reembolso recebido!":"Marcado como pendente");rDash();}catch(e){toast("Erro!");w.reimbPaid=!w.reimbPaid;}}
+async function toggleReimbPaid(wId){const w=db.weeks.find(x=>x.id===wId);if(!w)return;w.reimbPaid=!w.reimbPaid;w.reimbPaidDate=w.reimbPaid?formatUSDate(new Date()):null;try{await pw(w);toast(w.reimbPaid?"✅ Reembolso recebido!":"Marcado como pendente");rDash();}catch(e){toast("Erro!");w.reimbPaid=!w.reimbPaid;}}
 
 function rReimb(){
   const wks=[...db.weeks].reverse().filter(w=>cW(w).comp>0);
@@ -507,7 +511,7 @@ function rTips(){
   list.innerHTML=wks.map(w=>{
     const t=cW(w),isDep=isSundayPast(w);
     const sun=parseSunday(w.name);
-    const sunLabel=sun?sun.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"}):"domingo";
+    const sunLabel=sun?(_WD_PT[sun.getDay()]+' '+formatUSDateShort(sun)):"domingo";
     const rows=DAYS.map(d=>{const v=w.days[d.id]||{};const tips=v.tips||0;if(!tips)return"";return"<div class='wcard-row'><span class='wcard-day'>"+d.l+"</span><span style='font-size:10px;color:var(--t3);font-family:var(--mo)'>pool: "+f$(tips)+"</span><span class='wcard-val' style='color:var(--pk)'>depositar: "+f$(tips/2)+"</span></div>";}).filter(Boolean).join("");
     const venmoRow=t.venmoShare>0?"<div class='wcard-row'><span class='wcard-day' style='color:var(--bl)'>💳 Venmo (QR clientes)</span><span style='font-size:10px;color:var(--bl);font-family:var(--mo)'>Farber repassa — não depositar</span><span class='wcard-val' style='color:var(--bl)'>"+f$(t.venmoShare)+"</span></div>":"";
     const badge=isDep
@@ -518,8 +522,8 @@ function rTips(){
 }
 
 // ── FARBER PAID ──────────────────────────────────
-async function toggleFarberPaid(wId){const w=db.weeks.find(x=>x.id===wId);if(!w)return;w.farberPaid=!w.farberPaid;w.farberPaidDate=w.farberPaid?new Date().toLocaleDateString("pt-BR"):null;try{await pw(w);toast(w.farberPaid?"✅ Pagamento recebido!":"Marcado como pendente");rDash();}catch(e){toast("Erro!");w.farberPaid=!w.farberPaid;}}
-async function markAllPaid(){const pend=db.weeks.filter(w=>!w.farberPaid);if(!pend.length)return;if(!confirm("Marcar todas as "+pend.length+" semana(s) como recebidas?"))return;const date=new Date().toLocaleDateString("pt-BR");for(const w of pend){w.farberPaid=true;w.farberPaidDate=date;try{await pw(w);}catch(e){}}toast("Todas marcadas como recebidas!");rDash();}
+async function toggleFarberPaid(wId){const w=db.weeks.find(x=>x.id===wId);if(!w)return;w.farberPaid=!w.farberPaid;w.farberPaidDate=w.farberPaid?formatUSDate(new Date()):null;try{await pw(w);toast(w.farberPaid?"✅ Pagamento recebido!":"Marcado como pendente");rDash();}catch(e){toast("Erro!");w.farberPaid=!w.farberPaid;}}
+async function markAllPaid(){const pend=db.weeks.filter(w=>!w.farberPaid);if(!pend.length)return;if(!confirm("Marcar todas as "+pend.length+" semana(s) como recebidas?"))return;const date=formatUSDate(new Date());for(const w of pend){w.farberPaid=true;w.farberPaidDate=date;try{await pw(w);}catch(e){}}toast("Todas marcadas como recebidas!");rDash();}
 
 // ── DASHBOARD ────────────────────────────────────
 function rDash(){
@@ -571,9 +575,6 @@ function rDash(){
 
 // ── SELETOR DE SEMANAS ────────────────────────────
 function rWSel(){const s=document.getElementById("wsel");if(!db.weeks.length){s.innerHTML="<span style='font-size:12px;color:var(--t3);font-family:var(--mo)'>Nenhuma semana salva ainda</span>";return;}s.innerHTML=[...db.weeks].reverse().map(w=>"<button class='wp"+(eId===w.id?" on":"")+"' data-id='"+w.id+"' onclick='lwk(this.dataset.id)'>"+(w.name||w.id)+"</button>").join("");}
-function rCHist(){const tb=document.getElementById("chtb");if(!db.cashWeeks.length){tb.innerHTML="<tr><td colspan=6 class=emp>Nenhuma semana de divisão ainda</td></tr>";return;}tb.innerHTML=[...db.cashWeeks].reverse().map(w=>{const c=cC(w);let tr="";if(Math.abs(c.diff)<0.01)tr="<span class=g>Igual</span>";else if(c.diff>0)tr="<span class=g>Mat</span> → <span class='mn o'>"+f$(c.diff)+"</span> → <span class=b>Luiz</span>";else tr="<span class=b>Luiz</span> → <span class='mn o'>"+f$(Math.abs(c.diff))+"</span> → <span class=g>Mat</span>";return "<tr onclick='lcw(this.dataset.id)' data-id='"+w.id+"'><td><span class=tg>"+(w.name||w.id)+"</span></td><td class='mn g'>"+f$(c.me)+"</td><td class='mn b'>"+f$(c.luiz)+"</td><td class='mn o'>"+f$(c.total)+"</td><td class='mn g'>"+f$(c.each)+"</td><td>"+tr+"</td></tr>";}).join("");}
-function rCWSel(){const s=document.getElementById("cwsel");if(!db.cashWeeks.length){s.innerHTML="<span style='font-size:12px;color:var(--t3);font-family:var(--mo)'>Nenhuma semana salva ainda</span>";return;}s.innerHTML=[...db.cashWeeks].reverse().map(w=>"<button class='wp"+(ceId===w.id?" on":"")+"' data-id='"+w.id+"' onclick='lcw(this.dataset.id)'>"+(w.name||w.id)+"</button>").join("");}
-
 // ── LANÇAMENTO ────────────────────────────────────
 function buildDG(){document.getElementById("dg").innerHTML=DAYS.map(d=>`<div class="dr"><div class="dn">${d.l.slice(0,3)}</div><div class="ft1"><input type="number" id="${d.id}_t" placeholder="tips $" step="0.01" oninput="recalc()"></div><div class="ft2"><input type="text" id="${d.id}_h" placeholder="8:00" oninput="recalc()"></div><div class="ft3"><input type="text" id="${d.id}_loc" placeholder="local"></div><div class="ft4"><input type="text" id="${d.id}_ev" placeholder="h:mm" oninput="recalc()"></div></div>`).join("");}
 
@@ -591,7 +592,7 @@ async function saveW(){
   const data=gF();if(!data.name){toast("Informe o período da semana!");return;}
   if(eId){const i=db.weeks.findIndex(w=>w.id===eId);if(i>=0){data.id=eId;const old=db.weeks[i];data.farberPaid=old.farberPaid||false;data.farberPaidDate=old.farberPaidDate||null;data.reimbPaid=old.reimbPaid||false;data.reimbPaidDate=old.reimbPaidDate||null;db.weeks[i]=data;}else{data.id=Date.now()+"";eId=data.id;db.weeks.push(data);}}else{data.id=Date.now()+"";eId=data.id;db.weeks.push(data);}
   // Auto-popular Cash Split
-  const cd={};DAYS.forEach(d=>{cd[d.id]={me:data.days[d.id].tips/2||0,luiz:data.days[d.id].tips/2||0,note:""};});
+  const cd={};DAYS.forEach(d=>{cd[d.id]={who:"",tips:data.days[d.id].tips||0};});
   const ex=db.cashWeeks.find(w=>w.name===data.name);let co;
   if(ex){const ci=db.cashWeeks.findIndex(w=>w.name===data.name);co={...ex,days:cd,savedAt:data.savedAt};db.cashWeeks[ci]=co;}
   else{co={id:"c"+Date.now(),name:data.name,days:cd,savedAt:data.savedAt};db.cashWeeks.push(co);}
@@ -802,7 +803,7 @@ function renderR(){
   if(!s.value)return;
   const w=db.weeks.find(w=>w.id===s.value);if(!w)return;
   const t=cW(w),ct_raw=db.cashWeeks.find(c=>c.name===w.name)||null,ct=ct_raw?cC(ct_raw):null;
-  const today=new Date().toLocaleDateString("pt-BR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  const today=formatUSDate(new Date());
   const purch=w.purchases||[];
 
   // ── RELATÓRIO DO FARBER (mobile-first, sem tabela larga) ──────────────
