@@ -111,6 +111,7 @@ header{padding:24px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 
 /* history table */
 .history-wrap{overflow-x:auto}
+@media(max-width:480px){.metrics{grid-template-columns:1fr 1fr}}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{background:var(--s2);padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--t2);letter-spacing:.04em;text-transform:uppercase;font-family:var(--mo)}
 td{padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t)}
@@ -129,6 +130,7 @@ tr:last-child td{border-bottom:none}
   </div>
   <div style="display:flex;gap:8px;align-items:center">
     <div class="sync" id="sync-status"><div class="dot ld" id="sync-dot"></div><span id="sync-text">connecting...</span></div>
+    <a href="financeiro.html" class="back">💰 Financeiro</a>
     <a href="/" class="back">← Matheus</a>
   </div>
 </header>
@@ -268,11 +270,13 @@ let entries=[];
 let curYear=new Date().getFullYear();
 let curMonth=new Date().getMonth(); // 0-indexed
 
-function fmtDate(d){
-  if(!d)return'—';
-  const p=d.split('-');
-  return `${p[2]}/${p[1]}/${p[0].slice(2)}`;
-}
+// ── Date formatters (locale-independent, MM/DD/YYYY standard) ───────────────
+function formatUSDate(d){const mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return mm+'/'+dd+'/'+d.getFullYear();}
+function formatUSDateShort(d){const mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return mm+'/'+dd+'/'+String(d.getFullYear()).slice(2);}
+function formatUSDateFromISO(s){if(!s)return'—';const p=s.split('-');return p[1]+'/'+p[2]+'/'+p[0];}
+const _WD_PT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function fmtDate(d){return formatUSDateFromISO(d);}
 function fmtMoney(v){return'$'+parseFloat(v||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function monthName(m,y){
@@ -468,12 +472,8 @@ function getPrevSunday(from){
   return d;
 }
 function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
-function fmtFull(d){
-  return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
-}
-function fmtShort(d){
-  return (d.getDate()).toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0');
-}
+function fmtFull(d){return _WD_PT[d.getDay()]+' '+formatUSDateShort(d);}
+function fmtShort(d){return String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');}
 
 function renderUpcoming(){
   const today = new Date();

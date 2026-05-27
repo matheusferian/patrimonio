@@ -9,21 +9,21 @@
 :root{
   --bg:#0f1115;--s:#171b24;--s2:#1e2330;--b:#2a3142;
   --t:#e8edf5;--t2:#8b95a8;--t3:#4f5a6e;
-  --green:#22c55e;--blue:#3b82f6;--amber:#f59e0b;--red:#ef4444;--orange:#f97316;
+  --ac:#22c55e;--bl:#3b82f6;--or:#f59e0b;--re:#ef4444;--fp:#f97316;
   --r:10px;--mo:'DM Mono',monospace;--sa:'Inter',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--t);font-family:var(--sa);min-height:100vh;font-size:14px}
 .wrap{max-width:960px;margin:0 auto;padding:0 20px 80px}
 header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.logo{font-size:17px;font-weight:700;letter-spacing:-.3px}.logo span{color:var(--green)}
+.logo{font-size:17px;font-weight:700;letter-spacing:-.3px}.logo span{color:var(--ac)}
 .logo-sub{font-family:var(--mo);font-size:10px;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
 .nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .nav a{font-family:var(--mo);font-size:11px;color:var(--t2);text-decoration:none;padding:5px 11px;border-radius:99px;border:1px solid var(--b);background:var(--s)}
-.nav a:hover{background:var(--s2)}
+.nav a:hover{background:var(--s2);color:var(--t)}
 .sync{font-family:var(--mo);font-size:11px;padding:5px 11px;border-radius:99px;border:1px solid var(--b);background:var(--s);display:flex;align-items:center;gap:5px;color:var(--t2)}
 .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--t3)}
-.dot.ok{background:#22c55e}.dot.err{background:var(--red)}.dot.ld{background:var(--amber);animation:pulse 1s infinite}
+.dot.ok{background:#22c55e}.dot.err{background:var(--re)}.dot.ld{background:var(--or);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* month nav */
@@ -36,12 +36,12 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
 .mc{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden}
 .mc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.mc.green::after{background:var(--green)}.mc.red::after{background:var(--red)}
-.mc.amber::after{background:var(--amber)}.mc.blue::after{background:var(--blue)}
+.mc.green::after{background:var(--ac)}.mc.red::after{background:var(--re)}
+.mc.amber::after{background:var(--or)}.mc.blue::after{background:var(--bl)}
 .mc-label{font-size:11px;font-weight:500;color:var(--t3);margin-bottom:8px}
 .mc-val{font-family:var(--mo);font-size:22px;font-weight:700}
-.mc.green .mc-val{color:var(--green)}.mc.red .mc-val{color:var(--red)}
-.mc.amber .mc-val{color:var(--amber)}.mc.blue .mc-val{color:var(--blue)}
+.mc.green .mc-val{color:var(--ac)}.mc.red .mc-val{color:var(--re)}
+.mc.amber .mc-val{color:var(--or)}.mc.blue .mc-val{color:var(--bl)}
 .mc-sub{font-size:11px;color:var(--t3);margin-top:3px}
 
 /* alerts strip */
@@ -54,9 +54,9 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .alert-text{flex:1;font-size:13px}
 .alert-text b{font-weight:600}
 .alert-days{font-family:var(--mo);font-size:11px;padding:3px 8px;border-radius:99px}
-.urgent .alert-days{background:rgba(239,68,68,.2);color:var(--red)}
-.warn .alert-days{background:rgba(245,158,11,.2);color:var(--amber)}
-.info .alert-days{background:rgba(59,130,246,.2);color:var(--blue)}
+.urgent .alert-days{background:rgba(239,68,68,.2);color:var(--re)}
+.warn .alert-days{background:rgba(245,158,11,.2);color:var(--or)}
+.info .alert-days{background:rgba(59,130,246,.2);color:var(--bl)}
 
 /* hoje panel */
 .hoje-panel{background:var(--s);border:1px solid var(--b);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
@@ -67,11 +67,11 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .hoje-row{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid rgba(45,54,80,.5)}
 .hoje-row:last-child{border-bottom:none}
 .hoje-badge{font-family:var(--mo);font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;flex-shrink:0;white-space:nowrap}
-.b-overdue{background:rgba(239,68,68,.2);color:var(--red)}
-.b-today{background:rgba(239,68,68,.14);color:var(--red)}
-.b-tomorrow{background:rgba(245,158,11,.18);color:var(--amber)}
-.b-soon{background:rgba(59,130,246,.14);color:var(--blue)}
-.b-pend{background:rgba(245,158,11,.1);color:var(--amber)}
+.b-overdue{background:rgba(239,68,68,.2);color:var(--re)}
+.b-today{background:rgba(239,68,68,.14);color:var(--re)}
+.b-tomorrow{background:rgba(245,158,11,.18);color:var(--or)}
+.b-soon{background:rgba(59,130,246,.14);color:var(--bl)}
+.b-pend{background:rgba(245,158,11,.1);color:var(--or)}
 .b-next{background:rgba(74,85,104,.25);color:var(--t3)}
 .hoje-name{flex:1;font-size:13px;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .hoje-amt{font-family:var(--mo);font-size:13px;font-weight:600;flex-shrink:0}
@@ -90,12 +90,12 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .qadd-field.wide{flex:2;min-width:160px}
 .qadd-label{font-size:11px;font-weight:500;color:var(--t3)}
 .qadd-input{background:var(--s2);border:1px solid var(--b);border-radius:6px;color:var(--t);font-size:16px;font-family:var(--sa);padding:9px 11px;outline:none;width:100%}
-.qadd-input:focus{border-color:var(--amber)}
+.qadd-input:focus{border-color:var(--or)}
 .qadd-status{display:flex;gap:6px}
 .qs-btn{flex:1;padding:10px 8px;border-radius:8px;border:1px solid var(--b);background:none;font-size:13px;font-family:var(--sa);color:var(--t3);cursor:pointer;transition:all .15s;min-height:44px}
-.qs-btn.active-pend{background:rgba(245,158,11,.15);border-color:var(--amber);color:var(--amber)}
-.qs-btn.active-paid{background:rgba(34,197,94,.15);border-color:var(--green);color:var(--green)}
-.qadd-submit{width:100%;padding:12px;background:var(--green);border:none;border-radius:var(--r);color:#fff;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;min-height:46px;transition:opacity .15s}
+.qs-btn.active-pend{background:rgba(245,158,11,.15);border-color:var(--or);color:var(--or)}
+.qs-btn.active-paid{background:rgba(34,197,94,.15);border-color:var(--ac);color:var(--ac)}
+.qadd-submit{width:100%;padding:12px;background:var(--ac);border:none;border-radius:var(--r);color:#fff;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;min-height:46px;transition:opacity .15s}
 .qadd-submit:hover{opacity:.85}
 .qadd-submit:disabled{opacity:.4;cursor:default}
 
@@ -113,41 +113,41 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .inc-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--b)}
 .inc-row:last-child{border-bottom:none}
 .inc-ico{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;font-weight:700}
-.ico-m{background:rgba(59,130,246,.15);color:var(--blue)}.ico-l{background:rgba(34,197,94,.15);color:var(--green)}
+.ico-m{background:rgba(59,130,246,.15);color:var(--bl)}.ico-l{background:rgba(34,197,94,.15);color:var(--ac)}
 .inc-info{flex:1;min-width:0}
 .inc-name{font-size:13px;color:var(--t);font-weight:500}
 .inc-sub{font-size:11px;color:var(--t3);margin-top:1px}
 .inc-amt{font-size:14px;font-weight:700}
-.amt-blue{color:var(--blue)}.amt-green{color:var(--green)}
+.amt-blue{color:var(--bl)}.amt-green{color:var(--ac)}
 
 /* bill rows */
 .bill-row{display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--b)}
 .bill-row:last-child{border-bottom:none}
 .bill-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.bill-dot.paid{background:var(--green)}.bill-dot.pend{background:var(--amber)}.bill-dot.urgent{background:var(--red)}
+.bill-dot.paid{background:var(--ac)}.bill-dot.pend{background:var(--or)}.bill-dot.urgent{background:var(--re)}
 .bill-day{font-family:var(--mo);font-size:11px;color:var(--t3);width:22px;flex-shrink:0;text-align:center}
 .bill-name{flex:1;font-size:13px;color:var(--t)}
 .bill-name.strike{color:var(--t3);text-decoration:line-through}
 .bill-warn{font-size:10px;font-family:var(--mo);padding:2px 6px;border-radius:99px;flex-shrink:0;white-space:nowrap}
-.bill-warn.red{background:rgba(239,68,68,.15);color:var(--red)}
-.bill-warn.amber{background:rgba(245,158,11,.15);color:var(--amber)}
+.bill-warn.red{background:rgba(239,68,68,.15);color:var(--re)}
+.bill-warn.amber{background:rgba(245,158,11,.15);color:var(--or)}
 .bill-amt{font-size:13px;font-weight:600}
-.bill-amt.pend{color:var(--amber)}.bill-amt.done{color:var(--t3)}
+.bill-amt.pend{color:var(--or)}.bill-amt.done{color:var(--t3)}
 .bill-toggle{width:20px;height:20px;border-radius:5px;border:1px solid var(--b);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;background:none;color:transparent;transition:all .15s}
-.bill-toggle:hover{border-color:var(--green);color:var(--green)}
-.bill-toggle.done{background:var(--green);border-color:var(--green);color:#fff}
+.bill-toggle:hover{border-color:var(--ac);color:var(--ac)}
+.bill-toggle.done{background:var(--ac);border-color:var(--ac);color:#fff}
 .del-bill{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:2px 3px;flex-shrink:0}
-.del-bill:hover{color:var(--red)}
+.del-bill:hover{color:var(--re)}
 
 /* editable */
 .editable{cursor:pointer;border-bottom:1px dashed var(--t3);padding:1px 2px;border-radius:2px;transition:all .15s}
-.editable:hover{border-bottom-color:var(--amber);color:var(--amber)}
-.ie{background:rgba(245,158,11,.1);border:1px solid var(--amber);border-radius:4px;color:var(--t);font-size:13px;font-family:var(--sa);padding:2px 5px;outline:none}
+.editable:hover{border-bottom-color:var(--or);color:var(--or)}
+.ie{background:rgba(245,158,11,.1);border:1px solid var(--or);border-radius:4px;color:var(--t);font-size:13px;font-family:var(--sa);padding:2px 5px;outline:none}
 .ie.day-i{width:34px;text-align:center}.ie.amt-i{width:78px;text-align:right;font-family:var(--mo)}
 
 /* add bill */
 .add-bill-btn{width:100%;background:none;border:1px dashed var(--b);border-radius:var(--r);padding:6px;font-size:11px;font-family:var(--mo);color:var(--t3);cursor:pointer;transition:all .15s;margin-top:8px}
-.add-bill-btn:hover{border-color:var(--green);color:var(--green)}
+.add-bill-btn:hover{border-color:var(--ac);color:var(--ac)}
 
 /* total pill */
 .total-pill{display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.3);border-radius:var(--r);padding:9px 12px;margin-top:10px}
@@ -164,9 +164,9 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .rec-item input[type=checkbox]{width:15px;height:15px;cursor:pointer;flex-shrink:0}
 .rec-day{font-family:var(--mo);font-size:11px;color:var(--t3);width:30px}
 .rec-name{flex:1;color:var(--t)}
-.rec-amt{font-family:var(--mo);font-size:12px;color:var(--amber)}
-.rec-advance{font-size:10px;font-family:var(--mo);padding:2px 6px;border-radius:99px;background:rgba(239,68,68,.15);color:var(--red);white-space:nowrap}
-.apply-btn{background:var(--green);color:#fff;border:none;border-radius:var(--r);padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--mo)}
+.rec-amt{font-family:var(--mo);font-size:12px;color:var(--or)}
+.rec-advance{font-size:10px;font-family:var(--mo);padding:2px 6px;border-radius:99px;background:rgba(239,68,68,.15);color:var(--re);white-space:nowrap}
+.apply-btn{background:var(--ac);color:#fff;border:none;border-radius:var(--r);padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--mo)}
 .apply-btn:hover{opacity:.85}
 
 /* chart */
@@ -191,12 +191,12 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .re-amt{width:80px;font-family:var(--mo);font-size:12px;text-align:right}
 .re-adv{width:32px;text-align:center;font-family:var(--mo);font-size:12px}
 .re-inp{background:var(--s2);border:1px solid var(--b);border-radius:5px;color:var(--t);font-size:12px;font-family:var(--sa);padding:4px 7px;outline:none;width:100%}
-.re-inp:focus{border-color:var(--amber)}
+.re-inp:focus{border-color:var(--or)}
 .re-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px;padding:2px 4px;flex-shrink:0}
-.re-del:hover{color:var(--red)}
+.re-del:hover{color:var(--re)}
 .add-rec-btn{background:none;border:1px dashed var(--b);border-radius:var(--r);padding:6px;font-size:11px;font-family:var(--mo);color:var(--t3);cursor:pointer;width:100%;margin-top:8px}
-.add-rec-btn:hover{border-color:var(--green);color:var(--green)}
-.save-rec-btn{background:var(--green);color:#fff;border:none;border-radius:var(--r);padding:8px 18px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--mo);margin-top:12px;width:100%}
+.add-rec-btn:hover{border-color:var(--ac);color:var(--ac)}
+.save-rec-btn{background:var(--ac);color:#fff;border:none;border-radius:var(--r);padding:8px 18px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--mo);margin-top:12px;width:100%}
 .save-rec-btn:hover{opacity:.88}
 
 /* backup bar */
@@ -204,10 +204,10 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 .bkp-label{font-size:11px;font-weight:500;color:var(--t3);flex-shrink:0;margin-right:2px}
 .bkp-btn{font-family:var(--mo);font-size:11px;padding:7px 13px;border-radius:99px;border:1px solid var(--b);background:none;color:var(--t2);cursor:pointer;white-space:nowrap;transition:all .15s;min-height:36px}
 .bkp-btn:hover{background:var(--s2);color:var(--t)}
-.bkp-btn.imp{border-color:var(--blue);color:var(--blue)}
+.bkp-btn.imp{border-color:var(--bl);color:var(--bl)}
 .bkp-btn.imp:hover{background:rgba(59,130,246,.1)}
 .bkp-imp-note{font-family:var(--mo);font-size:10px;color:var(--t3)}
-.bkp-imp-status{display:none;width:100%;font-family:var(--mo);font-size:11px;color:var(--amber);padding-top:7px;border-top:1px solid var(--b);margin-top:2px}
+.bkp-imp-status{display:none;width:100%;font-family:var(--mo);font-size:11px;color:var(--or);padding-top:7px;border-top:1px solid var(--b);margin-top:2px}
 
 .toast{position:fixed;bottom:20px;right:20px;background:var(--s2);color:var(--t);border:1px solid var(--b);padding:9px 16px;border-radius:var(--r);font-size:13px;opacity:0;transform:translateY(6px);transition:all .22s;pointer-events:none;z-index:99}
 .toast.show{opacity:1;transform:none}
@@ -311,19 +311,19 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
   <div class="card">
     <div class="card-head"><div class="card-title">📥 Entradas do mês</div></div>
     <div id="inc-list"><div class="empty">carregando...</div></div>
-    <div class="total-pill"><div class="tp-label">Total entradas</div><div class="tp-val" style="color:var(--green)" id="inc-pill">$0.00</div></div>
+    <div class="total-pill"><div class="tp-label">Total entradas</div><div class="tp-val" style="color:var(--ac)" id="inc-pill">$0.00</div></div>
   </div>
 
   <!-- Pending -->
   <div class="card">
     <div class="card-head">
       <div class="card-title">⏳ Pendentes</div>
-      <span class="card-count" style="color:var(--amber)" id="pend-count"></span>
+      <span class="card-count" style="color:var(--or)" id="pend-count"></span>
     </div>
     <div class="edit-hint">clique para editar · ✓ para marcar pago</div>
     <div id="pend-list"><div class="empty">nenhuma pendente 🎉</div></div>
     <button class="add-bill-btn" onclick="addBill()">+ adicionar conta</button>
-    <div class="total-pill"><div class="tp-label">Total pendente</div><div class="tp-val" style="color:var(--amber)" id="pend-pill">$0.00</div></div>
+    <div class="total-pill"><div class="tp-label">Total pendente</div><div class="tp-val" style="color:var(--or)" id="pend-pill">$0.00</div></div>
   </div>
 </div>
 
@@ -331,10 +331,10 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 <div class="card" style="margin-bottom:14px">
   <div class="card-head">
     <div class="card-title">✅ Pagas</div>
-    <span class="card-count" style="color:var(--green)" id="paid-count"></span>
+    <span class="card-count" style="color:var(--ac)" id="paid-count"></span>
   </div>
   <div id="paid-list"><div class="empty">nenhuma paga ainda</div></div>
-  <div class="total-pill"><div class="tp-label">Total pago</div><div class="tp-val" style="color:var(--green)" id="paid-pill">$0.00</div></div>
+  <div class="total-pill"><div class="tp-label">Total pago</div><div class="tp-val" style="color:var(--ac)" id="paid-pill">$0.00</div></div>
 </div>
 
 <!-- Chart -->
@@ -440,6 +440,11 @@ const MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ago
 const fmt=v=>'$'+parseFloat(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 const mk=()=>curYear+'-'+(curMonth+1).toString().padStart(2,'0');
+// ── Date formatters (locale-independent, MM/DD/YYYY standard) ───────────────
+function formatUSDate(d){const mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return mm+'/'+dd+'/'+d.getFullYear();}
+function formatUSDateShort(d){const mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return mm+'/'+dd+'/'+String(d.getFullYear()).slice(2);}
+function formatUSDateFromISO(s){if(!s)return'—';const p=s.split('-');return p[1]+'/'+p[2]+'/'+p[0];}
+const _WD_PT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const isCurrentMonth=()=>curYear===new Date().getFullYear()&&curMonth===new Date().getMonth();
 
 function setSS(s,msg){
@@ -655,7 +660,7 @@ function renderRecList(){
       <span class="rec-name">${esc(r.name)}${r.note?` <span style="font-size:10px;color:var(--t3)">(${esc(r.note)})</span>`:''}</span>
       <span class="rec-amt">${fmt(r.amt)}</span>
       ${r.advance?`<span class="rec-advance">⚠ ${r.advance}d antes</span>`:''}
-      ${alreadyIn?'<span style="font-size:10px;font-family:var(--mo);color:var(--green)">já adicionada</span>':''}
+      ${alreadyIn?'<span style="font-size:10px;font-family:var(--mo);color:var(--ac)">já adicionada</span>':''}
     </div>`;
   }).join('');
 }
@@ -702,7 +707,7 @@ function renderHoje(){
   const dateEl=document.getElementById('hoje-date');
   if(isCurrent){
     titleEl.textContent='⚡ Hoje';
-    dateEl.textContent=today.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',year:'2-digit'});
+    dateEl.textContent=_WD_PT[today.getDay()]+' '+formatUSDateShort(today);
   }else if(isPast){
     titleEl.textContent='📋 Resumo';
     dateEl.textContent=MONTHS[curMonth]+' '+curYear;
@@ -747,7 +752,7 @@ function renderHoje(){
     html+=`<div class="hoje-row hoje-sep">
       <span class="hoje-badge b-pend">${unpaid.length} pendente${unpaid.length!==1?'s':''}</span>
       <span class="hoje-name">total a pagar no mês</span>
-      <span class="hoje-amt" style="color:var(--amber)">${fmt(totalPend)}</span>
+      <span class="hoje-amt" style="color:var(--or)">${fmt(totalPend)}</span>
     </div>`;
     if(upcoming){
       html+=`<div class="hoje-row">
@@ -768,7 +773,7 @@ function renderHoje(){
     html+=`<div class="hoje-row hoje-sep">
       <span class="hoje-badge b-pend">${unpaid.length} não pago${unpaid.length!==1?'s':''}</span>
       <span class="hoje-name">total não pago no mês</span>
-      <span class="hoje-amt" style="color:var(--amber)">${fmt(totalPend)}</span>
+      <span class="hoje-amt" style="color:var(--or)">${fmt(totalPend)}</span>
     </div>`;
   }else{
     // future month — all unpaid sorted by day, neutral labels
@@ -782,7 +787,7 @@ function renderHoje(){
     html+=`<div class="hoje-row hoje-sep">
       <span class="hoje-badge b-pend">${unpaid.length} previsto${unpaid.length!==1?'s':''}</span>
       <span class="hoje-name">total previsto no mês</span>
-      <span class="hoje-amt" style="color:var(--amber)">${fmt(totalPend)}</span>
+      <span class="hoje-amt" style="color:var(--or)">${fmt(totalPend)}</span>
     </div>`;
   }
   list.innerHTML=html;
@@ -847,7 +852,7 @@ function render(){
   document.getElementById('m-pend-sub').textContent=pend.length+' conta'+(pend.length!==1?'s':'')+' em aberto';
   const balEl=document.getElementById('m-bal');
   balEl.textContent=fmt(Math.abs(balance));
-  balEl.style.color=balance>=0?'var(--green)':'var(--red)';
+  balEl.style.color=balance>=0?'var(--ac)':'var(--re)';
   document.getElementById('m-bal-sub').textContent=(balance>=0?'':'Déficit · ')+'Agora: '+fmt(paidImpact);
   document.getElementById('balance-mc').className='mc '+(balance>=0?'blue':'red');
 
@@ -1064,7 +1069,7 @@ function importJSON(input){
       toast('Backup inválido: monthBills ausente ou incorreto.');input.value='';return;
     }
     const months=Object.keys(data.monthBills).length;
-    const expDate=data.exportedAt?data.exportedAt.slice(0,10):'data desconhecida';
+    const expDate=data.exportedAt?formatUSDateFromISO(data.exportedAt.slice(0,10)):'data desconhecida';
     const ok=confirm(
       'Importar backup de '+expDate+'?\n\n'+
       months+' mês(es) de contas serão carregados em memória.\n\n'+
