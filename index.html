@@ -202,6 +202,20 @@ input:focus{border-color:var(--ac)}input::placeholder{color:var(--t3)}
 .wcb{margin-top:8px;font-family:var(--mo);font-size:10px;font-weight:700;padding:8px 16px;border-radius:8px;border:none;background:var(--ac);color:#fff;cursor:pointer;display:inline-block;text-transform:uppercase;letter-spacing:.06em}
 .wcb:hover{opacity:.85}.wcb.cp{background:#22c55e}
 
+/* ABA LUCRO */
+.lucro-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:10px 0 12px}
+.lkpi{background:var(--bg2);border:1px solid var(--b);border-radius:var(--r);padding:14px}
+.lkpi.hl{border-color:var(--ac);background:rgba(34,197,94,.04)}
+.lkl{font-family:var(--mo);font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);margin-bottom:7px}
+.lkv{font-family:var(--mo);font-size:22px;font-weight:700;color:var(--ac);line-height:1}
+.lks{font-family:var(--mo);font-size:10px;color:var(--t3);margin-top:4px}
+.lwf{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0 10px;align-items:center}
+.lwf-btn{font-family:var(--mo);font-size:10px;font-weight:600;padding:5px 12px;border-radius:99px;border:1px solid var(--b);background:var(--bg2);color:var(--t3);cursor:pointer;transition:all .15s;white-space:nowrap}
+.lwf-btn:hover{border-color:var(--t2);color:var(--t2)}
+.lwf-btn.on{background:rgba(59,130,246,.12);border-color:var(--bl);color:var(--bl);font-weight:700}
+.lchart-wrap{background:var(--bg2);border:1px solid var(--b);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.lchart-title{font-family:var(--mo);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+
 /* PRINT / TOAST */
 #po{position:fixed;inset:0;background:#fff;z-index:9999;overflow:auto;padding:20px}
 .toast{position:fixed;bottom:22px;right:22px;background:var(--bg2);border:1px solid var(--b);border-radius:10px;padding:11px 17px;font-family:var(--mo);font-size:12px;color:var(--t);transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:999}
@@ -240,6 +254,7 @@ input:focus{border-color:var(--ac)}input::placeholder{color:var(--t3)}
   <button class="tab" onclick="goTab('entry',this)">lançamento</button>
   <button class="tab" onclick="goTab('cash',this)">divisão</button>
   <button class="tab" onclick="goTab('report',this)">relatório</button>
+  <button class="tab" onclick="goTab('lucro',this)">lucro</button>
 </div>
 
 <!-- DASHBOARD -->
@@ -404,9 +419,57 @@ input:focus{border-color:var(--ac)}input::placeholder{color:var(--t3)}
   <div class="rp" id="rp-wal"><div class="wac"><h3>📱 WhatsApp — Luiz</h3><div class="wat" id="waL">Selecione uma semana acima</div><button class="wcb" onclick="cpWA('waL',this)">📋 Copiar</button></div></div>
 </div>
 
+<!-- LUCRO -->
+<div class="pn" id="tab-lucro">
+
+  <div style="padding:14px 0 8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+    <div style="font-family:var(--mo);font-size:15px;font-weight:700;color:var(--t)">📈 Análise de Lucro</div>
+    <div style="font-family:var(--mo);font-size:10px;color:var(--t3);letter-spacing:.06em">análise pessoal · não enviada ao Farber</div>
+  </div>
+
+  <!-- Filtro mês -->
+  <div class="month-tabs" id="lucro-month-tabs"></div>
+
+  <!-- Filtro semana -->
+  <div class="lwf" id="lucro-week-filter"></div>
+
+  <!-- KPIs -->
+  <div class="lucro-kpis" id="lucro-kpis"></div>
+
+  <!-- Tabela -->
+  <div class="st" style="cursor:default;padding:10px 0 8px">📋 semanas do mês</div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Semana</th><th>Meu Lucro</th><th>Status</th></tr></thead>
+      <tbody id="lucro-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Gráficos -->
+  <div style="margin-top:14px">
+    <div class="lchart-wrap">
+      <div class="lchart-title">📊 lucro por semana</div>
+      <div style="position:relative;height:210px"><canvas id="lucro-bar"></canvas></div>
+    </div>
+    <div class="lchart-wrap" id="lucro-line-wrap">
+      <div class="lchart-title">📈 evolução do lucro</div>
+      <div style="position:relative;height:210px"><canvas id="lucro-line"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Ações -->
+  <div class="bg" style="margin-top:14px">
+    <button class="btn bs" onclick="lucroExportCSV()">📊 Exportar CSV</button>
+    <button class="btn bs" onclick="lucroCopyWA()">📱 Copiar WhatsApp</button>
+    <button class="btn bs" onclick="lucroPrint()">🖨 Imprimir</button>
+  </div>
+
+</div>
+
 </div><!-- /wrap -->
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 const SB="https://icatgbqspkbwzjqtaaoz.supabase.co";
 const SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXRnYnFzcGtid3pqcXRhYW96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNDMzNTAsImV4cCI6MjA5MzgxOTM1MH0.3NQA6ui4n19yDT5aAkCArluKpTg0VXjb5bjvyvPW7Oc";
@@ -1203,8 +1266,168 @@ function printR(who){
 function closePO(){const p=document.getElementById("po");if(p)p.remove();}
 function cpWA(id,btn){const text=document.getElementById(id).textContent;navigator.clipboard.writeText(text).then(()=>{btn.textContent="Copiado!";btn.classList.add("cp");setTimeout(()=>{btn.textContent="📋 Copiar";btn.classList.remove("cp");},2000);});}
 
+// ── ABA LUCRO ─────────────────────────────────────────
+let lucroMonth=(()=>{const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');})();
+let lucroWeekId='all';
+let _lBar=null,_lLine=null;
+
+function getLucroWeeks(){
+  return db.weeks
+    .filter(w=>getWeekMonthKey(w)===lucroMonth)
+    .sort((a,b)=>{
+      const sa=parseSunday(a.name),sb=parseSunday(b.name);
+      if(sa&&sb)return sa-sb;
+      return new Date(a.savedAt||0)-new Date(b.savedAt||0);
+    });
+}
+
+function rLucroMonthTabs(){
+  const months=getAvailableMonths();
+  const c=document.getElementById('lucro-month-tabs');
+  if(!c)return;
+  c.innerHTML=months.map(m=>`<button class="mtab${m===lucroMonth?' active':''}" onclick="setLucroMonth('${m}')">${monthLabel(m)}</button>`).join('');
+}
+
+function setLucroMonth(m){lucroMonth=m;lucroWeekId='all';rLucro();}
+function setLucroWeek(id){lucroWeekId=id;rLucro();}
+
+function rLucroWeekFilter(wks){
+  const c=document.getElementById('lucro-week-filter');
+  if(!c)return;
+  c.innerHTML=`<button class="lwf-btn${lucroWeekId==='all'?' on':''}" onclick="setLucroWeek('all')">Todas</button>`+
+    wks.map(w=>`<button class="lwf-btn${lucroWeekId===w.id?' on':''}" onclick="setLucroWeek('${w.id}')">${w.name||w.id}</button>`).join('');
+}
+
+function rLucro(){
+  rLucroMonthTabs();
+  const allWks=getLucroWeeks();
+  rLucroWeekFilter(allWks);
+  const wks=lucroWeekId==='all'?allWks:allWks.filter(w=>w.id===lucroWeekId);
+  const profits=wks.map(w=>({w,p:cW(w).myProfit}));
+  const total=profits.reduce((s,x)=>s+x.p,0);
+  const count=profits.length;
+  const mnName=MONTH_NAMES_PT[parseInt(lucroMonth.split('-')[1])-1];
+
+  // KPIs
+  const kpiEl=document.getElementById('lucro-kpis');
+  if(!count){
+    kpiEl.innerHTML=`<div class="lkpi"><div class="lkl">Nenhuma semana</div><div class="lkv" style="color:var(--t3)">—</div><div class="lks">sem dados em ${mnName}</div></div>`;
+  }else if(lucroWeekId==='all'){
+    const avg=total/count;
+    const best=profits.reduce((b,x)=>x.p>b.p?x:b,profits[0]);
+    const worst=profits.reduce((b,x)=>x.p<b.p?x:b,profits[0]);
+    kpiEl.innerHTML=
+      `<div class="lkpi hl"><div class="lkl">Lucro Total</div><div class="lkv">${f$(total)}</div><div class="lks">${count} semana${count!==1?'s':''} em ${mnName}</div></div>`+
+      `<div class="lkpi"><div class="lkl">Média / Semana</div><div class="lkv" style="color:var(--bl)">${f$(avg)}</div><div class="lks">lucro médio</div></div>`+
+      `<div class="lkpi"><div class="lkl">Melhor Semana</div><div class="lkv" style="color:var(--ac)">${f$(best.p)}</div><div class="lks">${esc(best.w.name||best.w.id)}</div></div>`+
+      `<div class="lkpi"><div class="lkl">Pior Semana</div><div class="lkv" style="color:var(--or)">${f$(worst.p)}</div><div class="lks">${esc(worst.w.name||worst.w.id)}</div></div>`+
+      `<div class="lkpi"><div class="lkl">Semanas</div><div class="lkv" style="color:var(--t2)">${count}</div><div class="lks">no mês</div></div>`;
+  }else{
+    const pw=profits[0];
+    const allAvg=allWks.length?allWks.reduce((s,w)=>s+cW(w).myProfit,0)/allWks.length:0;
+    const vsAvg=allAvg?((pw.p-allAvg)/allAvg*100):0;
+    const isPaid=pw.w.farberPaid||false;
+    const reimb=cW(pw.w).comp;
+    kpiEl.innerHTML=
+      `<div class="lkpi hl"><div class="lkl">Lucro da Semana</div><div class="lkv">${f$(pw.p)}</div><div class="lks">${esc(pw.w.name||pw.w.id)}</div></div>`+
+      `<div class="lkpi"><div class="lkl">vs Média do Mês</div><div class="lkv" style="color:${vsAvg>=0?'var(--ac)':'var(--re)'}">${vsAvg>=0?'+':''}${vsAvg.toFixed(1)}%</div><div class="lks">média: ${f$(allAvg)}</div></div>`+
+      `<div class="lkpi"><div class="lkl">Status Farber</div><div class="lkv" style="color:${isPaid?'var(--ac)':'var(--fp)'};font-size:16px">${isPaid?'PAGO':'PENDENTE'}</div><div class="lks">pagamento</div></div>`;
+  }
+
+  // Tabela
+  const tbody=document.getElementById('lucro-tbody');
+  if(!profits.length){
+    tbody.innerHTML=`<tr><td colspan="3" class="emp">Nenhuma semana em ${mnName}</td></tr>`;
+  }else{
+    tbody.innerHTML=profits.map(({w,p})=>{
+      const isPaid=w.farberPaid||false;
+      const badge=isPaid?`<span class="fbadge fbadge-r">PAGO</span>`:`<span class="fbadge fbadge-p">PENDENTE</span>`;
+      return`<tr><td><span class="tg">${esc(w.name||w.id)}</span></td><td class="mn g">${f$(p)}</td><td>${badge}</td></tr>`;
+    }).join('');
+  }
+
+  // Gráficos
+  if(_lBar){_lBar.destroy();_lBar=null;}
+  if(_lLine){_lLine.destroy();_lLine=null;}
+  const lineWrap=document.getElementById('lucro-line-wrap');
+  if(profits.length){
+    const labels=profits.map(x=>x.w.name||x.w.id);
+    const data=profits.map(x=>parseFloat(x.p.toFixed(2)));
+    const maxP=Math.max(...data);
+    const baseOpts={responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+f$(c.raw)}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#4a5568',font:{size:10},maxRotation:30}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#4a5568',font:{size:10},callback:v=>'$'+(v>=1000?(v/1000).toFixed(1)+'k':v.toFixed(0))}}}};
+    _lBar=new Chart(document.getElementById('lucro-bar'),{type:'bar',
+      data:{labels,datasets:[{label:'Lucro',data,
+        backgroundColor:data.map(v=>v===maxP?'rgba(34,197,94,.85)':'rgba(59,130,246,.6)'),borderRadius:5}]},
+      options:baseOpts});
+    if(profits.length>=2){
+      lineWrap.style.display='block';
+      _lLine=new Chart(document.getElementById('lucro-line'),{type:'line',
+        data:{labels,datasets:[{label:'Evolução',data,borderColor:'rgba(34,197,94,.8)',
+          backgroundColor:'rgba(34,197,94,.08)',tension:.35,fill:true,
+          pointBackgroundColor:'#22c55e',pointRadius:4}]},
+        options:baseOpts});
+    }else{lineWrap.style.display='none';}
+  }else{lineWrap.style.display='none';}
+}
+
+function lucroExportCSV(){
+  const wks=lucroWeekId==='all'?getLucroWeeks():getLucroWeeks().filter(w=>w.id===lucroWeekId);
+  const rows=[['Semana','Meu Lucro','Status']];
+  wks.forEach(w=>rows.push([w.name||w.id,cW(w).myProfit.toFixed(2),w.farberPaid?'PAGO':'PENDENTE']));
+  function cv(v){const s=String(v==null?'':v);return/[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
+  const csv=rows.map(r=>r.map(cv).join(',')).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download='lucro-'+lucroMonth+(lucroWeekId!=='all'?'-semana':'')+'.csv';
+  a.click();URL.revokeObjectURL(a.href);
+  toast('CSV exportado ✓');
+}
+
+function lucroCopyWA(){
+  const wks=lucroWeekId==='all'?getLucroWeeks():getLucroWeeks().filter(w=>w.id===lucroWeekId);
+  const mn=MONTH_NAMES_PT[parseInt(lucroMonth.split('-')[1])-1];
+  const lines=['*Lucro — '+mn+(lucroWeekId!=='all'?' (semana selecionada)':'')+'*',''];
+  let tot=0;
+  wks.forEach(w=>{const p=cW(w).myProfit;tot+=p;lines.push('  '+(w.name||w.id)+': '+f$(p)+(w.farberPaid?' ✅':' ⏳'));});
+  if(wks.length>1)lines.push('','Total: '+f$(tot),'Média: '+f$(tot/wks.length));
+  lines.push('','_Matheus_');
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>toast('Copiado! ✓'));
+}
+
+function lucroPrint(){
+  const wks=lucroWeekId==='all'?getLucroWeeks():getLucroWeeks().filter(w=>w.id===lucroWeekId);
+  const mn=MONTH_NAMES_PT[parseInt(lucroMonth.split('-')[1])-1];
+  const tot=wks.reduce((s,w)=>s+cW(w).myProfit,0);
+  const avg=wks.length?tot/wks.length:0;
+  const rows=wks.map(w=>{const p=cW(w).myProfit;
+    return`<tr><td style="padding:8px 14px;border-bottom:1px solid #f0f0f0;font-size:14px">${esc(w.name||w.id)}</td>`+
+      `<td style="padding:8px 14px;border-bottom:1px solid #f0f0f0;font-family:monospace;font-size:14px;font-weight:700;color:#2d6a4f">${f$(p)}</td>`+
+      `<td style="padding:8px 14px;border-bottom:1px solid #f0f0f0;font-size:12px;color:${w.farberPaid?'#2d6a4f':'#c96a1a'}">${w.farberPaid?'✅ Pago':'⏳ Pendente'}</td></tr>`;}).join('');
+  const summary=wks.length>1?`<div style="margin-top:16px;padding:14px;background:#f7f7f7;border-radius:8px;display:flex;gap:24px;flex-wrap:wrap">`+
+    `<div><span style="font-size:11px;color:#666;display:block;margin-bottom:3px">Total</span><b style="font-family:monospace;font-size:18px;color:#2d6a4f">${f$(tot)}</b></div>`+
+    `<div><span style="font-size:11px;color:#666;display:block;margin-bottom:3px">Média/semana</span><b style="font-family:monospace;font-size:18px;color:#1a4a7a">${f$(avg)}</b></div></div>`:'';
+  const win=window.open('','_blank','width=520,height=640');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset=UTF-8><title>Lucro ${mn}</title>
+  <style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;margin:0;padding:20px;color:#1a1916}table{width:100%;border-collapse:collapse}.np{display:flex;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #ddd;flex-wrap:wrap;gap:8px;align-items:center}@media print{.np{display:none!important}}</style>
+  </head><body><div class="np"><b style="font-size:16px">Lucro — ${mn}</b>
+  <div style="display:flex;gap:8px"><button onclick="window.print()" style="background:#2d6a4f;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">Imprimir</button>
+  <button onclick="window.close()" style="background:#f0eeeb;border:1px solid #ddd;border-radius:6px;padding:8px 12px;cursor:pointer">Fechar</button></div></div>
+  <table><thead><tr style="background:#f7f7f7">
+  <th style="padding:8px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#666;border-bottom:2px solid #ddd">Semana</th>
+  <th style="padding:8px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#666;border-bottom:2px solid #ddd">Meu Lucro</th>
+  <th style="padding:8px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#666;border-bottom:2px solid #ddd">Status</th>
+  </tr></thead><tbody>${rows}</tbody></table>${summary}
+  <div style="margin-top:14px;font-size:10px;color:#888">Matheus Ferian · ${formatUSDate(new Date())}</div>
+  </body></html>`);
+  win.document.close();
+}
+
 // ── NAVEGAÇÃO ─────────────────────────────────────
-function goTab(tab,btn){document.querySelectorAll(".pn").forEach(p=>p.classList.remove("active"));document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.getElementById("tab-"+tab).classList.add("active");if(btn)btn.classList.add("active");if(tab==="report"){fillR();renderR();}if(tab==="entry"&&!eId&&db.weeks.length)lwk(latW().id);if(tab==="cash"){rCWSel();if(!ceId&&db.cashWeeks.length)lcw(db.cashWeeks[0].id);else if(!ceId&&db.weeks.length)loadDivByWeek(latW().id);}}
+function goTab(tab,btn){document.querySelectorAll(".pn").forEach(p=>p.classList.remove("active"));document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.getElementById("tab-"+tab).classList.add("active");if(btn)btn.classList.add("active");if(tab==="report"){fillR();renderR();}if(tab==="entry"&&!eId&&db.weeks.length)lwk(latW().id);if(tab==="cash"){rCWSel();if(!ceId&&db.cashWeeks.length)lcw(db.cashWeeks[0].id);else if(!ceId&&db.weeks.length)loadDivByWeek(latW().id);}if(tab==="lucro")rLucro();}
 function goRT(t,btn){document.querySelectorAll(".rp").forEach(p=>p.classList.remove("active"));document.querySelectorAll(".rt").forEach(b=>b.classList.remove("on"));document.getElementById("rp-"+t).classList.add("active");if(btn)btn.classList.add("on");}
 function toast(msg){const e=document.getElementById("toast");e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2500);}
 
