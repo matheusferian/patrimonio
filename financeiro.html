@@ -27,10 +27,16 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* month nav */
-.month-row{display:flex;align-items:center;gap:10px;margin:22px 0 18px}
-.mnav-btn{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:6px 13px;cursor:pointer;font-size:14px;color:var(--t2)}
+.month-row{margin:18px 0 14px}
+.mnav-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.mnav-btn{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:5px 11px;cursor:pointer;font-size:13px;color:var(--t2)}
 .mnav-btn:hover{background:var(--s2)}
-.month-title{font-size:19px;font-weight:700;color:var(--t);flex:1}
+.month-title{font-size:14px;font-weight:600;color:var(--t2);font-family:var(--mo);flex:1}
+/* month tabs (fin) */
+.fin-month-tabs{display:flex;gap:6px;overflow-x:auto;flex-wrap:wrap;padding:4px 0}
+.fin-mtab{font-family:var(--mo);font-size:10px;font-weight:600;padding:5px 13px;border-radius:99px;border:1px solid var(--b);background:var(--s);color:var(--t3);cursor:pointer;transition:all .15s;white-space:nowrap;letter-spacing:.05em}
+.fin-mtab:hover{border-color:var(--t2);color:var(--t2)}
+.fin-mtab.active{background:rgba(34,197,94,.12);border-color:var(--ac);color:var(--ac);font-weight:700}
 
 /* metrics */
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
@@ -228,9 +234,12 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 </header>
 
 <div class="month-row">
-  <button class="mnav-btn" onclick="prevMonth()">‹</button>
-  <div class="month-title" id="month-title">—</div>
-  <button class="mnav-btn" onclick="nextMonth()">›</button>
+  <div class="fin-month-tabs" id="fin-month-tabs"></div>
+  <div class="mnav-row">
+    <button class="mnav-btn" onclick="prevMonth()">‹</button>
+    <div class="month-title" id="month-title">—</div>
+    <button class="mnav-btn" onclick="nextMonth()">›</button>
+  </div>
 </div>
 
 <!-- Hoje panel -->
@@ -479,8 +488,41 @@ async function saveMonthBills(mk){
   if(!r.ok)throw new Error('saveMonthBills: '+r.status);
 }
 
-function prevMonth(){curMonth--;if(curMonth<0){curMonth=11;curYear--;}render();}
-function nextMonth(){curMonth++;if(curMonth>11){curMonth=0;curYear++;}render();}
+function prevMonth(){curMonth--;if(curMonth<0){curMonth=11;curYear--;}rMonthTabsF();render();}
+function nextMonth(){curMonth++;if(curMonth>11){curMonth=0;curYear++;}rMonthTabsF();render();}
+
+function getAvailableMonthsF(){
+  const s=new Set();
+  const n=new Date();
+  s.add(n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'));
+  Object.keys(monthBills).forEach(k=>s.add(k));
+  // usa monthKey quando existe (fonte oficial); senão saved_at como fallback
+  weeksData.forEach(w=>{
+    const d=w.data||{};
+    if(d.monthKey){s.add(d.monthKey);return;}
+    const sv=(w.saved_at||'').slice(0,7);if(sv)s.add(sv);
+  });
+  return[...s].sort();
+}
+
+function goToMonthF(mk){
+  const[y,m]=mk.split('-');
+  curYear=parseInt(y);curMonth=parseInt(m)-1;
+  rMonthTabsF();render();
+}
+
+function rMonthTabsF(){
+  const months=getAvailableMonthsF();
+  const curMk=curYear+'-'+String(curMonth+1).padStart(2,'0');
+  const nowMk=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
+  const c=document.getElementById('fin-month-tabs');
+  if(!c)return;
+  c.innerHTML=months.map(m=>{
+    const[y,mo]=m.split('-');
+    const lbl=MONTHS[parseInt(mo)-1].slice(0,3)+'/\''+y.slice(2);
+    return`<button class="fin-mtab${m===curMk?' active':''}" onclick="goToMonthF('${m}')">${lbl}${m===nowMk?' ✦':''}</button>`;
+  }).join('');
+}
 
 // ── Income ───────────────────────────────────────────────────────────────────
 function getMattIncome(m){
@@ -492,7 +534,7 @@ function getMattIncome(m){
     if(!d.farberPaid&&!w.farberPaid)return;
     const saved=(w.saved_at||'').slice(0,7);
     const name=(w.name||d.name||'').toLowerCase();
-    if(saved===m||name.includes(abbr)){
+    if(d.monthKey?d.monthKey===m:(saved===m||name.includes(abbr))){
       Object.values(d.days||{}).forEach(day=>{
         const h=pH(day.hours||''),ph=day.ph||14,eh=pH(day.ev||'');
         payFP+=h*ph; tips+=(day.tips||0)/2; ev+=eh*18;
@@ -831,6 +873,7 @@ function renderAlerts(bills){
 
 // ── Render ───────────────────────────────────────────────────────────────────
 function render(){
+  rMonthTabsF();
   const m=mk();
   const matt=getMattIncome(m),lidy=getLidyIncome(m);
   const bills=getBills(m);

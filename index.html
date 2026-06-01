@@ -31,6 +31,13 @@ header{padding:18px 0 16px;border-bottom:1px solid var(--b);display:flex;align-i
 .tab:hover{color:var(--t2)}.tab.active{color:var(--ac);border-bottom-color:var(--ac)}
 .pn{display:none}.pn.active{display:block}
 
+/* MONTH TABS */
+.month-tabs{display:flex;gap:6px;padding:10px 0 6px;overflow-x:auto}
+.mtab{font-family:var(--mo);font-size:10px;font-weight:600;padding:5px 13px;border-radius:99px;border:1px solid var(--b);background:var(--bg2);color:var(--t3);cursor:pointer;transition:all .15s;white-space:nowrap;letter-spacing:.05em}
+.mtab:hover{border-color:var(--t2);color:var(--t2)}
+.mtab.active{background:rgba(34,197,94,.12);border-color:var(--ac);color:var(--ac);font-weight:700}
+.month-badge{font-family:var(--mo);font-size:10px;color:var(--t3);padding:4px 0 10px}
+
 /* AÇÃO DO DIA */
 .hoje{background:var(--bg2);border:1px solid var(--b);border-radius:var(--r);padding:14px 18px;margin:18px 0 10px;display:none}
 .hoje.visible{display:block}
@@ -237,6 +244,9 @@ input:focus{border-color:var(--ac)}input::placeholder{color:var(--t3)}
 
 <!-- DASHBOARD -->
 <div class="pn active" id="tab-dash">
+
+  <!-- ABAS DE MÊS -->
+  <div class="month-tabs" id="month-tabs"></div>
 
   <!-- O QUE FAZER HOJE -->
   <div class="hoje" id="hoje-box">
@@ -475,7 +485,7 @@ function rHoje(){
 async function toggleReimbPaid(wId){const w=db.weeks.find(x=>x.id===wId);if(!w)return;w.reimbPaid=!w.reimbPaid;w.reimbPaidDate=w.reimbPaid?formatUSDate(new Date()):null;try{await pw(w);toast(w.reimbPaid?"✅ Reembolso recebido!":"Marcado como pendente");rDash();}catch(e){toast("Erro!");w.reimbPaid=!w.reimbPaid;}}
 
 function rReimb(){
-  const wks=[...db.weeks].reverse().filter(w=>cW(w).comp>0);
+  const wks=[...db.weeks].reverse().filter(w=>cW(w).comp>0&&getWeekMonthKey(w)===selectedMonth);
   const reimb=document.getElementById("reimb-summary");const list=document.getElementById("reimb-list");
   if(!wks.length){reimb.innerHTML="";list.innerHTML="<div class='emp' style='padding:16px'>Nenhum reembolso registrado</div>";return;}
   const paid=wks.filter(w=>w.reimbPaid),pend=wks.filter(w=>!w.reimbPaid);
@@ -497,7 +507,7 @@ function rReimb(){
 
 // ── TIPS ─────────────────────────────────────────
 function rTips(){
-  const wks=[...db.weeks].reverse().filter(w=>cW(w).tipsDeposit>0||cW(w).venmoShare>0);
+  const wks=[...db.weeks].reverse().filter(w=>(cW(w).tipsDeposit>0||cW(w).venmoShare>0)&&getWeekMonthKey(w)===selectedMonth);
   const sum=document.getElementById("tips-summary");const list=document.getElementById("tips-list");
   if(!wks.length){sum.innerHTML="";list.innerHTML="<div class='emp' style='padding:16px'>Nenhuma semana com tips ainda</div>";return;}
   const dep=wks.filter(w=>isSundayPast(w)),pend=wks.filter(w=>!isSundayPast(w));
@@ -523,11 +533,48 @@ function rTips(){
 
 // ── FARBER PAID ──────────────────────────────────
 async function toggleFarberPaid(wId){const w=db.weeks.find(x=>x.id===wId);if(!w)return;w.farberPaid=!w.farberPaid;w.farberPaidDate=w.farberPaid?formatUSDate(new Date()):null;try{await pw(w);toast(w.farberPaid?"✅ Pagamento recebido!":"Marcado como pendente");rDash();}catch(e){toast("Erro!");w.farberPaid=!w.farberPaid;}}
-async function markAllPaid(){const pend=db.weeks.filter(w=>!w.farberPaid);if(!pend.length)return;if(!confirm("Marcar todas as "+pend.length+" semana(s) como recebidas?"))return;const date=formatUSDate(new Date());for(const w of pend){w.farberPaid=true;w.farberPaidDate=date;try{await pw(w);}catch(e){}}toast("Todas marcadas como recebidas!");rDash();}
+async function markAllPaid(){const pend=db.weeks.filter(w=>!w.farberPaid&&getWeekMonthKey(w)===selectedMonth);if(!pend.length)return;if(!confirm("Marcar todas as "+pend.length+" semana(s) de "+MONTH_NAMES_PT[parseInt(selectedMonth.split('-')[1])-1]+" como recebidas?"))return;const date=formatUSDate(new Date());for(const w of pend){w.farberPaid=true;w.farberPaidDate=date;try{await pw(w);}catch(e){}}toast("Todas marcadas como recebidas!");rDash();}
+
+// ── MESES ─────────────────────────────────────────────
+const MONTH_NAMES_PT=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+let selectedMonth=(()=>{const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');})();
+
+function getWeekMonthKey(w){
+  if(w.monthKey)return w.monthKey;
+  const sun=parseSunday(w.name);
+  if(sun)return sun.getFullYear()+'-'+String(sun.getMonth()+1).padStart(2,'0');
+  if(w.savedAt)return w.savedAt.slice(0,7);
+  return selectedMonth;
+}
+
+function getAvailableMonths(){
+  const s=new Set();
+  const n=new Date();
+  s.add(n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'));
+  db.weeks.forEach(w=>s.add(getWeekMonthKey(w)));
+  return[...s].sort();
+}
+
+function monthLabel(mk){
+  const[y,m]=mk.split('-');
+  const nowMk=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
+  return MONTH_NAMES_PT[parseInt(m)-1].slice(0,3)+(mk===nowMk?' ✦':'');
+}
+
+function rMonthTabs(){
+  const months=getAvailableMonths();
+  const c=document.getElementById('month-tabs');
+  if(!c)return;
+  c.innerHTML=months.map(m=>`<button class="mtab${m===selectedMonth?' active':''}" onclick="selectMonth('${m}')">${monthLabel(m)}</button>`).join('');
+}
+
+function selectMonth(m){selectedMonth=m;rDash();}
 
 // ── DASHBOARD ────────────────────────────────────
 function rDash(){
-  const wks=db.weeks;document.getElementById("wc").textContent=wks.length;
+  rMonthTabs();
+  document.getElementById("wc").textContent=db.weeks.length;
+  const wks=db.weeks.filter(w=>getWeekMonthKey(w)===selectedMonth);
   let tT=0,tMA=0,tFPK=0,tC=0,tP=0,tH=0;const profs=[];
   wks.forEach(w=>{const t=cW(w);tT+=t.tips;tMA+=t.payMA;tFPK+=t.payFPK;tC+=t.comp;tP+=t.myProfit;tH+=t.totalHrs;profs.push(t.myProfit);});
   const avg=wks.length?tP/wks.length:0;
@@ -556,7 +603,7 @@ function rDash(){
   rHoje();
   // Tabela histórico simplificada
   const tb=document.getElementById("wtb");
-  if(!wks.length){tb.innerHTML="<tr><td colspan=5 class=emp>Nenhuma semana ainda — vá para Lançamento</td></tr>";return;}
+  if(!wks.length){tb.innerHTML="<tr><td colspan=5 class=emp>Nenhuma semana em "+MONTH_NAMES_PT[parseInt(selectedMonth.split('-')[1])-1]+" — vá para Lançamento</td></tr>";return;}
   const mx=Math.max(...profs);
   tb.innerHTML=[...wks].reverse().map(w=>{
     const t=cW(w),df=avg?(t.myProfit-avg)/avg*100:0,bar=mx?Math.round(t.myProfit/mx*100):0,isPaid=w.farberPaid||false;
@@ -586,7 +633,7 @@ function rP(btn){const id=btn.getAttribute("data-pid");const e=document.getEleme
 function getPT(){let t=0;document.querySelectorAll(".pamt").forEach(i=>t+=parseFloat(i.value||0)||0);return t;}
 function gPI(){const i=[];document.querySelectorAll(".pi").forEach(r=>{const d=r.querySelector(".pdesc")?.value||"",a=parseFloat(r.querySelector(".pamt")?.value||0)||0;if(d||a)i.push({desc:d,amt:a});});return i;}
 
-function gF(){const name=document.getElementById("wn").value.trim(),days={};DAYS.forEach(d=>{days[d.id]={tips:parseFloat(document.getElementById(d.id+"_t").value)||0,hours:document.getElementById(d.id+"_h").value||"",loc:document.getElementById(d.id+"_loc").value||"",ev:document.getElementById(d.id+"_ev").value||""};});return{name,days,venmo:parseFloat(document.getElementById("ven").value)||0,purchases:gPI(),savedAt:new Date().toISOString()};}
+function gF(){const name=document.getElementById("wn").value.trim(),days={};DAYS.forEach(d=>{days[d.id]={tips:parseFloat(document.getElementById(d.id+"_t").value)||0,hours:document.getElementById(d.id+"_h").value||"",loc:document.getElementById(d.id+"_loc").value||"",ev:document.getElementById(d.id+"_ev").value||""};});const sun=parseSunday(name);const wMK=sun?(sun.getFullYear()+'-'+String(sun.getMonth()+1).padStart(2,'0')):selectedMonth;return{name,days,venmo:parseFloat(document.getElementById("ven").value)||0,purchases:gPI(),savedAt:new Date().toISOString(),monthKey:wMK};}
 
 async function saveW(){
   const data=gF();if(!data.name){toast("Informe o período da semana!");return;}
@@ -750,8 +797,10 @@ function clearC(){
 function rCWSel(){
   const s=document.getElementById("cwsel");
   if(!db.weeks.length){s.innerHTML="<span style='font-size:12px;color:var(--t3);font-family:var(--mo)'>Nenhuma semana salva ainda</span>";return;}
-  // Mostra semanas do lançamento (fonte da verdade)
-  s.innerHTML=[...db.weeks].reverse().map(w=>{
+  // Mostra semanas do mês selecionado (fonte da verdade)
+  const mWks=[...db.weeks].reverse().filter(w=>getWeekMonthKey(w)===selectedMonth);
+  if(!mWks.length){s.innerHTML="<span style='font-size:12px;color:var(--t3);font-family:var(--mo)'>Nenhuma semana em "+MONTH_NAMES_PT[parseInt(selectedMonth.split('-')[1])-1]+"</span>";return;}
+  s.innerHTML=mWks.map(w=>{
     const hasCash=db.cashWeeks.find(c=>c.name===w.name);
     const isActive=ceId&&db.cashWeeks.find(c=>c.id===ceId&&c.name===w.name);
     return "<button class='wp"+(isActive?" on":"")+"' onclick='loadDivByWeek(\""+w.id+"\")'>"+(w.name||w.id)+(hasCash?" ✓":"")+"</button>";
