@@ -330,7 +330,7 @@ input:focus{border-color:var(--ac)}input::placeholder{color:var(--t3)}
     <span style="color:var(--fp)">Tips (valor total)</span>
     <span style="color:var(--ac)" title="Makers Air — $14/hr">Horas MA</span>
     <span style="color:var(--or)" title="Farber Parking — local">Local FPK</span>
-    <span style="color:var(--or)" title="Farber Parking — $18/hr">Horas FPK</span>
+    <span id="fpk-col-hdr" style="color:var(--or)" title="Farber Parking — $19/hr (a partir de Jun/15/2026)">Horas FPK</span>
   </div>
   <div class="dg" id="dg"></div>
   <div class="sl">💳 Tips Venmo / Cartão</div>
@@ -484,6 +484,8 @@ function ss(c,t){document.getElementById("dot").className="dot "+c;document.getE
 
 // ── CONSTANTES ───────────────────────────────────
 const DAYS=[{id:"mon",l:"Segunda"},{id:"tue",l:"Terça"},{id:"wed",l:"Quarta"},{id:"thu",l:"Quinta"},{id:"fri",l:"Sexta"},{id:"sat",l:"Sábado"},{id:"sun",l:"Domingo"}];
+const EV_RATE_CHANGE=new Date('2026-06-15T00:00:00');
+const EV_RATE_V1=18,EV_RATE_V2=19;
 
 // ── UTILS ────────────────────────────────────────
 function pH(s){if(!s||!s.trim())return 0;s=s.trim().replace(",",".");if(s.includes(":")){const[h,m]=s.split(":").map(Number);return(h||0)+(m||0)/60;}return parseFloat(s)||0;}
@@ -497,6 +499,11 @@ const _WD_PT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 function latW(){return[...db.weeks].sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt))[0];}
 function latCW(){return[...db.cashWeeks].sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt))[0];}
 
+// ── TAXA DE EVENTOS (versionamento por data efetiva) ────────────────────────
+// Semanas com domingo >= 2026-06-15 usam $19/h; anteriores usam $18/h.
+function getEvRate(w){const sun=parseSunday(w.name);const d=sun||(w.savedAt?new Date(w.savedAt):new Date());return d>=EV_RATE_CHANGE?EV_RATE_V2:EV_RATE_V1;}
+function getEvRateForEntry(){const name=document.getElementById("wn")?.value||"";const sun=parseSunday(name);const d=sun||new Date();return d>=EV_RATE_CHANGE?EV_RATE_V2:EV_RATE_V1;}
+
 // ── CÁLCULOS ─────────────────────────────────────
 function cW(w){
   let tr=0,mah=0,fpkh=0,comp=0;
@@ -506,9 +513,10 @@ function cW(w){
   const tipsDeposit=tr/2;          // cash tips → você deposita no banco domingo
   const venmoShare=venmo/2;        // Venmo → clientes pagaram pro Farber → Farber te repassa
   const tips=tipsDeposit+venmoShare; // seu total de tips (lucro)
-  const payMA=mah*14,payFPK=fpkh*18;
+  const evRate=getEvRate(w);
+  const payMA=mah*14,payFPK=fpkh*evRate;
   const farberOwes=payMA+payFPK+venmoShare; // Farber deve: horas + venmo da sua parte
-  return{tips,tipsDeposit,venmoShare,tr,venmo,payMA,payFPK,mah,fpkh,totalHrs:mah+fpkh,comp,myProfit:tips+payMA+payFPK,farberOwes};
+  return{tips,tipsDeposit,venmoShare,tr,venmo,payMA,payFPK,mah,fpkh,totalHrs:mah+fpkh,comp,myProfit:tips+payMA+payFPK,farberOwes,evRate};
 }
 
 // ── PARSEAR DOMINGO DA SEMANA ────────────────────
@@ -688,7 +696,7 @@ function rWSel(){const s=document.getElementById("wsel");if(!db.weeks.length){s.
 // ── LANÇAMENTO ────────────────────────────────────
 function buildDG(){document.getElementById("dg").innerHTML=DAYS.map(d=>`<div class="dr"><div class="dn">${d.l.slice(0,3)}</div><div class="ft1"><input type="number" id="${d.id}_t" placeholder="tips $" step="0.01" oninput="recalc()"></div><div class="ft2"><input type="text" id="${d.id}_h" placeholder="8:00" oninput="recalc()"></div><div class="ft3"><input type="text" id="${d.id}_loc" placeholder="local"></div><div class="ft4"><input type="text" id="${d.id}_ev" placeholder="h:mm" oninput="recalc()"></div></div>`).join("");}
 
-function recalc(){let tr=0,mah=0,fpkh=0;DAYS.forEach(d=>{tr+=parseFloat(document.getElementById(d.id+"_t")?.value||0)||0;mah+=pH(document.getElementById(d.id+"_h")?.value);fpkh+=pH(document.getElementById(d.id+"_ev")?.value);});const vr=parseFloat(document.getElementById("ven")?.value||0)||0,comp=getPT(),tips=(tr+vr)/2,payMA=mah*14,payFPK=fpkh*18,myP=tips+payMA+payFPK,fO=payMA+payFPK;const pe=document.getElementById("ptot");if(pe)pe.textContent=comp>0?"Total compras: "+f$(comp):"";document.getElementById("tp").innerHTML="<div class=ti><div class=tl>Tips (minha ½)</div><div class='tv g'>"+f$(tips)+"</div><div class=ts>total: "+f$(tr+vr)+"</div></div><div class=ti><div class=tl>Pag. MA</div><div class='tv g'>"+f$(payMA)+"</div><div class=ts>"+fH(mah)+" x $14</div></div><div class=ti><div class=tl>FPK</div><div class='tv o'>"+f$(payFPK)+"</div><div class=ts>"+fH(fpkh)+" x $18</div></div><div class=ti><div class=tl>Horas</div><div class='tv b'>"+fH(mah+fpkh)+"</div></div><div class=ti><div class=tl>Compras</div><div class='tv r'>"+f$(comp)+"</div><div class=ts>não no lucro</div></div><div class=ti style='border-left:3px solid var(--ac);padding-left:8px'><div class=tl>Meu Lucro</div><div class='tv g'>"+f$(myP)+"</div><div class=ts>tips+MA+FPK</div></div><div class=ti style='border-left:3px solid var(--fp);padding-left:8px'><div class=tl>Farber Deve</div><div class='tv' style='color:var(--fp)'>"+f$(fO)+"</div><div class=ts>MA+FPK apenas</div></div>";}
+function recalc(){let tr=0,mah=0,fpkh=0;DAYS.forEach(d=>{tr+=parseFloat(document.getElementById(d.id+"_t")?.value||0)||0;mah+=pH(document.getElementById(d.id+"_h")?.value);fpkh+=pH(document.getElementById(d.id+"_ev")?.value);});const evR=getEvRateForEntry(),vr=parseFloat(document.getElementById("ven")?.value||0)||0,comp=getPT(),tips=(tr+vr)/2,payMA=mah*14,payFPK=fpkh*evR,myP=tips+payMA+payFPK,fO=payMA+payFPK;const pe=document.getElementById("ptot");if(pe)pe.textContent=comp>0?"Total compras: "+f$(comp):"";const hdr=document.getElementById("fpk-col-hdr");if(hdr)hdr.title="Farber Parking — $"+evR+"/hr";document.getElementById("tp").innerHTML="<div class=ti><div class=tl>Tips (minha ½)</div><div class='tv g'>"+f$(tips)+"</div><div class=ts>total: "+f$(tr+vr)+"</div></div><div class=ti><div class=tl>Pag. MA</div><div class='tv g'>"+f$(payMA)+"</div><div class=ts>"+fH(mah)+" x $14</div></div><div class=ti><div class=tl>FPK</div><div class='tv o'>"+f$(payFPK)+"</div><div class=ts>"+fH(fpkh)+" x $"+evR+"</div></div><div class=ti><div class=tl>Horas</div><div class='tv b'>"+fH(mah+fpkh)+"</div></div><div class=ti><div class=tl>Compras</div><div class='tv r'>"+f$(comp)+"</div><div class=ts>não no lucro</div></div><div class=ti style='border-left:3px solid var(--ac);padding-left:8px'><div class=tl>Meu Lucro</div><div class='tv g'>"+f$(myP)+"</div><div class=ts>tips+MA+FPK</div></div><div class=ti style='border-left:3px solid var(--fp);padding-left:8px'><div class=tl>Farber Deve</div><div class='tv' style='color:var(--fp)'>"+f$(fO)+"</div><div class=ts>MA+FPK apenas</div></div>";}
 
 let pId=0;
 function addP(desc,amt){const list=document.getElementById("pl"),id="p"+(pId++),div=document.createElement("div");div.className="pi";div.id=id;div.innerHTML="<input type=text class=pdesc placeholder='Descrição' value='"+(desc||"").replace(/'/g,"&#39;")+"'><input type=number class=pamt placeholder=0.00 step=0.01 value='"+(amt||"")+"' oninput=recalc()><button class=xb onclick='rP(this)' data-pid='"+id+"'>x</button>";list.appendChild(div);recalc();}
@@ -925,7 +933,8 @@ function renderR(){
     const v=w.days[d.id]||{};
     const mah=pH(v.hours), fpkh=pH(v.ev);
     if(!mah&&!fpkh)return;
-    const daily=mah*14+fpkh*18;
+    const evRate=t.evRate;
+    const daily=mah*14+fpkh*evRate;
     // MA row
     if(mah>0){
       diasRows+=`<div style='display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #f0f0f0'>
@@ -944,8 +953,8 @@ function renderR(){
         <span style='font-size:11px;color:#c96a1a;margin-left:8px'>FPK${v.loc?" — "+v.loc:""}</span></div>
         <div style='text-align:right'>
           <span style='font-family:monospace;font-size:13px;color:#333'>${v.ev}</span>
-          <span style='font-size:11px;color:#888;margin-left:6px'>× $18</span>
-          <span style='font-family:monospace;font-weight:700;color:#c96a1a;font-size:14px;margin-left:10px'>${f$(fpkh*18)}</span>
+          <span style='font-size:11px;color:#888;margin-left:6px'>× $${evRate}</span>
+          <span style='font-family:monospace;font-weight:700;color:#c96a1a;font-size:14px;margin-left:10px'>${f$(fpkh*evRate)}</span>
         </div></div>`;
     }
   });
@@ -966,7 +975,7 @@ function renderR(){
     <div style='background:#f0f0f0;border-radius:8px;padding:12px;border-top:3px solid #c96a1a'>
       <div style='font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:4px'>FPK Events</div>
       <div style='font-family:monospace;font-size:18px;font-weight:700;color:#c96a1a'>${f$(t.payFPK)}</div>
-      <div style='font-size:11px;color:#666;margin-top:2px'>${fH(t.fpkh)} × $18</div>
+      <div style='font-size:11px;color:#666;margin-top:2px'>${fH(t.fpkh)} × $${t.evRate}</div>
     </div>
     <div style='background:#f0f0f0;border-radius:8px;padding:12px;border-top:3px solid #1a4a7a'>
       <div style='font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:4px'>Total Horas</div>
@@ -1020,7 +1029,7 @@ function renderR(){
   totalBlockLines+=`<div style='display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.12)'>
     <div>
       <div style='font-size:13px;font-weight:600;color:#e8f4ef'>💼 Trabalho — Semana ${w.name}</div>
-      <div style='font-size:11px;color:#a3c4b5;margin-top:2px'>${t.mah>0?fH(t.mah)+"h MA ($14)":""}${t.mah>0&&t.fpkh>0?" + ":""}${t.fpkh>0?fH(t.fpkh)+"h FPK ($18)":""}</div>
+      <div style='font-size:11px;color:#a3c4b5;margin-top:2px'>${t.mah>0?fH(t.mah)+"h MA ($14)":""}${t.mah>0&&t.fpkh>0?" + ":""}${t.fpkh>0?fH(t.fpkh)+"h FPK ($"+t.evRate+")":""}</div>
     </div>
     <div style='font-family:monospace;font-size:16px;font-weight:700;color:#fff'>${f$(t.payMA+t.payFPK)}</div>
   </div>`;
@@ -1188,7 +1197,7 @@ function renderR(){
     if(!mah&&!fpkh)return;
     let line="*"+d.l+"*";
     if(mah>0)line+="\n  MA: "+v.hours+" hrs × $14 = "+f$(mah*14);
-    if(fpkh>0)line+="\n  FPK"+(v.loc?" ("+v.loc+")":"")+": "+v.ev+" hrs × $18 = "+f$(fpkh*18);
+    if(fpkh>0)line+="\n  FPK"+(v.loc?" ("+v.loc+")":"")+": "+v.ev+" hrs × $"+t.evRate+" = "+f$(fpkh*t.evRate);
     wbLines.push(line);
   });
   wbLines.push("","================================");

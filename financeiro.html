@@ -524,6 +524,12 @@ function rMonthTabsF(){
   }).join('');
 }
 
+// ── Taxa de Eventos (versionamento por data efetiva) ─────────────────────────
+// Semanas com domingo >= 2026-06-15 usam $19/h; anteriores usam $18/h.
+const EV_RATE_CHANGE_FIN=new Date('2026-06-15T00:00:00');
+function parseSundayFin(name){if(!name)return null;try{const n=name.trim();const m1=n.match(/^(\w+)\s+(\d+)\s*[-–]\s*(\d+)(?:,?\s*(\d{4}))?$/i);if(m1){const yr=m1[4]?parseInt(m1[4]):new Date().getFullYear();const d=new Date(m1[1]+" "+parseInt(m1[3])+", "+yr);if(!isNaN(d))return d;}const m2=n.match(/^(\w+)\s+(\d+)\s*[-–]\s*(\w+)\s+(\d+)(?:,?\s*(\d{4}))?$/i);if(m2){let yr=m2[5]?parseInt(m2[5]):new Date().getFullYear();const months=["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];const m1i=months.indexOf(m2[1].toLowerCase().slice(0,3)),m2i=months.indexOf(m2[3].toLowerCase().slice(0,3));if(m2i>=0&&m1i>=0&&m2i<m1i)yr++;const d=new Date(m2[3]+" "+parseInt(m2[4])+", "+yr);if(!isNaN(d))return d;}return null;}catch(e){return null;}}
+function getEvRateFin(w){const d_obj=w.data||{};const name=w.name||d_obj.name||'';const sun=parseSundayFin(name);const d=sun||(w.saved_at?new Date(w.saved_at):new Date());return d>=EV_RATE_CHANGE_FIN?19:18;}
+
 // ── Income ───────────────────────────────────────────────────────────────────
 function getMattIncome(m){
   const[,mo]=m.split('-');
@@ -535,9 +541,10 @@ function getMattIncome(m){
     const saved=(w.saved_at||'').slice(0,7);
     const name=(w.name||d.name||'').toLowerCase();
     if(d.monthKey?d.monthKey===m:(saved===m||name.includes(abbr))){
+      const evRate=getEvRateFin(w);
       Object.values(d.days||{}).forEach(day=>{
         const h=pH(day.hours||''),ph=day.ph||14,eh=pH(day.ev||'');
-        payFP+=h*ph; tips+=(day.tips||0)/2; ev+=eh*18;
+        payFP+=h*ph; tips+=(day.tips||0)/2; ev+=eh*evRate;
       });
       tips+=(d.venmo||0)/2;
       total=payFP+tips+ev;
