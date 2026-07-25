@@ -217,6 +217,22 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
 
 .toast{position:fixed;bottom:20px;right:20px;background:var(--s2);color:var(--t);border:1px solid var(--b);padding:9px 16px;border-radius:var(--r);font-size:13px;opacity:0;transform:translateY(6px);transition:all .22s;pointer-events:none;z-index:99}
 .toast.show{opacity:1;transform:none}
+
+/* v2 — banners, resumo extra, filtros, ações de mês */
+#schema-banner,#migration-banner{margin-bottom:10px}
+#schema-banner:empty,#migration-banner:empty{margin:0}
+.metrics2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.metrics2:empty{margin:0}
+.gen-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.month-actions-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:10px 0}
+#month-lock-ui{display:flex;gap:6px}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.cat-chips{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.cat-chip{font-family:var(--mo);font-size:10px;padding:4px 10px;border-radius:99px;border:1px solid var(--b);background:var(--s);color:var(--t3);cursor:pointer;white-space:nowrap}
+.cat-chip:hover{border-color:var(--t2);color:var(--t2)}
+.cat-chip.active{background:rgba(34,197,94,.12);border-color:var(--ac);color:var(--ac);font-weight:700}
+.search-input{background:var(--s2);border:1px solid var(--b);border-radius:6px;color:var(--t);font-size:12px;font-family:var(--sa);padding:6px 10px;outline:none;min-width:160px}
+.search-input:focus{border-color:var(--or)}
 </style>
 </head>
 <body>
@@ -233,12 +249,20 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
   </div>
 </header>
 
+<div id="schema-banner"></div>
+<div id="migration-banner"></div>
+
 <div class="month-row">
   <div class="fin-month-tabs" id="fin-month-tabs"></div>
   <div class="mnav-row">
     <button class="mnav-btn" onclick="prevMonth()">‹</button>
     <div class="month-title" id="month-title">—</div>
     <button class="mnav-btn" onclick="nextMonth()">›</button>
+  </div>
+  <div class="month-actions-row">
+    <button class="bkp-btn" onclick="openGenerateNextMonthPreview()" title="Copia as recorrentes ativas para o mês seguinte">➡️ Criar próximo mês</button>
+    <button class="bkp-btn" onclick="openUpdateValuesScreen()" title="Confirmar valores de contas variáveis deste mês">✏️ Atualizar valores</button>
+    <div id="month-lock-ui"></div>
   </div>
 </div>
 
@@ -262,6 +286,9 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
   <div class="mc blue" id="balance-mc"><div class="mc-label">Saldo previsto</div><div class="mc-val" id="m-bal">$0</div><div class="mc-sub" id="m-bal-sub">receita − tudo</div></div>
 </div>
 
+<!-- Resumo v2 (aguardando valor / parcelas / previsto / confirmado) -->
+<div class="metrics2" id="metrics2"></div>
+
 <!-- Quick Add Bill -->
 <div class="qadd-panel">
   <div class="qadd-hd" onclick="toggleQadd()">
@@ -283,6 +310,12 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
       <div class="qadd-field">
         <span class="qadd-label">Dia do vencimento</span>
         <input class="qadd-input" id="qa-day" type="number" placeholder="1 – 31" min="1" max="31" inputmode="numeric">
+      </div>
+      <div class="qadd-field">
+        <span class="qadd-label">Categoria</span>
+        <select class="qadd-input" id="qa-category" style="font-family:var(--sa)">
+          <option value="">—</option>
+          </select>
       </div>
       <div class="qadd-field" style="flex:2;min-width:160px">
         <span class="qadd-label">Status</span>
@@ -313,6 +346,12 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
       <button style="background:none;border:1px solid var(--b);border-radius:var(--r);padding:7px 12px;font-size:12px;font-family:var(--mo);color:var(--t3);cursor:pointer" onclick="selectAllRec()">Selecionar todas</button>
     </div>
   </div>
+</div>
+
+<!-- Filtro por categoria + busca -->
+<div class="filter-row">
+  <div class="cat-chips" id="cat-chips"></div>
+  <input class="search-input" id="search-input" type="text" placeholder="🔎 buscar nome/categoria/obs…" oninput="setSearchTerm(this.value)">
 </div>
 
 <div class="grid2">
@@ -384,6 +423,59 @@ header{padding:22px 0 18px;border-bottom:1px solid var(--b);display:flex;align-i
     <button class="save-rec-btn" onclick="saveRecurring()">💾 Salvar alterações</button>
   </div>
 </div>
+
+<!-- Criar próximo mês — preview -->
+<div class="modal-bg hidden" id="gen-preview-modal" onclick="closeModalByBgClick(event,'gen-preview-modal')">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="gen-preview-title">Criar próximo mês</span>
+      <button class="modal-close" onclick="closeModalById('gen-preview-modal')">×</button>
+    </div>
+    <div id="gen-preview-list"></div>
+    <button class="add-rec-btn" onclick="addAdhocRowToGenPreview()">+ incluir conta avulsa</button>
+    <button class="save-rec-btn" onclick="confirmGenerateNextMonth()">✓ Confirmar geração</button>
+  </div>
+</div>
+
+<!-- Atualizar valores (contas variáveis) -->
+<div class="modal-bg hidden" id="update-values-modal" onclick="closeModalByBgClick(event,'update-values-modal')">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">✏️ Atualizar valores</span>
+      <button class="modal-close" onclick="closeModalById('update-values-modal')">×</button>
+    </div>
+    <div id="update-values-list"></div>
+    <button class="save-rec-btn" onclick="saveVariableValues()">💾 Salvar valores</button>
+  </div>
+</div>
+
+<!-- Revisão de migração de fin_recurring -->
+<div class="modal-bg hidden" id="migration-modal" onclick="closeModalByBgClick(event,'migration-modal')">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">🗂️ Revisar e migrar contas recorrentes</span>
+      <button class="modal-close" onclick="closeModalById('migration-modal')">×</button>
+    </div>
+    <div style="font-size:11px;color:var(--t3);margin-bottom:10px">Confira/ajuste o tipo sugerido de cada conta antes de migrar. Nada é gravado até você confirmar.</div>
+    <div id="migration-review-list"></div>
+    <div class="bkp-imp-status" id="migration-download-status" style="display:none;margin-top:10px">✓ Backup gerado — pode confirmar a migração.</div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button class="bkp-btn imp" onclick="downloadPreMigrationBackup()">📥 Baixar backup antes de migrar</button>
+      <button class="save-rec-btn" id="migration-confirm-btn" style="flex:1;min-width:160px" disabled onclick="confirmMigration()">✓ Confirmar migração</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transformar avulsa em recorrente -->
+<div class="modal-bg hidden" id="transform-modal" onclick="closeModalByBgClick(event,'transform-modal')">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head">
+      <span class="modal-title">🔁 Transformar em recorrente</span>
+      <button class="modal-close" onclick="closeModalById('transform-modal')">×</button>
+    </div>
+    <div id="transform-modal-body"></div>
+  </div>
+</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -441,12 +533,34 @@ async function saveRecurringRemote(){
 
 // ── State ────────────────────────────────────────────────────────────────────
 let weeksData=[],lidyData=[];
-let monthBills={}; // {mk: [{key,day,name,amt,paid}]} — stored in Supabase
+let monthBills={}; // {mk: [{key,day,name,amt,paid,...campos v2 opcionais}]} — stored in Supabase
+let monthMeta={};  // {mk: {closed,closed_at}} — carregado junto de fin_month_bills
 let curYear=new Date().getFullYear(), curMonth=new Date().getMonth();
 let histChart=null;
 
+// ── Financeiro v2 — feature flag, detecção de schema, dados novos ──────────
+// Trocar para false ESCONDE a UI v2 no app (nível A de rollback), mas NÃO
+// desativa o trigger/RPC no banco — meses já fechados continuam protegidos
+// no Postgres mesmo assim. Ver supabase_financeiro_migration.sql para os
+// rollbacks operacional (B) e destrutivo (C).
+const FINANCE_V2_ENABLED = true;
+
+let SCHEMA_V2_READY = false;
+let MERGE_RPC_READY = null;     // null=desconhecido; só vira true/false na 1ª geração real
+let SCHEMA_STATE = 'unchecked'; // legacy|partial|ready|permission_error|connection_error|unknown_error|legacy_forced
+let BILL_TEMPLATES = [];        // fin_bill_templates (quando SCHEMA_V2_READY)
+let MIGRATION_STATE = null;     // fin_migration_state row (quando SCHEMA_V2_READY)
+
+const CATEGORIES = ['Moradia','Energia','Internet','Telefonia','Transporte','Alimentação','Saúde','Educação','Impostos','Cartões','Assinaturas','Compras','Outros'];
+
+let _categoryFilter = '';
+let _searchTerm = '';
+
 const MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const fmt=v=>'$'+parseFloat(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+// amt=null (variable pendente) nunca deve aparecer como "$0.00" — 0 é um valor
+// real válido depois de confirmado, então a checagem é sempre por pendingValue.
+function fmtOrPending(b){ return b&&b.pendingValue ? '<span class="bill-warn amber">valor pendente</span>' : fmt(b?b.amt:0); }
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 const mk=()=>curYear+'-'+(curMonth+1).toString().padStart(2,'0');
 // ── Date formatters (locale-independent, MM/DD/YYYY standard) ───────────────
@@ -455,6 +569,55 @@ function formatUSDateShort(d){const mm=String(d.getMonth()+1).padStart(2,'0'),dd
 function formatUSDateFromISO(s){if(!s)return'—';const p=s.split('-');return p[1]+'/'+p[2]+'/'+p[0];}
 const _WD_PT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const isCurrentMonth=()=>curYear===new Date().getFullYear()&&curMonth===new Date().getMonth();
+
+// ── Vencimento efetivo (dias 29/30/31) ──────────────────────────────────────
+// O "day" salvo nunca é alterado/clampado — só o cálculo de data efetiva (pra
+// alertas/ordenação) usa o último dia real do mês quando o dia configurado
+// não existe (ex: day=31 em fevereiro). Substitui o antigo `new Date(y,m,day)`
+// direto, que rolava silenciosamente pro mês seguinte nesses casos.
+function lastDayOfMonth(y,mo){ return new Date(y,mo+1,0).getDate(); }
+function effectiveDueDate(y,mo,day){ return new Date(y,mo, Math.min(day, lastDayOfMonth(y,mo))); }
+
+// ── Diferença de meses (parcelas) ───────────────────────────────────────────
+function monthsBetween(startKey, targetKey){
+  const [sy,sm]=startKey.split('-').map(Number), [ty,tm]=targetKey.split('-').map(Number);
+  return (ty*12+tm)-(sy*12+sm);
+}
+
+// ── Key única por conta mensal (nunca reaproveita o id do template) ────────
+function genUniqueBillKey(mkVal, existingKeysSet, hint){
+  let key;
+  do{
+    const rand = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2));
+    key = mkVal+'_'+(hint?hint+'_':'')+rand;
+  } while(existingKeysSet.has(key));
+  return key;
+}
+
+// ── legacy_key: fingerprint de conteúdo + ordinal, não índice do array ─────
+// Estável enquanto o conteúdo da recorrência antiga não mudar de verdade —
+// uma alteração real de nome/dia/valor/advance produz um fingerprint novo
+// por design (é conteúdo diferente). Índice sozinho não seria estável se
+// fin_recurring for reordenado/editado entre tentativas de migração.
+function djb2Hash(str){
+  let h=5381;
+  for(let i=0;i<str.length;i++) h=((h*33)^str.charCodeAt(i))>>>0;
+  return h.toString(36);
+}
+function canonicalFingerprint(item){
+  const norm = { day:Number(item.day)||0, name:String(item.name||'').trim().toLowerCase(),
+                 amt:Number(item.amt)||0, advance:Number(item.advance)||0,
+                 advanceNote:String(item.advanceNote||'').trim().toLowerCase() };
+  return djb2Hash(JSON.stringify(norm));
+}
+function computeLegacyKeys(recurringArray){
+  const counts = {};
+  return recurringArray.map(item=>{
+    const fp = canonicalFingerprint(item);
+    const ord = counts[fp] || 0; counts[fp] = ord+1;
+    return { item, legacyKey:'legacy_'+fp+'_'+ord };
+  });
+}
 
 function setSS(s,msg){
   document.getElementById('sync-dot').className='dot '+(s==='ok'?'ok':s==='err'?'err':'ld');
@@ -471,9 +634,14 @@ async function loadAll(){
     ]);
     weeksData=weeks||[]; lidyData=lidy||[];
     // rebuild monthBills from DB
-    monthBills={};
-    (mbills||[]).forEach(r=>{monthBills[r.month_key]=r.bills||[];});
+    monthBills={}; monthMeta={};
+    (mbills||[]).forEach(r=>{
+      if(!/^\d{4}-\d{2}$/.test(r.month_key))return; // ignora chaves não-mês (ex: probes)
+      monthBills[r.month_key]=r.bills||[];
+      monthMeta[r.month_key]={closed:!!r.closed, closed_at:r.closed_at||null};
+    });
     await loadRecurring();
+    await bootFinanceV2();
     setSS('ok','sincronizado ✓'); render();
   }catch(e){setSS('err','erro de conexão');render();}
 }
@@ -486,6 +654,168 @@ async function saveMonthBills(mk){
     body:JSON.stringify({month_key:mk,bills,updated_at:new Date().toISOString()})
   });
   if(!r.ok)throw new Error('saveMonthBills: '+r.status);
+}
+
+// ── Financeiro v2 — detecção de schema (nunca grava nada no banco) ─────────
+// Códigos que realmente significam "tabela/coluna não existe" — Postgres
+// 42P01 (undefined_table), 42703 (undefined_column), e os códigos do
+// PostgREST pra isso não estar no schema cache (PGRST205 tabela, PGRST204
+// coluna, PGRST202 função). Qualquer outro 400/404 vira 'unknown', nunca
+// 'missing' — não presumimos schema ausente por qualquer 400 genérico.
+const MISSING_SCHEMA_CODES = new Set(['42P01','42703','PGRST202','PGRST204','PGRST205']);
+
+async function probeTable(path){
+  try{ await sb('GET', path); return {ok:true}; }
+  catch(err){
+    const msg = String(err.message||'');
+    const m = msg.match(/^(\d{3}):\s*([\s\S]*)$/);
+    const status = m ? parseInt(m[1]) : null;
+    const bodyText = m ? m[2] : '';
+    let code = null;
+    try{ code = JSON.parse(bodyText).code; }catch(_){ /* corpo não-JSON */ }
+
+    if (status === 401 || status === 403) return {ok:false, kind:'permission'};
+    if (status === null) return {ok:false, kind:'connection'};
+    if (code && MISSING_SCHEMA_CODES.has(code)) return {ok:false, kind:'missing'};
+    if (/does not exist|could not find|schema cache/i.test(bodyText)) return {ok:false, kind:'missing'};
+    return {ok:false, kind:'unknown', status, code};
+  }
+}
+
+async function checkSchemaReady(){
+  const t = await probeTable('/fin_bill_templates?select=id&limit=1');
+  const c = await probeTable('/fin_month_bills?select=closed,closed_at&limit=1');
+  const g = await probeTable('/fin_migration_state?select=id,recurring_migrated,migrated_at&limit=1');
+
+  const all = [t,c,g];
+  if (all.some(x=>x.kind==='permission')){ SCHEMA_STATE='permission_error'; return; }
+  if (all.some(x=>x.kind==='connection')){
+    if (SCHEMA_STATE==='unchecked') SCHEMA_STATE='connection_error';
+    return; // preserva o último estado conhecido da sessão
+  }
+  if (all.some(x=>x.kind==='unknown')){ SCHEMA_STATE='unknown_error'; return; }
+
+  SCHEMA_V2_READY = t.ok && c.ok && g.ok;
+  SCHEMA_STATE = (!t.ok && !c.ok && !g.ok) ? 'legacy' : SCHEMA_V2_READY ? 'ready' : 'partial';
+}
+
+function isFunctionMissingError(e){
+  const m = String(e.message||'');
+  return m.startsWith('404:') && /PGRST202|42883|function .* does not exist/i.test(m);
+}
+
+async function bootFinanceV2(){
+  if (!FINANCE_V2_ENABLED){
+    SCHEMA_STATE = 'legacy_forced';
+    SCHEMA_V2_READY = false;
+    renderSchemaBanner();
+    return;
+  }
+  await checkSchemaReady();
+  if (SCHEMA_STATE === 'ready'){
+    try{
+      const [tpls, mig] = await Promise.all([
+        sb('GET','/fin_bill_templates?select=*').catch(()=>[]),
+        sb('GET','/fin_migration_state?select=*&id=eq.1').catch(()=>[])
+      ]);
+      BILL_TEMPLATES = tpls||[];
+      MIGRATION_STATE = (mig&&mig[0]) || {id:'1',recurring_migrated:false,migrated_at:null};
+    }catch(e){ /* mantém defaults, banner de estado já cobre erro de conexão */ }
+  }
+  renderSchemaBanner();
+  renderMigrationBanner();
+}
+
+function billSourceIsTemplates(){
+  return MIGRATION_STATE && MIGRATION_STATE.recurring_migrated === true;
+}
+
+// ── Fechamento de mês — PATCH dedicado, NUNCA envia "bills" ─────────────────
+// saveMonthBills sempre envia o array completo; reaproveitá-la aqui poderia
+// mandar um "bills" desatualizado/editado junto da mudança de "closed" — é
+// exatamente isso que o trigger do banco rejeita. Por isso estas duas
+// funções só tocam nos campos de fechamento.
+function assertMonthOpen(mkVal){
+  if (SCHEMA_V2_READY && monthMeta[mkVal] && monthMeta[mkVal].closed){
+    toast('Este mês está fechado. Desbloqueie para editar.');
+    return false;
+  }
+  return true;
+}
+
+async function closeMonth(mkVal){
+  if(!SCHEMA_V2_READY){toast('Recurso indisponível — schema v2 não instalado.');return;}
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/fin_month_bills?month_key=eq.'+encodeURIComponent(mkVal),{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'},
+      body: JSON.stringify({closed:true, closed_at:new Date().toISOString()})
+    });
+    if(!r.ok) throw new Error('closeMonth: '+r.status);
+    monthMeta[mkVal] = {closed:true, closed_at:new Date().toISOString()};
+    toast('🔒 Mês fechado.');
+    render();
+  }catch(e){ toast('Erro ao fechar o mês.'); }
+}
+
+async function unlockMonth(mkVal){
+  if(!SCHEMA_V2_READY){toast('Recurso indisponível — schema v2 não instalado.');return;}
+  if(!confirm('Desbloquear '+mkVal+'? Isso permite editar/apagar contas novamente neste mês.')) return;
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/fin_month_bills?month_key=eq.'+encodeURIComponent(mkVal),{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'},
+      body: JSON.stringify({closed:false, closed_at:null})
+    });
+    if(!r.ok) throw new Error('unlockMonth: '+r.status);
+    monthMeta[mkVal] = {closed:false, closed_at:null};
+    toast('🔓 Mês desbloqueado.');
+    render();
+  }catch(e){ toast('Erro ao desbloquear o mês.'); }
+}
+
+// ── mergeGeneratedBills — SÓ para fluxos aditivos (gerar mês / recorrentes) ─
+// Nunca edita nem remove contas existentes; nunca substitui saveMonthBills.
+function clientSideDedupMerge(existing, newItems){
+  const result = (existing||[]).slice();
+  newItems.forEach(ni=>{
+    if (ni.templateId && ['fixed','variable','installment'].includes(ni.type)){
+      const already = result.some(e=>e.templateId===ni.templateId && String(e.installmentNum||'')===String(ni.installmentNum||''));
+      if (already) return;
+      result.push(ni);
+    } else {
+      const already = result.some(e=>e.key===ni.key);
+      if (already) return; // preserva a existente, idempotente
+      result.push(ni);
+    }
+  });
+  return result;
+}
+
+async function mergeGeneratedBills(mkVal, newItems){
+  if (!newItems.length) return monthBills[mkVal]||[];
+  if (SCHEMA_V2_READY && MERGE_RPC_READY !== false){
+    try{
+      const merged = await sb('POST','/rpc/fin_merge_month_bills', {p_month_key:mkVal, p_new_bills:newItems});
+      MERGE_RPC_READY = true;
+      monthBills[mkVal] = merged;
+      return merged;
+    }catch(e){
+      if (isFunctionMissingError(e)) { MERGE_RPC_READY = false; }
+      else throw e; // erro de negócio real (MONTH_CLOSED, DUPLICATE_* etc.) — propaga
+    }
+  }
+  // fallback client-side: relê o estado mais atual do mês (nunca reaproveita
+  // o array antigo em memória), aplica a mesma regra de dedup, grava pelo
+  // caminho normal de saveMonthBills.
+  let fresh=[];
+  try{ fresh = await sb('GET','/fin_month_bills?month_key=eq.'+encodeURIComponent(mkVal)+'&select=*'); }catch(_){ fresh=[]; }
+  const row = fresh && fresh[0];
+  if (row && row.closed) throw new Error('MONTH_CLOSED: '+mkVal);
+  const merged = clientSideDedupMerge(row ? row.bills : (monthBills[mkVal]||[]), newItems);
+  monthBills[mkVal] = merged;
+  await saveMonthBills(mkVal);
+  return merged;
 }
 
 function prevMonth(){curMonth--;if(curMonth<0){curMonth=11;curYear--;}rMonthTabsF();render();}
@@ -571,9 +901,11 @@ function getBills(m){
 
 async function toggleBill(key,cur){
   const m=mk();
+  if(!assertMonthOpen(m))return;
   if(!monthBills[m])monthBills[m]=[];
   const prev=JSON.parse(JSON.stringify(monthBills[m]));
   const b=monthBills[m].find(x=>x.key===key);
+  if(b&&b.pendingValue){toast('Confirme o valor desta conta variável antes de marcar como paga.');return;}
   if(b){b.paid=!cur;}
   render();
   try{await saveMonthBills(m);}
@@ -582,9 +914,10 @@ async function toggleBill(key,cur){
 
 async function addBill(){
   const m=mk();
+  if(!assertMonthOpen(m))return;
   if(!monthBills[m])monthBills[m]=[];
   const prev=JSON.parse(JSON.stringify(monthBills[m]));
-  monthBills[m].push({key:m+'_new_'+Date.now(),day:1,name:'Nova conta',amt:0,paid:false});
+  monthBills[m].push({key:m+'_new_'+Date.now(),day:1,name:'Nova conta',amt:0,paid:false,type:'single'});
   render();
   try{await saveMonthBills(m);}
   catch(e){monthBills[m]=prev;render();toast('Erro ao salvar. Alteração desfeita.');}
@@ -592,6 +925,7 @@ async function addBill(){
 
 async function deleteBill(key){
   const m=mk();
+  if(!assertMonthOpen(m))return;
   const prev=JSON.parse(JSON.stringify(monthBills[m]||[]));
   monthBills[m]=(monthBills[m]||[]).filter(b=>b.key!==key);
   render();
@@ -615,6 +949,7 @@ function setQStatus(s){
 }
 
 async function quickAddBill(){
+  if(!assertMonthOpen(mk()))return;
   const nameEl=document.getElementById('qa-name');
   const amtEl=document.getElementById('qa-amt');
   const dayEl=document.getElementById('qa-day');
@@ -646,14 +981,16 @@ async function quickAddBill(){
   btn.disabled=true;
   if(!monthBills[m])monthBills[m]=[];
   const prev=JSON.parse(JSON.stringify(monthBills[m]));
+  const qaCatEl=document.getElementById('qa-category');
   monthBills[m].push({
     key:m+'_qa_'+Date.now(),
-    day,name,amt,paid:_qStatus==='paid',advance:0,advanceNote:''
+    day,name,amt,paid:_qStatus==='paid',advance:0,advanceNote:'',
+    type:'single', category:(qaCatEl&&qaCatEl.value)||''
   });
   render();
   try{
     await saveMonthBills(m);
-    nameEl.value='';amtEl.value='';dayEl.value='';
+    nameEl.value='';amtEl.value='';dayEl.value='';if(qaCatEl)qaCatEl.value='';
     setQStatus('pend');
     toast('Conta adicionada ✓');
     nameEl.focus();                    // panel stays open, cursor back on name
@@ -674,13 +1011,17 @@ function startEdit(el,key,field,val){
   if(field==='amt'){inp.min=0;inp.step='0.01';}
   el.innerHTML=''; el.appendChild(inp); inp.focus(); inp.select();
   async function save(){
+    const m=mk();
+    if(!assertMonthOpen(m)){render();return;}
     let v=inp.value.trim();
     if(field==='amt')v=parseFloat(v)||0;
     if(field==='day')v=parseInt(v)||1;
-    const m=mk();
     const prev=JSON.parse(JSON.stringify(monthBills[m]||[]));
     const b=(monthBills[m]||[]).find(x=>x.key===key);
-    if(b){b[field]=v;}
+    if(b){
+      b[field]=v;
+      if(field==='amt'&&b.pendingValue)b.pendingValue=false; // editar o valor confirma a conta variável
+    }
     render();
     try{await saveMonthBills(m);}
     catch(e){monthBills[m]=prev;render();toast('Erro ao salvar. Alteração desfeita.');}
@@ -698,8 +1039,61 @@ function toggleRec(){
   if(!open) renderRecList();
 }
 
+// ── Proposta por template (compartilhada entre applyRecurring e a geração
+//    de próximo mês — evita duplicar a lógica de cada tipo) ─────────────────
+function findPriorAmountForTemplate(templateId, beforeMk){
+  const keys = Object.keys(monthBills).filter(k=>/^\d{4}-\d{2}$/.test(k) && k<beforeMk).sort().reverse();
+  for(const k of keys){
+    const b=(monthBills[k]||[]).find(x=>x.templateId===templateId && !x.pendingValue && x.amt!=null);
+    if(b) return b.amt;
+  }
+  return null;
+}
+
+function buildProposalItemForTemplate(tpl, targetMk, existingKeysSet){
+  const base = { templateId: tpl.id, name: tpl.name, category: tpl.category||'', day: tpl.day,
+                 advance: tpl.advance||0, advanceNote: tpl.advance_note||'', notes: tpl.notes||'', paid:false };
+  if (tpl.type==='fixed'){
+    return { ...base, type:'fixed', key: genUniqueBillKey(targetMk, existingKeysSet, 'fixed'), amt: tpl.amount, pendingValue:false };
+  }
+  if (tpl.type==='variable'){
+    const prevAmt = findPriorAmountForTemplate(tpl.id, targetMk);
+    return { ...base, type:'variable', key: genUniqueBillKey(targetMk, existingKeysSet, 'var'), amt:null, pendingValue:true, estimatedAmount: prevAmt!=null?prevAmt:tpl.amount };
+  }
+  if (tpl.type==='installment'){
+    const expected = monthsBetween(tpl.installment_start_key, targetMk) + 1;
+    if (expected<1 || expected>tpl.installment_total) return null; // ainda não começou ou já terminou
+    return { ...base, type:'installment', key: genUniqueBillKey(targetMk, existingKeysSet, 'inst'), amt: tpl.amount, pendingValue:false, installmentNum:expected, installmentTotal:tpl.installment_total };
+  }
+  return null;
+}
+
 function renderRecList(){
   const m=mk();
+  if(billSourceIsTemplates()){
+    const existing=monthBills[m]||[];
+    const active=BILL_TEMPLATES.filter(t=>t.active);
+    document.getElementById('rec-list').innerHTML=active.length?active.map((t,i)=>{
+      const already = existing.some(b=>b.templateId===t.id);
+      let finished=false, label='';
+      if(t.type==='installment'){
+        const expected=monthsBetween(t.installment_start_key,m)+1;
+        finished = expected<1||expected>t.installment_total;
+        label = finished ? ' <span style="font-size:10px;color:var(--t3)">(parcelamento fora do período)</span>' : ` <span style="font-size:10px;color:var(--t3)">(${expected}/${t.installment_total})</span>`;
+      }
+      const disabled = already||finished;
+      return `<div class="rec-item">
+        <input type="checkbox" id="rc${i}" ${disabled?'disabled':''} ${disabled?'':'checked'}>
+        <span class="rec-day">${t.day}</span>
+        <span class="rec-name">${esc(t.name)}${label}</span>
+        <span class="rec-amt">${t.type==='variable'?'a confirmar':fmt(t.amount)}</span>
+        ${t.advance?`<span class="rec-advance">⚠ ${t.advance}d antes</span>`:''}
+        ${already?'<span style="font-size:10px;font-family:var(--mo);color:var(--ac)">já adicionada</span>':''}
+      </div>`;
+    }).join(''):'<div class="empty">nenhum template ativo</div>';
+    return;
+  }
+  // ---- modo legado (fin_recurring — inalterado) ----
   const existing=(monthBills[m]||[]).map(b=>b.name.toLowerCase());
   document.getElementById('rec-list').innerHTML=RECURRING.map((r,i)=>{
     const alreadyIn=existing.some(n=>n.includes(r.name.toLowerCase().slice(0,6)));
@@ -720,6 +1114,30 @@ function selectAllRec(){
 
 async function applyRecurring(){
   const m=mk();
+  if(!assertMonthOpen(m))return;
+
+  if(billSourceIsTemplates()){
+    const existing = monthBills[m]||[];
+    const existingKeys = new Set(existing.map(b=>b.key));
+    const active = BILL_TEMPLATES.filter(t=>t.active);
+    const toAdd=[];
+    active.forEach((t,i)=>{
+      const cb=document.getElementById('rc'+i);
+      if(!cb||!cb.checked||cb.disabled)return;
+      const item = buildProposalItemForTemplate(t, m, existingKeys);
+      if(item){ existingKeys.add(item.key); toAdd.push(item); }
+    });
+    document.getElementById('rec-panel').style.display='none';
+    document.getElementById('rec-arrow').textContent='▸';
+    try{
+      await mergeGeneratedBills(m, toAdd);
+      render();
+      toast('✓ '+toAdd.length+' contas adicionadas!');
+    }catch(e){ render(); toast('Erro ao adicionar: '+(e.message||'')); }
+    return;
+  }
+
+  // ---- modo legado (fin_recurring — inalterado) ----
   if(!monthBills[m])monthBills[m]=[];
   const prev=JSON.parse(JSON.stringify(monthBills[m]));
   let count=0;
@@ -741,6 +1159,368 @@ async function applyRecurring(){
     toast('✓ '+count+' contas adicionadas!');
   }
   catch(e){monthBills[m]=prev;render();toast('Erro ao salvar. Alteração desfeita.');}
+}
+
+// ── Modais genéricos (reaproveitam o padrão .modal-bg/.modal já existente) ──
+function openModalById(id){ const el=document.getElementById(id); if(el)el.classList.remove('hidden'); }
+function closeModalById(id){ const el=document.getElementById(id); if(el)el.classList.add('hidden'); }
+function closeModalByBgClick(e,id){ if(e.target===document.getElementById(id)) closeModalById(id); }
+
+// ── Templates (fin_bill_templates) — CRUD ───────────────────────────────────
+async function setTemplateActive(id, active){
+  try{
+    const h={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'};
+    const r=await fetch(SB_URL+'/rest/v1/fin_bill_templates?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:h,body:JSON.stringify({active})});
+    if(!r.ok) throw new Error('setTemplateActive: '+r.status);
+    const t=BILL_TEMPLATES.find(x=>x.id===id); if(t)t.active=active;
+    toast(active?'Template reativado.':'Template desativado.');
+    render();
+  }catch(e){ toast('Erro ao atualizar template.'); }
+}
+
+async function deleteTemplate(id){
+  const t=BILL_TEMPLATES.find(x=>x.id===id);
+  if(!t)return;
+  if(!confirm('Apagar definitivamente o template "'+t.name+'"? Isso NÃO afeta meses já criados — prefira desativar se não tiver certeza.'))return;
+  try{
+    const h={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+    const r=await fetch(SB_URL+'/rest/v1/fin_bill_templates?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:h});
+    if(!r.ok) throw new Error('deleteTemplate: '+r.status);
+    BILL_TEMPLATES=BILL_TEMPLATES.filter(x=>x.id!==id);
+    toast('Template apagado.');
+    render();
+  }catch(e){ toast('Erro ao apagar template.'); }
+}
+
+async function createTemplate(fields){
+  const id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('tpl_'+Date.now()+'_'+Math.random().toString(36).slice(2));
+  const row={id, ...fields};
+  const h={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=representation'};
+  const r=await fetch(SB_URL+'/rest/v1/fin_bill_templates',{method:'POST',headers:h,body:JSON.stringify(row)});
+  if(!r.ok) throw new Error('createTemplate: '+r.status);
+  const rows=await r.json();
+  if(rows&&rows[0]) BILL_TEMPLATES.push(rows[0]);
+  return rows&&rows[0];
+}
+
+async function saveTemplateFields(id, fields){
+  const h={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=representation'};
+  const r=await fetch(SB_URL+'/rest/v1/fin_bill_templates?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:h,body:JSON.stringify(fields)});
+  if(!r.ok) throw new Error('saveTemplateFields: '+r.status);
+  const rows=await r.json();
+  if(rows&&rows[0]){ const i=BILL_TEMPLATES.findIndex(x=>x.id===id); if(i>=0) BILL_TEMPLATES[i]=rows[0]; }
+}
+
+// ── "Transformar em recorrente" — avulsa existente vira template ──────────
+// Só a conta deste mês (ainda aberto) recebe o vínculo; nenhum mês anterior
+// é tocado; se já estava paga, confirmação extra e nada de amt/day/paid muda.
+async function transformBillToTemplate(monthKeyVal, billKey, choice, installmentTotal){
+  if(!SCHEMA_V2_READY){toast('Recurso indisponível — schema v2 não instalado.');return;}
+  if(!assertMonthOpen(monthKeyVal))return;
+  const bill=(monthBills[monthKeyVal]||[]).find(b=>b.key===billKey);
+  if(!bill)return;
+  if(bill.paid){
+    const ok=confirm('Esta conta já está paga. O histórico de pagamento será preservado — nenhum valor, vencimento ou status será alterado; apenas um template será criado para os próximos meses. Continuar?');
+    if(!ok)return;
+  }
+  try{
+    const fields = { name:bill.name, category:bill.category||null, type:choice, day:bill.day, amount:bill.amt||0,
+                      advance:bill.advance||0, advance_note:bill.advanceNote||null, notes:bill.notes||null, active:true };
+    if(choice==='installment'){
+      fields.installment_total = parseInt(installmentTotal)||1;
+      fields.installment_start_key = monthKeyVal;
+    }
+    const created = await createTemplate(fields);
+    if(!created) throw new Error('sem retorno ao criar template');
+    bill.templateId = created.id;
+    bill.type = choice;
+    if(choice==='installment'){ bill.installmentNum=1; bill.installmentTotal=created.installment_total; }
+    await saveMonthBills(monthKeyVal);
+    render();
+    toast('✓ Template criado a partir desta conta.');
+  }catch(e){ toast('Erro ao transformar em recorrente.'); }
+}
+
+function openTransformModal(monthKeyVal, billKey){
+  const bill=(monthBills[monthKeyVal]||[]).find(b=>b.key===billKey);
+  if(!bill)return;
+  document.getElementById('transform-modal-body').innerHTML = `
+    <div style="font-size:13px;margin-bottom:12px">Transformar <b>${esc(bill.name)}</b> em conta recorrente:</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="apply-btn" onclick="transformBillToTemplate('${monthKeyVal}','${billKey}','fixed');closeModalById('transform-modal')">Recorrente fixa</button>
+      <button class="apply-btn" onclick="transformBillToTemplate('${monthKeyVal}','${billKey}','variable');closeModalById('transform-modal')">Recorrente variável</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="apply-btn" style="flex:1" onclick="transformBillToTemplate('${monthKeyVal}','${billKey}','installment',document.getElementById('transform-inst-total').value);closeModalById('transform-modal')">Parcelada — total de parcelas:</button>
+        <input class="re-inp" id="transform-inst-total" type="number" min="1" value="12" style="width:56px">
+      </div>
+    </div>`;
+  openModalById('transform-modal');
+}
+
+// ── Banners de estado de schema / migração ──────────────────────────────────
+const SCHEMA_BANNER_MESSAGES = {
+  legacy: 'Atualização do banco de dados ainda não foi instalada — os recursos novos (criar próximo mês, parcelamento, fechamento de mês) ficam indisponíveis até isso ser feito.',
+  partial: 'Atualização do banco incompleta — rode o SQL completo (supabase_financeiro_migration.sql).',
+  permission_error: 'Sem permissão para acessar as tabelas novas — verifique as policies (RLS) no Supabase.',
+  connection_error: 'Sem conexão com o Supabase no momento.',
+  unknown_error: 'Erro inesperado ao verificar o banco — recursos novos desabilitados até isso ser investigado.'
+};
+function renderSchemaBanner(){
+  const el=document.getElementById('schema-banner');
+  if(!el)return;
+  const msg = SCHEMA_BANNER_MESSAGES[SCHEMA_STATE];
+  el.innerHTML = msg ? `<div class="alert-item info"><span class="alert-icon">🛠️</span><span class="alert-text">${esc(msg)}</span></div>` : '';
+}
+
+function checkMigrationCompleteness(){
+  const computed = computeLegacyKeys(RECURRING||[]);
+  const existingKeys = new Set(BILL_TEMPLATES.map(t=>t.legacy_key).filter(Boolean));
+  const missing = computed.filter(c=>!existingKeys.has(c.legacyKey));
+  return { allMigrated: missing.length===0 && computed.length>0, missing, computed };
+}
+
+function renderMigrationBanner(){
+  const el=document.getElementById('migration-banner');
+  if(!el)return;
+  if(!SCHEMA_V2_READY || billSourceIsTemplates() || !RECURRING || !RECURRING.length){ el.innerHTML=''; return; }
+  const { allMigrated } = checkMigrationCompleteness();
+  if(allMigrated){
+    el.innerHTML = `<div class="alert-item info"><span class="alert-icon">ℹ️</span>
+      <span class="alert-text">As contas já foram migradas, mas a conclusão da migração não foi registrada.</span>
+      <button class="apply-btn" onclick="finalizeMigrationOnly()">Finalizar migração</button></div>`;
+  } else {
+    el.innerHTML = `<div class="alert-item warn"><span class="alert-icon">🗂️</span>
+      <span class="alert-text">Contas recorrentes antigas encontradas.</span>
+      <button class="apply-btn" onclick="openMigrationReviewScreen()">Revisar e migrar contas</button></div>`;
+  }
+}
+
+async function finalizeMigrationOnly(){
+  try{
+    const h={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'resolution=merge-duplicates,return=representation'};
+    await fetch(SB_URL+'/rest/v1/fin_migration_state',{method:'POST',headers:h,body:JSON.stringify({id:'1',recurring_migrated:true,migrated_at:new Date().toISOString()})});
+    MIGRATION_STATE = {id:'1',recurring_migrated:true,migrated_at:new Date().toISOString()};
+    toast('✓ Migração finalizada.');
+    renderMigrationBanner();
+    render();
+  }catch(e){ toast('Erro ao finalizar migração.'); }
+}
+
+// ── Tela de revisão/migração manual de fin_recurring ────────────────────────
+let _migrationBackupDone = false;
+let _migrationRows = [];
+
+function suggestTypeForLegacyItem(item){
+  const n = String(item.name||'').toLowerCase();
+  const variableHints = ['fpl','at&t','att ','água','agua','gás','gas','cart','seguro','insurance'];
+  return variableHints.some(h=>n.includes(h)) ? 'variable' : 'fixed';
+}
+
+function openMigrationReviewScreen(){
+  if(!SCHEMA_V2_READY){toast('Schema v2 não instalado.');return;}
+  const { missing } = checkMigrationCompleteness();
+  _migrationBackupDone = false;
+  _migrationRows = missing.map(m=>({
+    legacyKey: m.legacyKey,
+    name: m.item.name, day: m.item.day, amt: m.item.amt,
+    advance: m.item.advance||0, advanceNote: m.item.advanceNote||'',
+    type: suggestTypeForLegacyItem(m.item),
+    category: '',
+    installmentTotal: 12
+  }));
+  renderMigrationReviewRows();
+  document.getElementById('migration-download-status').style.display='none';
+  document.getElementById('migration-confirm-btn').disabled=true;
+  openModalById('migration-modal');
+}
+
+function possibleDuplicateWarning(row){
+  const similar = BILL_TEMPLATES.find(t=>t.day===row.day && t.name.trim().toLowerCase().slice(0,5)===row.name.trim().toLowerCase().slice(0,5));
+  return similar ? `<div style="font-size:10px;color:var(--or);font-family:var(--mo);width:100%">⚠ possível duplicata de "${esc(similar.name)}" (dia ${similar.day}) — confirme antes de migrar</div>` : '';
+}
+
+function renderMigrationReviewRows(){
+  const list=document.getElementById('migration-review-list');
+  if(!list)return;
+  if(!_migrationRows.length){
+    list.innerHTML='<div class="empty">Nada pendente de migração 🎉</div>';
+    return;
+  }
+  list.innerHTML=_migrationRows.map((r,i)=>`
+    <div class="rec-edit-item" style="flex-wrap:wrap">
+      <div class="re-day"><input class="re-inp" type="number" min="1" max="31" value="${r.day}" onchange="_migrationRows[${i}].day=parseInt(this.value)||1"></div>
+      <div class="re-name"><input class="re-inp" type="text" value="${esc(r.name)}" onchange="_migrationRows[${i}].name=this.value"></div>
+      <div class="re-amt"><input class="re-inp" type="number" step="0.01" value="${r.amt}" onchange="_migrationRows[${i}].amt=parseFloat(this.value)||0" style="text-align:right"></div>
+      <select class="re-inp" onchange="_migrationRows[${i}].type=this.value; renderMigrationReviewRows();">
+        <option value="fixed" ${r.type==='fixed'?'selected':''}>Fixa</option>
+        <option value="variable" ${r.type==='variable'?'selected':''}>Variável</option>
+        <option value="installment" ${r.type==='installment'?'selected':''}>Parcelada</option>
+      </select>
+      <select class="re-inp" onchange="_migrationRows[${i}].category=this.value">
+        <option value="">Categoria…</option>
+        ${CATEGORIES.map(c=>`<option value="${c}" ${r.category===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+      ${r.type==='installment'?`<div class="re-adv" title="Total de parcelas"><input class="re-inp" type="number" min="1" value="${r.installmentTotal}" onchange="_migrationRows[${i}].installmentTotal=parseInt(this.value)||1" style="text-align:center"></div>`:''}
+      <button class="re-del" onclick="_migrationRows.splice(${i},1);renderMigrationReviewRows();">×</button>
+      ${possibleDuplicateWarning(r)}
+    </div>`).join('');
+}
+
+function downloadPreMigrationBackup(){
+  exportJSON();
+  _migrationBackupDone = true;
+  document.getElementById('migration-download-status').style.display='block';
+  document.getElementById('migration-confirm-btn').disabled=false;
+}
+
+async function confirmMigration(){
+  if(!_migrationBackupDone){ toast('Baixe o backup antes de migrar.'); return; }
+  if(!_migrationRows.length){ closeModalById('migration-modal'); return; }
+  try{
+    for(const r of _migrationRows){
+      const fields = { legacy_key:r.legacyKey, name:r.name, category:r.category||null, type:r.type, day:r.day,
+                       amount:r.amt||0, advance:r.advance||0, advance_note:r.advanceNote||null, active:true,
+                       installment_total: r.type==='installment'?r.installmentTotal:null,
+                       installment_start_key: r.type==='installment'?mk():null };
+      await createTemplate(fields);
+    }
+    const h={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'resolution=merge-duplicates,return=representation'};
+    await fetch(SB_URL+'/rest/v1/fin_migration_state',{method:'POST',headers:h,body:JSON.stringify({id:'1',recurring_migrated:true,migrated_at:new Date().toISOString()})});
+    MIGRATION_STATE = {id:'1',recurring_migrated:true,migrated_at:new Date().toISOString()};
+    closeModalById('migration-modal');
+    toast('✓ Migração concluída!');
+    renderMigrationBanner();
+    render();
+  }catch(e){ toast('Erro na migração: '+(e.message||'')); }
+}
+
+// ── "Criar próximo mês" — preview editável antes de confirmar ─────────────
+let _genProposal = [];
+let _genTargetMk = null;
+
+function nextMonthKeyOf(y, moZeroIdx){
+  let ny=y, nm=moZeroIdx+1;
+  if(nm>11){nm=0;ny++;}
+  return ny+'-'+String(nm+1).padStart(2,'0');
+}
+
+function computeNextMonthProposal(fromKey, toKey){
+  const toBills = monthBills[toKey]||[];
+  const existingKeys = new Set(toBills.map(b=>b.key));
+  const active = BILL_TEMPLATES.filter(t=>t.active);
+  const proposal=[];
+  active.forEach(t=>{
+    const alreadyInTarget = toBills.some(b=>b.templateId===t.id);
+    if(alreadyInTarget) return;
+    const item = buildProposalItemForTemplate(t, toKey, existingKeys);
+    if(!item) return; // parcelamento fora do período (ainda não começou ou já terminou)
+    existingKeys.add(item.key);
+    proposal.push({ ...item, _referenceAmount: item.type==='variable' ? item.estimatedAmount : t.amount });
+  });
+  return proposal;
+}
+
+function openGenerateNextMonthPreview(){
+  if(!SCHEMA_V2_READY){toast('Recurso indisponível — schema v2 não instalado.');return;}
+  const fromKey = mk();
+  const toKey = nextMonthKeyOf(curYear, curMonth);
+  if(monthMeta[toKey]&&monthMeta[toKey].closed){toast('O mês '+toKey+' está fechado.');return;}
+  const toHasBills = (monthBills[toKey]||[]).length>0;
+  if(toHasBills){
+    if(!confirm('O mês '+toKey+' já existe. Deseja apenas adicionar as contas que ainda não existem?'))return;
+  }
+  _genTargetMk = toKey;
+  _genProposal = computeNextMonthProposal(fromKey, toKey);
+  renderGenPreview();
+  openModalById('gen-preview-modal');
+}
+
+function renderGenPreview(){
+  const titleEl=document.getElementById('gen-preview-title');
+  if(titleEl)titleEl.textContent='Criar '+_genTargetMk+' a partir de '+mk();
+  const list=document.getElementById('gen-preview-list');
+  if(!list)return;
+  if(!_genProposal.length){
+    list.innerHTML='<div class="empty">Nada novo para gerar — templates ativos já estão neste mês, ou parcelamentos fora do período.</div>';
+    return;
+  }
+  list.innerHTML=_genProposal.map((it,i)=>`
+    <div class="rec-edit-item" style="flex-wrap:wrap">
+      <input type="checkbox" checked onchange="_genProposal[${i}]._excluded=!this.checked">
+      <div class="re-day"><input class="re-inp" type="number" min="1" max="31" value="${it.day}" onchange="_genProposal[${i}].day=parseInt(this.value)||1"></div>
+      <div class="re-name"><input class="re-inp" type="text" value="${esc(it.name)}" onchange="_genProposal[${i}].name=this.value"></div>
+      <span class="tg" style="flex-shrink:0">${it.type==='fixed'?'Fixa':it.type==='variable'?'Variável':('Parcela '+it.installmentNum+'/'+it.installmentTotal)}</span>
+      <span style="font-size:10px;color:var(--t3);font-family:var(--mo)">ref: ${fmt(it._referenceAmount||0)}</span>
+      ${it.type==='variable'
+        ? `<span class="bill-warn amber">valor pendente</span>`
+        : `<div class="re-amt"><input class="re-inp" type="number" step="0.01" value="${it.amt}" onchange="_genProposal[${i}].amt=parseFloat(this.value)||0" style="text-align:right"></div>`}
+    </div>`).join('');
+}
+
+function addAdhocRowToGenPreview(){
+  if(!_genTargetMk)return;
+  const existingKeys = new Set([..._genProposal.map(p=>p.key), ...((monthBills[_genTargetMk]||[]).map(b=>b.key))]);
+  _genProposal.push({ key:genUniqueBillKey(_genTargetMk, existingKeys,'adhoc'), type:'single', name:'Nova conta', day:1, amt:0, paid:false, category:'', _referenceAmount:0 });
+  renderGenPreview();
+}
+
+async function confirmGenerateNextMonth(){
+  const items = _genProposal.filter(it=>!it._excluded).map(it=>{
+    const clean = {...it}; delete clean._excluded; delete clean._referenceAmount;
+    return clean;
+  });
+  if(!items.length){ closeModalById('gen-preview-modal'); toast('Nada para gerar.'); return; }
+  try{
+    await mergeGeneratedBills(_genTargetMk, items);
+    closeModalById('gen-preview-modal');
+    goToMonthF(_genTargetMk);
+    const pendCount = items.filter(i=>i.pendingValue).length;
+    toast('✓ '+items.length+' conta(s) criada(s) em '+_genTargetMk+(pendCount?' — '+pendCount+' aguardando valor':''));
+  }catch(e){ toast('Erro ao gerar o mês: '+(e.message||'')); }
+}
+
+// ── "Atualizar valores" — tela dedicada para contas variáveis pendentes ────
+function pendingValueBillsForCurrentMonth(){
+  const m=mk();
+  return (monthBills[m]||[]).filter(b=>b.pendingValue===true);
+}
+
+function openUpdateValuesScreen(){
+  const m=mk();
+  if(!assertMonthOpen(m))return;
+  const pend = pendingValueBillsForCurrentMonth();
+  const list=document.getElementById('update-values-list');
+  if(!list)return;
+  list.innerHTML = pend.length ? pend.map(b=>`
+      <div class="rec-edit-item">
+        <div class="re-name" style="flex:2">${esc(b.name)}<div style="font-size:10px;color:var(--t3)">anterior: ${b.estimatedAmount!=null?fmt(b.estimatedAmount):'—'}</div></div>
+        <div class="re-amt" style="width:110px"><input class="re-inp" id="uv-${esc(b.key)}" type="number" step="0.01" placeholder="novo valor" style="text-align:right"></div>
+      </div>`).join('') : '<div class="empty">Nenhuma conta variável aguardando valor neste mês 🎉</div>';
+  openModalById('update-values-modal');
+}
+
+async function saveVariableValues(){
+  const m=mk();
+  if(!assertMonthOpen(m))return;
+  const pend = pendingValueBillsForCurrentMonth();
+  const prev=JSON.parse(JSON.stringify(monthBills[m]||[]));
+  let count=0;
+  pend.forEach(b=>{
+    const inp=document.getElementById('uv-'+b.key);
+    if(!inp||inp.value==='')return;
+    const v=parseFloat(inp.value);
+    if(isNaN(v)||v<0)return;
+    const bill=(monthBills[m]||[]).find(x=>x.key===b.key);
+    if(bill){ bill.amt=v; bill.pendingValue=false; count++; }
+  });
+  if(!count){ toast('Nenhum valor informado.'); return; }
+  render();
+  try{
+    await saveMonthBills(m);
+    closeModalById('update-values-modal');
+    toast('✓ '+count+' valor(es) atualizado(s)!');
+    render();
+  }catch(e){ monthBills[m]=prev; render(); toast('Erro ao salvar. Alteração desfeita.'); }
 }
 
 // ── Hoje panel ───────────────────────────────────────────────────────────────
@@ -775,7 +1555,7 @@ function renderHoje(){
     // urgency mode — classify by days until due
     const rows=[];
     unpaid.forEach(b=>{
-      const due=new Date(curYear,curMonth,b.day); due.setHours(0,0,0,0);
+      const due=effectiveDueDate(curYear,curMonth,b.day); due.setHours(0,0,0,0);
       const diff=Math.round((due-today)/86400000);
       if(diff<0)        rows.push({order:0,badge:'b-overdue',label:'atrasada',b,diff});
       else if(diff===0) rows.push({order:1,badge:'b-today',  label:'hoje',    b,diff});
@@ -784,7 +1564,7 @@ function renderHoje(){
     });
     rows.sort((a,b)=>a.order!==b.order?a.order-b.order:a.diff-b.diff);
     const upcoming=unpaid
-      .map(b=>{const due=new Date(curYear,curMonth,b.day);due.setHours(0,0,0,0);return{...b,_due:due,_diff:Math.round((due-today)/86400000)};})
+      .map(b=>{const due=effectiveDueDate(curYear,curMonth,b.day);due.setHours(0,0,0,0);return{...b,_due:due,_diff:Math.round((due-today)/86400000)};})
       .filter(b=>b._diff>7)
       .sort((a,b)=>a._due-b._due)[0];
     if(rows.length){
@@ -792,7 +1572,7 @@ function renderHoje(){
         `<div class="hoje-row">
           <span class="hoje-badge ${r.badge}">${r.label}</span>
           <span class="hoje-name">dia ${r.b.day} — ${esc(r.b.name)}</span>
-          <span class="hoje-amt">${fmt(r.b.amt)}</span>
+          <span class="hoje-amt">${fmtOrPending(r.b)}</span>
         </div>`
       ).join('');
     }else{
@@ -816,7 +1596,7 @@ function renderHoje(){
       `<div class="hoje-row">
         <span class="hoje-badge b-overdue">não pago</span>
         <span class="hoje-name">dia ${b.day} — ${esc(b.name)}</span>
-        <span class="hoje-amt">${fmt(b.amt)}</span>
+        <span class="hoje-amt">${fmtOrPending(b)}</span>
       </div>`
     ).join('');
     html+=`<div class="hoje-row hoje-sep">
@@ -830,7 +1610,7 @@ function renderHoje(){
       `<div class="hoje-row">
         <span class="hoje-badge b-next">dia ${b.day}</span>
         <span class="hoje-name">${esc(b.name)}</span>
-        <span class="hoje-amt">${fmt(b.amt)}</span>
+        <span class="hoje-amt">${fmtOrPending(b)}</span>
       </div>`
     ).join('');
     html+=`<div class="hoje-row hoje-sep">
@@ -849,7 +1629,7 @@ function renderAlerts(bills){
   const today=new Date(); today.setHours(0,0,0,0);
   const alerts=[];
   bills.filter(b=>!b.paid).forEach(b=>{
-    const due=new Date(curYear,curMonth,b.day);
+    const due=effectiveDueDate(curYear,curMonth,b.day);
     const daysUntil=Math.ceil((due-today)/86400000);
     // advance warning (Remitly etc)
     if(b.advance&&daysUntil>0&&daysUntil<=(b.advance+3)){
@@ -861,15 +1641,37 @@ function renderAlerts(bills){
         alerts.push({cls:'warn',icon:'⚠️',text:`<b>${esc(b.name)}</b> vence dia ${b.day} — ${esc(b.advanceNote||'prepare com antecedência')}`,days:`agir em ${daysToAct}d`});
       }
     }
-    // general proximity: due in ≤5 days
+    // general proximity: due in ≤3 days = urgent, ≤5 days = warn
     else if(daysUntil>=0&&daysUntil<=5&&!b.advance){
       if(daysUntil===0) alerts.push({cls:'urgent',icon:'🔴',text:`<b>${esc(b.name)}</b> vence HOJE`,days:'hoje!'});
       else if(daysUntil===1) alerts.push({cls:'urgent',icon:'🔴',text:`<b>${esc(b.name)}</b> vence amanhã`,days:'amanhã'});
+      else if(daysUntil<=3) alerts.push({cls:'urgent',icon:'🔴',text:`<b>${esc(b.name)}</b> vence em ${daysUntil} dias`,days:`em ${daysUntil}d`});
       else alerts.push({cls:'warn',icon:'🟡',text:`<b>${esc(b.name)}</b> vence dia ${b.day}`,days:`em ${daysUntil}d`});
     }
+    // parcela chegando ao fim
+    if(b.type==='installment'&&b.installmentNum&&b.installmentTotal&&b.installmentNum===b.installmentTotal){
+      alerts.push({cls:'info',icon:'🏁',text:`<b>${esc(b.name)}</b> é a última parcela (${b.installmentNum}/${b.installmentTotal})`,days:'última'});
+    }
+    // variável sem valor atualizado
+    if(b.pendingValue){
+      alerts.push({cls:'warn',icon:'✏️',text:`<b>${esc(b.name)}</b> ainda sem valor confirmado este mês`,days:'atualizar'});
+    }
   });
+  // template ativo sem conta correspondente no mês atual (só quando migrado)
+  if(SCHEMA_V2_READY&&billSourceIsTemplates()){
+    const curKeys=new Set(bills.map(b=>b.templateId).filter(Boolean));
+    BILL_TEMPLATES.filter(t=>t.active).forEach(t=>{
+      if(curKeys.has(t.id))return;
+      if(t.type==='installment'){
+        const expected=monthsBetween(t.installment_start_key,mk())+1;
+        if(expected<1||expected>t.installment_total)return; // fora do período, não é "esquecida"
+      }
+      alerts.push({cls:'info',icon:'❔',text:`<b>${esc(t.name)}</b> (recorrente ativa) ainda não foi adicionada a este mês`,days:'revisar'});
+    });
+  }
   if(!alerts.length){strip.innerHTML='';return;}
-  alerts.sort((a,b)=>a.cls==='urgent'?-1:1);
+  const order={urgent:0,warn:1,info:2};
+  alerts.sort((a,b)=>(order[a.cls]??3)-(order[b.cls]??3));
   strip.innerHTML=alerts.map(a=>`
     <div class="alert-item ${a.cls}">
       <span class="alert-icon">${a.icon}</span>
@@ -879,16 +1681,69 @@ function renderAlerts(bills){
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────
+function renderV2Summary(bills, pendAwaiting, tPrevisto, tConfirmado){
+  const el=document.getElementById('metrics2');
+  if(!el)return;
+  if(!SCHEMA_V2_READY){ el.innerHTML=''; return; }
+  const installmentBills = bills.filter(b=>b.type==='installment');
+  let remainingCount=0, remainingValue=0;
+  installmentBills.forEach(b=>{
+    const rem=Math.max((b.installmentTotal||0)-(b.installmentNum||0),0);
+    remainingCount+=rem;
+    const tpl=BILL_TEMPLATES.find(t=>t.id===b.templateId);
+    if(tpl) remainingValue+=rem*tpl.amount;
+  });
+  el.innerHTML = `
+    <div class="mc amber"><div class="mc-label">Aguardando valor</div><div class="mc-val">${pendAwaiting.length}</div><div class="mc-sub">contas variáveis</div></div>
+    <div class="mc blue"><div class="mc-label">Parcelas restantes</div><div class="mc-val">${remainingCount}</div><div class="mc-sub">${remainingCount?fmt(remainingValue)+' estimado':'—'}</div></div>
+    <div class="mc"><div class="mc-label">Valor previsto</div><div class="mc-val">${fmt(tPrevisto)}</div><div class="mc-sub">inclui estimativa</div></div>
+    <div class="mc green"><div class="mc-label">Valor confirmado</div><div class="mc-val">${fmt(tConfirmado)}</div><div class="mc-sub">pago + pendente real</div></div>`;
+}
+
+function renderMonthLockUI(m){
+  const el=document.getElementById('month-lock-ui');
+  if(!el)return;
+  if(!SCHEMA_V2_READY){ el.innerHTML=''; return; }
+  const closed = !!(monthMeta[m]&&monthMeta[m].closed);
+  el.innerHTML = closed
+    ? `<span class="bkp-btn" style="border-color:var(--re);color:var(--re)">🔒 fechado</span>
+       <button class="bkp-btn" onclick="unlockMonth('${m}')">🔓 Desbloquear</button>`
+    : `<button class="bkp-btn" onclick="closeMonth('${m}')">🔒 Fechar mês</button>`;
+}
+
+function setCategoryFilter(v){ _categoryFilter=(_categoryFilter===v)?'':v; render(); }
+function setSearchTerm(v){ _searchTerm=v; render(); }
+
+function renderCategoryChips(){
+  const el=document.getElementById('cat-chips');
+  if(!el)return;
+  el.innerHTML = CATEGORIES.map(c=>`<span class="cat-chip${_categoryFilter===c?' active':''}" onclick="setCategoryFilter('${c}')">${c}</span>`).join('');
+}
+
+function populateCategorySelects(){
+  const sel=document.getElementById('qa-category');
+  if(sel && sel.options.length<=1){
+    CATEGORIES.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+  }
+}
+
 function render(){
   rMonthTabsF();
   const m=mk();
   const matt=getMattIncome(m),lidy=getLidyIncome(m);
   const bills=getBills(m);
-  const paid=bills.filter(b=>b.paid),pend=bills.filter(b=>!b.paid);
-  const tPaid=paid.reduce((s,b)=>s+b.amt,0);
-  const tPend=pend.reduce((s,b)=>s+b.amt,0);
-  const tBills=tPaid+tPend,tInc=matt.total+lidy.total;
-  const balance=tInc-tBills;       // projected: income − all bills
+  const paid=bills.filter(b=>b.paid);
+  const unpaidAll=bills.filter(b=>!b.paid);
+  const pend=unpaidAll.filter(b=>!b.pendingValue);       // só confirmadas contam nos totais "reais"
+  const pendAwaiting=unpaidAll.filter(b=>b.pendingValue); // variáveis aguardando valor — nunca somadas
+
+  const tPaid=paid.reduce((s,b)=>s+(b.amt||0),0);
+  const tPend=pend.reduce((s,b)=>s+(b.amt||0),0);
+  const tConfirmado=tPaid+tPend;
+  const tEstimadoAguardando=pendAwaiting.reduce((s,b)=>s+(b.estimatedAmount!=null?b.estimatedAmount:0),0);
+  const tPrevisto=tConfirmado+tEstimadoAguardando;
+  const tBills=tConfirmado,tInc=matt.total+lidy.total;
+  const balance=tInc-tBills;       // projected: income − contas confirmadas (nunca inclui estimativa de pendentes)
   const paidImpact=tInc-tPaid;     // current:   income − paid bills only
 
   document.getElementById('month-title').textContent=MONTHS[curMonth]+' '+curYear;
@@ -905,6 +1760,10 @@ function render(){
   balEl.style.color=balance>=0?'var(--ac)':'var(--re)';
   document.getElementById('m-bal-sub').textContent=(balance>=0?'':'Déficit · ')+'Agora: '+fmt(paidImpact);
   document.getElementById('balance-mc').className='mc '+(balance>=0?'blue':'red');
+
+  renderV2Summary(bills, pendAwaiting, tPrevisto, tConfirmado);
+  renderMonthLockUI(m);
+  renderCategoryChips();
 
   // hoje + alerts
   renderHoje();
@@ -932,9 +1791,10 @@ function render(){
 
   // pending
   const today=new Date(); today.setHours(0,0,0,0);
+  const monthClosedNow = !!(monthMeta[m]&&monthMeta[m].closed);
   function warnTag(b){
-    if(!isCurrentMonth()||b.paid)return'';
-    const due=new Date(curYear,curMonth,b.day);
+    if(!isCurrentMonth()||b.paid||b.pendingValue)return''; // pendingValue já mostra seu próprio badge
+    const due=effectiveDueDate(curYear,curMonth,b.day);
     const d=Math.ceil((due-today)/86400000);
     if(b.advance&&d<=(b.advance+3)){
       const act=new Date(due); act.setDate(act.getDate()-b.advance);
@@ -946,28 +1806,51 @@ function render(){
     if(d<=7)return`<span class="bill-warn amber">em ${d}d</span>`;
     return'';
   }
+  function typeTag(b){
+    if(b.type==='installment') return `<span class="tg" style="flex-shrink:0">${b.installmentNum}/${b.installmentTotal}</span>`;
+    if(b.category) return `<span class="tg" style="flex-shrink:0">${esc(b.category)}</span>`;
+    return '';
+  }
+  function transformBtn(b){
+    if(!SCHEMA_V2_READY||b.templateId||monthClosedNow) return '';
+    return `<button class="del-bill" title="Transformar em recorrente" onclick="openTransformModal('${m}','${b.key}')">🔁</button>`;
+  }
+  function matchesFilters(b){
+    if(_categoryFilter && (b.category||'')!==_categoryFilter) return false;
+    if(_searchTerm){
+      const hay=((b.name||'')+' '+(b.category||'')+' '+(b.notes||'')).toLowerCase();
+      if(!hay.includes(_searchTerm.toLowerCase())) return false;
+    }
+    return true;
+  }
+  const pendShown=unpaidAll.filter(matchesFilters); // inclui pendingValue — só os totais numéricos as excluem
+  const paidShown=paid.filter(matchesFilters);
 
-  document.getElementById('pend-count').textContent=pend.length?pend.length+' itens':'';
-  document.getElementById('pend-list').innerHTML=pend.length?pend.map(b=>`
+  document.getElementById('pend-count').textContent=pendShown.length?pendShown.length+' itens':'';
+  document.getElementById('pend-list').innerHTML=pendShown.length?pendShown.map(b=>`
     <div class="bill-row">
-      <div class="bill-dot pend"></div>
+      <div class="bill-dot ${b.pendingValue?'urgent':'pend'}"></div>
       <div class="bill-day editable" onclick="startEdit(this,'${b.key}','day',${b.day})">${b.day}</div>
       <div class="bill-name editable" style="flex:1" data-key="${esc(b.key)}" data-val="${esc(b.name)}" onclick="startEdit(this,this.dataset.key,'name',this.dataset.val)">${esc(b.name)}</div>
+      ${typeTag(b)}
       ${warnTag(b)}
-      <div class="bill-amt pend editable" onclick="startEdit(this,'${b.key}','amt',${b.amt})">${fmt(b.amt)}</div>
-      <button class="bill-toggle" onclick="toggleBill('${b.key}',false)">✓</button>
+      <div class="bill-amt pend editable" onclick="startEdit(this,'${b.key}','amt',${b.amt==null?0:b.amt})">${fmtOrPending(b)}</div>
+      <button class="bill-toggle" ${b.pendingValue?'disabled title="Confirme o valor antes de marcar como paga"':''} onclick="toggleBill('${b.key}',false)">✓</button>
+      ${transformBtn(b)}
       <button class="del-bill" onclick="deleteBill('${b.key}')">×</button>
     </div>`).join(''):'<div class="empty">nenhuma pendente 🎉</div>';
   document.getElementById('pend-pill').textContent=fmt(tPend);
 
-  document.getElementById('paid-count').textContent=paid.length?paid.length+' itens':'';
-  document.getElementById('paid-list').innerHTML=paid.length?paid.map(b=>`
+  document.getElementById('paid-count').textContent=paidShown.length?paidShown.length+' itens':'';
+  document.getElementById('paid-list').innerHTML=paidShown.length?paidShown.map(b=>`
     <div class="bill-row">
       <div class="bill-dot paid"></div>
       <div class="bill-day editable" onclick="startEdit(this,'${b.key}','day',${b.day})">${b.day}</div>
       <div class="bill-name strike editable" style="flex:1" data-key="${esc(b.key)}" data-val="${esc(b.name)}" onclick="startEdit(this,this.dataset.key,'name',this.dataset.val)">${esc(b.name)}</div>
+      ${typeTag(b)}
       <div class="bill-amt done editable" onclick="startEdit(this,'${b.key}','amt',${b.amt})">${fmt(b.amt)}</div>
       <button class="bill-toggle done" onclick="toggleBill('${b.key}',true)">✓</button>
+      ${transformBtn(b)}
       <button class="del-bill" onclick="deleteBill('${b.key}')">×</button>
     </div>`).join(''):'<div class="empty">nenhuma paga ainda</div>';
   document.getElementById('paid-pill').textContent=fmt(tPaid);
@@ -1083,7 +1966,10 @@ function exportJSON(){
     exportedAt:new Date().toISOString(),
     selectedMonth:mk(),
     monthBills,
+    monthMeta,
     recurring:RECURRING,
+    billTemplates:BILL_TEMPLATES,
+    migrationState:MIGRATION_STATE,
     lidyEntries:lidyData,
     weeksData
   };
@@ -1137,6 +2023,7 @@ function importJSON(input){
   reader.readAsText(file);
 }
 
+populateCategorySelects();
 loadAll();
 </script>
 </body>
